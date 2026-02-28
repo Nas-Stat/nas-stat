@@ -10,6 +10,12 @@ const setCenterMock = vi.fn();
 const jumpToMock = vi.fn();
 const getCenterMock = vi.fn(() => ({ lng: 14.4378, lat: 50.0755 }));
 const getZoomMock = vi.fn(() => 12);
+const addSourceMock = vi.fn();
+const addLayerMock = vi.fn();
+const removeSourceMock = vi.fn();
+const removeLayerMock = vi.fn();
+const getLayerMock = vi.fn();
+const getSourceMock = vi.fn();
 
 vi.mock('maplibre-gl', () => {
   class MapMock {
@@ -21,6 +27,12 @@ vi.mock('maplibre-gl', () => {
     getCenter = getCenterMock;
     getZoom = getZoomMock;
     project = vi.fn(() => ({ x: 0, y: 0 }));
+    addSource = addSourceMock;
+    addLayer = addLayerMock;
+    removeSource = removeSourceMock;
+    removeLayer = removeLayerMock;
+    getLayer = getLayerMock;
+    getSource = getSourceMock;
   }
 
   class NavigationControlMock {}
@@ -94,4 +106,47 @@ describe('Map Component', () => {
     
     expect(removeMock).not.toHaveBeenCalled();
   });
+
+  it('handles heatmap layer correctly when showHeatmap changes', async () => {
+    // We need to trigger the 'load' event
+    let onMapLoad: () => void = () => {};
+    onMock.mockImplementation((event, callback) => {
+      if (event === 'load') onMapLoad = callback;
+    });
+
+    const reports = [{ 
+      id: '1', 
+      title: 'Test', 
+      location: { lng: 14.4, lat: 50.1 }, 
+      status: 'pending' as const, 
+      description: 'Desc', 
+      category: 'Cat', 
+      rating: 5 
+    }];
+
+    const { rerender } = render(<Map reports={reports} showHeatmap={false} />);
+    
+    // Trigger map load
+    await import('react').then((React) => {
+      React.act(() => {
+        onMapLoad();
+      });
+    });
+
+    // Rerender with showHeatmap=true
+    rerender(<Map reports={reports} showHeatmap={true} />);
+
+    
+    expect(addSourceMock).toHaveBeenCalledWith('reports-source', expect.any(Object));
+    expect(addLayerMock).toHaveBeenCalledWith(expect.objectContaining({ id: 'reports-heatmap' }));
+
+    // Rerender with showHeatmap=false
+    getLayerMock.mockReturnValue({});
+    getSourceMock.mockReturnValue({});
+    rerender(<Map reports={reports} showHeatmap={false} />);
+    
+    expect(removeLayerMock).toHaveBeenCalledWith('reports-heatmap');
+    expect(removeSourceMock).toHaveBeenCalledWith('reports-source');
+  });
 });
+

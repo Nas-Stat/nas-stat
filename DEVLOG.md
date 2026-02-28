@@ -1,5 +1,15 @@
 # Developer Log
 
+## 2026-02-28 - Implement Heatmap and Polish Pulse Dashboard (Issue #9)
+
+As part of finalizing Issue #9, I have implemented the heatmap visualization for the geographic pulse and improved the dashboard's data presentation.
+- Added `showHeatmap` prop to the `Map` component and implemented a MapLibre GL heatmap layer.
+- Updated `DashboardPage` to fetch all reports for accurate heatmap representation.
+- Improved "Popular Topics" on the dashboard by sorting them by comment count instead of just creation date.
+- Added unit tests for heatmap functionality in `Map.test.tsx`.
+- Updated `DashboardPage` tests to reflect new data fetching patterns.
+- Verified that all 68 tests pass across the entire codebase.
+
 ## 2026-02-28 - Final Polish and Robust Coverage (Issue #9)
 
 As part of Issue #9 finalization, I have improved test coverage and addressed minor inconsistencies.

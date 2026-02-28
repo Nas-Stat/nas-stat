@@ -12,7 +12,10 @@ export default async function DashboardPage() {
   const supabase = await createClient();
 
   // Fetch stats and latest data
-  const [reportsResponse, topicsResponse] = await Promise.all([
+  const [reportsResponse, latestReportsResponse, topicsResponse] = await Promise.all([
+    supabase
+      .from('reports')
+      .select('id, title, description, location, rating, category, status'),
     supabase
       .from('reports')
       .select('*')
@@ -21,25 +24,26 @@ export default async function DashboardPage() {
     supabase
       .from('topics')
       .select('*, comments(id)')
-      .order('created_at', { ascending: false })
-      .limit(5),
+      .order('created_at', { ascending: false }),
   ]);
 
-  const latestReports = reportsResponse.data || [];
-  const popularTopics = topicsResponse.data || [];
-
-  // Basic aggregation for stats
-  const { data: allReportsData } = await supabase.from('reports').select('id, title, description, location, rating, category, status');
+  const allReportsData = reportsResponse.data || [];
+  const latestReports = latestReportsResponse.data || [];
   
-  const totalReports = allReportsData?.length || 0;
+  // Sort topics by popularity (comment count)
+  const popularTopics = (topicsResponse.data || [])
+    .sort((a, b) => (b.comments?.length || 0) - (a.comments?.length || 0))
+    .slice(0, 5);
+
+  const totalReports = allReportsData.length;
   const avgRating = totalReports > 0 
-    ? (allReportsData!.reduce((acc, curr) => acc + (curr.rating || 0), 0) / totalReports).toFixed(1)
+    ? (allReportsData.reduce((acc, curr) => acc + (curr.rating || 0), 0) / totalReports).toFixed(1)
     : '0.0';
   
-  const resolvedCount = allReportsData?.filter(r => r.status === 'resolved').length || 0;
+  const resolvedCount = allReportsData.filter(r => r.status === 'resolved').length;
 
   // Format reports for the map
-  const mapReports: Report[] = (allReportsData || []).map(r => {
+  const mapReports: Report[] = allReportsData.map(r => {
     const geoJson = r.location as unknown as GeoJsonPoint;
     return {
       id: r.id,
@@ -123,12 +127,12 @@ export default async function DashboardPage() {
           <section className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-                Geografický pulz
+                Geografický pulz (Heatmapa)
               </h2>
-              <span className="text-xs text-zinc-500">Vizualizace hlášení v reálném čase</span>
+              <span className="text-xs text-zinc-500">Intenzita hlášení podle lokality a hodnocení</span>
             </div>
             <div className="h-80 overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-              <Map reports={mapReports} readOnly zoom={10} />
+              <Map reports={mapReports} readOnly zoom={10} showHeatmap />
             </div>
           </section>
 

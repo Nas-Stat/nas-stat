@@ -42,32 +42,27 @@ test('renders Dashboard page with header, map and sections', async () => {
     },
     from: vi.fn().mockImplementation((table: string) => {
       if (table === 'reports') {
-        const mockReports = {
-          data: [
-            { id: '1', title: 'Díra v silnici', rating: 2, category: 'Doprava', created_at: new Date().toISOString(), location: { type: 'Point', coordinates: [14.4, 50.1] } },
-          ],
-          error: null,
-        };
+        const mockReports = [
+          { id: '1', title: 'Díra v silnici', rating: 2, category: 'Doprava', created_at: new Date().toISOString(), location: { type: 'Point', coordinates: [14.4, 50.1] } },
+        ];
         return {
           select: vi.fn().mockReturnValue({
             order: vi.fn().mockReturnValue({
-              limit: vi.fn().mockResolvedValue(mockReports),
+              limit: vi.fn().mockResolvedValue({ data: mockReports, error: null }),
             }),
-            // Mock the Promise-like behavior for allReports select
-            then: (resolve: (value: { data: typeof mockReports.data; error: null }) => void) => resolve({ data: mockReports.data, error: null }),
+            // Mock for the allReports fetch (which is awaitable/thenable)
+            then: (resolve: (value: { data: typeof mockReports; error: null }) => void) => resolve({ data: mockReports, error: null }),
           }),
         } as unknown;
       }
       if (table === 'topics') {
         return {
           select: vi.fn().mockReturnValue({
-            order: vi.fn().mockReturnValue({
-              limit: vi.fn().mockResolvedValue({
-                data: [
-                  { id: '1', title: 'Nová reforma', comments: [{ id: '1' }], created_at: new Date().toISOString() },
-                ],
-                error: null,
-              }),
+            order: vi.fn().mockResolvedValue({
+              data: [
+                { id: '1', title: 'Nová reforma', comments: [{ id: '1' }], created_at: new Date().toISOString() },
+              ],
+              error: null,
             }),
           }),
         };
@@ -101,6 +96,8 @@ test('renders empty state when no data is available', async () => {
         order: vi.fn().mockReturnValue({
           limit: vi.fn().mockResolvedValue({ data: [], error: null }),
         }),
+        // Mock for the allReports fetch
+        then: (resolve: (value: { data: []; error: null }) => void) => resolve({ data: [], error: null }),
       }),
     }),
   } as unknown as ReturnType<typeof createClient>);
@@ -137,13 +134,12 @@ test('calculates and displays correct statistics', async () => {
       }
       return {
         select: vi.fn().mockReturnValue({
-          order: vi.fn().mockReturnValue({
-            limit: vi.fn().mockResolvedValue({ data: [], error: null }),
-          }),
+          order: vi.fn().mockResolvedValue({ data: [], error: null }),
         }),
       };
     }),
   } as unknown as ReturnType<typeof createClient>);
+
 
   const PageComponent = await Page();
   render(PageComponent);
