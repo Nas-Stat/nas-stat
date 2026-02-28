@@ -1,5 +1,15 @@
 # Developer Log
 
+## 2026-02-28 - Refactor and Polish Reports (Story 1.3.4 - Issue #6 cleanup)
+
+### Changes
+
+- Fixed linter failures by removing 'any' types in `ReportsClient.test.tsx` and `src/app/reports/page.tsx`.
+- Replaced 'window.location.reload()' with 'router.refresh()' in `ReportsClient.tsx` for better Next.js integration.
+- Implemented robust 'zod' validation in 'createReport' server action in `src/app/reports/actions.ts`.
+- Mocked `next/navigation` in `ReportsClient.test.tsx` to fix tests after adding `useRouter`.
+- Verified all tests pass (30 tests) and linting is clean.
+
 ## 2026-02-28 - Implement Report Creation and Visualization (Story 1.3.2 & 1.3.3 - Issue #6)
 
 ### Changes

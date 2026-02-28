@@ -1,10 +1,11 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import ReportsClient from './ReportsClient';
 import { expect, test, vi, beforeEach } from 'vitest';
+import { User } from '@supabase/supabase-js';
 
 // Mock Map component
 vi.mock('@/components/Map', () => ({
-  default: ({ onMapClick }: any) => (
+  default: ({ onMapClick }: { onMapClick?: (lng: number, lat: number) => void }) => (
     <div data-testid="mocked-map" onClick={() => onMapClick?.(14.4378, 50.0755)}>
       Mocked Map
     </div>
@@ -22,8 +23,15 @@ vi.mock('lucide-react', () => ({
   X: () => <div data-testid="x-icon">X</div>,
 }));
 
+// Mock next/navigation
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    refresh: vi.fn(),
+  }),
+}));
+
 describe('ReportsClient', () => {
-  const mockUser = { id: 'user-123', email: 'test@example.com' } as any;
+  const mockUser = { id: 'user-123', email: 'test@example.com' } as unknown as User;
 
   beforeEach(() => {
     vi.clearAllMocks();

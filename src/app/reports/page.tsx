@@ -24,9 +24,9 @@ export default async function ReportsPage() {
   }
 
   // Transform reports to match our Report interface
-  const reports: Report[] = (reportsData || []).map((report: any) => {
+  const reports: Report[] = (reportsData || []).map((report) => {
     // PostgREST returns location as a GeoJSON object for GEOGRAPHY types
-    const location = report.location as {
+    const location = report.location as unknown as {
       type: string;
       coordinates: [number, number];
     };

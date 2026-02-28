@@ -44,6 +44,11 @@ Tento dokument slouží jako detailní architektonický plán pro vývojový tý
 - [x] **Story 1.3.3: Zobrazení existujících hlášení**
   - [x] Načíst hlášení ze Supabase a zobrazit je jako body na mapě (např. barevně odlišené podle hodnocení).
 
+- [x] **Story 1.3.4: Refactor and Polish Reports (Issue #6 cleanup)**
+  - [x] Fix linter failures by removing `any` types in `ReportsClient.test.tsx` and `reports/page.tsx`.
+  - [x] Replace `window.location.reload()` with `useRouter().refresh()` in `ReportsClient.tsx`.
+  - [x] Implement robust `zod` validation in `createReport` server action.
+
 ### Epic 1.4: Tématické hlášení a Dashboard
 
 - [ ] **Story 1.4.1: Feed témat**

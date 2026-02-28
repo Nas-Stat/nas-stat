@@ -5,6 +5,7 @@ import Map, { Report } from '@/components/Map';
 import { createReport } from './actions';
 import { User } from '@supabase/supabase-js';
 import { Star, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface ReportsClientProps {
   initialReports: Report[];
@@ -24,6 +25,7 @@ export default function ReportsClient({
   initialReports,
   user,
 }: ReportsClientProps) {
+  const router = useRouter();
   const [reports] = useState<Report[]>(initialReports);
   const [selectedLocation, setSelectedLocation] = useState<
     [number, number] | null
@@ -54,10 +56,8 @@ export default function ReportsClient({
     try {
       await createReport(formData);
       closeForm();
-      // In a real app, we might want to refresh the reports list here,
-      // but revalidatePath will refresh the server component if we navigate or similar.
-      // For now, let's just reload the page or let the user know.
-      window.location.reload();
+      // Use Next.js refresh instead of full page reload
+      router.refresh();
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Něco se nepovedlo.');
     } finally {
