@@ -54,8 +54,8 @@ Tento dokument slouží jako detailní architektonický plán pro vývojový tý
 - [x] **Story 1.4.1: Feed témat**
   - [x] Vytvořit UI pro zobrazení seznamu aktuálních témat bez geografické vazby.
   - [x] Umožnit přihlášeným uživatelům hlasovat (palec nahoru/dolů) a přidat komentář.
-- [ ] **Story 1.4.2: Základní Pulse Dashboard**
-  - [ ] Jednoduchá analytická stránka zobrazující agregovaná data (např. nejnovější hlášení, nejvíce diskutovaná témata).
+- [x] **Story 1.4.2: Základní Pulse Dashboard**
+  - [x] Jednoduchá analytická stránka zobrazující agregovaná data (např. nejnovější hlášení, nejvíce diskutovaná témata).
 
 ---
 

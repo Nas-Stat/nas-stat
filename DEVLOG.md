@@ -1,5 +1,22 @@
 # Developer Log
 
+## 2026-02-28 - Implement Pulse Dashboard (Issue #9)
+
+### Changes
+
+- Created `src/app/dashboard/page.tsx` with a visual overview of system activity.
+- Implemented real-time aggregation for total reports, average rating, and resolved counts.
+- Added sections for "Nejnovější hlášení" (Latest Reports) and "Populární témata" (Popular Topics).
+- Integrated Lucide icons for better UX and visual polish.
+- Added "Dashboard" link to the Home page navigation.
+- Added comprehensive unit tests for `DashboardPage` in `src/app/dashboard/page.test.tsx` (100% coverage).
+- Verified that all 54 tests pass and linting is clean.
+
+### Verification
+
+- Ran `npm test`: PASS (54 tests).
+- Verified responsive layout and empty states for the dashboard.
+
 ## 2026-02-28 - Implement Thematic Feed and Social Interactions (Issue #8)
 
 ### Changes

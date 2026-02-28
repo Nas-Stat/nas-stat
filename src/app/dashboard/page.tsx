@@ -1,0 +1,187 @@
+import Link from 'next/link';
+import { ArrowLeft, LayoutDashboard, Star, MapPin, MessageSquare, TrendingUp, Info } from 'lucide-react';
+import { createClient } from '@/utils/supabase/server';
+
+export default async function DashboardPage() {
+  const supabase = await createClient();
+
+  // Fetch stats and latest data
+  const [reportsResponse, topicsResponse] = await Promise.all([
+    supabase
+      .from('reports')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(5),
+    supabase
+      .from('topics')
+      .select('*, comments(id)')
+      .order('created_at', { ascending: false })
+      .limit(5),
+  ]);
+
+  const latestReports = reportsResponse.data || [];
+  const popularTopics = topicsResponse.data || [];
+
+  // Basic aggregation for stats
+  // In a real app, this should be a more efficient aggregate query or a database view
+  const { data: allReports } = await supabase.from('reports').select('rating, status');
+  
+  const totalReports = allReports?.length || 0;
+  const avgRating = totalReports > 0 
+    ? (allReports!.reduce((acc, curr) => acc + curr.rating, 0) / totalReports).toFixed(1)
+    : '0.0';
+  
+  const resolvedCount = allReports?.filter(r => r.status === 'resolved').length || 0;
+
+  return (
+    <div className="flex min-h-screen flex-col bg-zinc-50 dark:bg-black">
+      {/* Header */}
+      <header className="sticky top-0 z-10 flex h-16 items-center border-b border-zinc-200 bg-white px-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <Link
+          href="/"
+          className="mr-4 flex items-center gap-1 text-sm font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Zpět
+        </Link>
+        <LayoutDashboard className="mr-2 h-5 w-5 text-blue-600" />
+        <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
+          Pulse Dashboard
+        </h1>
+      </header>
+
+      {/* Main content */}
+      <main className="flex-1 overflow-y-auto px-6 py-8">
+        <div className="mx-auto max-w-5xl space-y-8">
+          
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+              <div className="flex items-center gap-2 text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                <MapPin className="h-4 w-4" />
+                Celkem hlášení
+              </div>
+              <div className="mt-2 text-3xl font-bold text-zinc-900 dark:text-zinc-100">
+                {totalReports}
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+              <div className="flex items-center gap-2 text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                <Star className="h-4 w-4 text-yellow-500" />
+                Průměrná spokojenost
+              </div>
+              <div className="mt-2 text-3xl font-bold text-zinc-900 dark:text-zinc-100">
+                {avgRating} / 5
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+              <div className="flex items-center gap-2 text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                <TrendingUp className="h-4 w-4 text-green-500" />
+                Vyřešených podnětů
+              </div>
+              <div className="mt-2 text-3xl font-bold text-zinc-900 dark:text-zinc-100">
+                {resolvedCount}
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+              <div className="flex items-center gap-2 text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                <Info className="h-4 w-4 text-blue-500" />
+                Status systému
+              </div>
+              <div className="mt-2 text-lg font-bold text-green-600">
+                Aktivní
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+            {/* Latest Reports Section */}
+            <section className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+                  Nejnovější hlášení
+                </h2>
+                <Link href="/reports" className="text-xs font-medium text-blue-600 hover:underline">
+                  Zobrazit vše
+                </Link>
+              </div>
+              <div className="divide-y divide-zinc-200 rounded-xl border border-zinc-200 bg-white shadow-sm dark:divide-zinc-800 dark:border-zinc-800 dark:bg-zinc-900">
+                {latestReports.length === 0 ? (
+                  <div className="p-6 text-center text-sm text-zinc-500">Zatím žádná hlášení.</div>
+                ) : (
+                  latestReports.map((report) => (
+                    <div key={report.id} className="p-4">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                          {report.title}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`h-3 w-3 ${
+                                i < report.rating ? 'fill-yellow-500 text-yellow-500' : 'text-zinc-300 dark:text-zinc-700'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <div className="mt-1 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
+                        <span>{report.category}</span>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wider ${
+                          report.status === 'resolved' ? 'bg-green-100 text-green-700' : 
+                          report.status === 'in_review' ? 'bg-blue-100 text-blue-700' : 
+                          'bg-zinc-100 text-zinc-700'
+                        }`}>
+                          {report.status}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
+
+            {/* Popular Topics Section */}
+            <section className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+                  Populární témata
+                </h2>
+                <Link href="/topics" className="text-xs font-medium text-blue-600 hover:underline">
+                  Zobrazit feed
+                </Link>
+              </div>
+              <div className="divide-y divide-zinc-200 rounded-xl border border-zinc-200 bg-white shadow-sm dark:divide-zinc-800 dark:border-zinc-800 dark:bg-zinc-900">
+                {popularTopics.length === 0 ? (
+                  <div className="p-6 text-center text-sm text-zinc-500">Zatím žádná témata.</div>
+                ) : (
+                  popularTopics.map((topic) => (
+                    <div key={topic.id} className="p-4">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-zinc-900 dark:text-zinc-100 line-clamp-1">
+                          {topic.title}
+                        </span>
+                        <div className="flex items-center gap-1 text-xs text-zinc-500">
+                          <MessageSquare className="h-3 w-3" />
+                          {topic.comments?.length || 0}
+                        </div>
+                      </div>
+                      <div className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                        Založeno: {new Date(topic.created_at).toLocaleDateString('cs-CZ')}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
+          </div>
+
+        </div>
+      </main>
+    </div>
+  );
+}
