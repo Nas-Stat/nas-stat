@@ -1,5 +1,20 @@
 # Developer Log
 
+## 2026-02-28 - Fix README.md and .gitignore (Story 1.1.3 - Issue #3)
+
+### Changes
+
+- Removed duplicate 'Running with Docker' sections from `README.md`.
+- Added placeholder sections for future production and staging documentation to `README.md`.
+- Cleaned up generic Next.js boilerplate text in `README.md`.
+- Modified `.gitignore` to allow tracking of `.env.example`.
+- Verified all existing tests pass.
+
+### Verification
+
+- Ran `npm test`: PASS (7 tests)
+- Manual inspection of `README.md` and `.gitignore`.
+
 ## 2026-02-28 - Setup Supabase Schema and Configuration
 
 ### Changes
