@@ -118,17 +118,35 @@ const Map: React.FC<MapProps> = ({
     // Add new markers for reports
     reports.forEach((report) => {
       const color = report.rating && report.rating <= 2 ? '#ef4444' : '#3b82f6';
+      const statusColors: Record<string, string> = {
+        pending: 'bg-zinc-100 text-zinc-700',
+        in_review: 'bg-blue-100 text-blue-700',
+        resolved: 'bg-green-100 text-green-700',
+        rejected: 'bg-red-100 text-red-700',
+      };
+      const statusLabels: Record<string, string> = {
+        pending: 'Čeká',
+        in_review: 'V řešení',
+        resolved: 'Vyřešeno',
+        rejected: 'Zamítnuto',
+      };
+
       const marker = new maplibregl.Marker({ color })
         .setLngLat([report.location.lng, report.location.lat])
         .addTo(mapRef.current!);
 
       const popup = new maplibregl.Popup({ offset: 25 }).setHTML(`
-        <div class="p-2">
-          <h3 class="font-bold">${report.title}</h3>
-          <p class="text-sm">${report.description || ''}</p>
-          <div class="mt-1 flex items-center">
-            <span class="text-xs font-medium px-2 py-0.5 rounded bg-zinc-100">${report.category || 'Bez kategorie'}</span>
-            <span class="ml-2 text-xs text-zinc-500">${'★'.repeat(report.rating || 0)}</span>
+        <div class="p-2 min-w-[200px]">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${statusColors[report.status] || statusColors.pending}">
+              ${statusLabels[report.status] || report.status}
+            </span>
+            <span class="text-xs text-zinc-500">${'★'.repeat(report.rating || 0)}</span>
+          </div>
+          <h3 class="font-bold text-zinc-900">${report.title}</h3>
+          <p class="text-sm text-zinc-600 mt-1">${report.description || ''}</p>
+          <div class="mt-2 pt-2 border-t border-zinc-100">
+            <span class="text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-100 text-zinc-600">${report.category || 'Bez kategorie'}</span>
           </div>
         </div>
       `);

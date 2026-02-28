@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ArrowLeft, LayoutDashboard, Star, MapPin, MessageSquare, TrendingUp, Info } from 'lucide-react';
 import { createClient } from '@/utils/supabase/server';
+import Map from '@/components/Map';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -23,8 +24,7 @@ export default async function DashboardPage() {
   const popularTopics = topicsResponse.data || [];
 
   // Basic aggregation for stats
-  // In a real app, this should be a more efficient aggregate query or a database view
-  const { data: allReports } = await supabase.from('reports').select('rating, status');
+  const { data: allReports } = await supabase.from('reports').select('id, rating, status, location');
   
   const totalReports = allReports?.length || 0;
   const avgRating = totalReports > 0 
@@ -32,6 +32,12 @@ export default async function DashboardPage() {
     : '0.0';
   
   const resolvedCount = allReports?.filter(r => r.status === 'resolved').length || 0;
+
+  // Format reports for the map
+  const mapReports = (allReports || []).map(r => ({
+    ...r,
+    location: r.location as unknown as { lng: number, lat: number }
+  }));
 
   return (
     <div className="flex min-h-screen flex-col bg-zinc-50 dark:bg-black">
@@ -96,6 +102,19 @@ export default async function DashboardPage() {
               </div>
             </div>
           </div>
+
+          {/* Map Preview (Pulse) */}
+          <section className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+                Geografický pulz
+              </h2>
+              <span className="text-xs text-zinc-500">Vizualizace hlášení v reálném čase</span>
+            </div>
+            <div className="h-80 overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+              <Map reports={mapReports as any} readOnly zoom={10} />
+            </div>
+          </section>
 
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
             {/* Latest Reports Section */}

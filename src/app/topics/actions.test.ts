@@ -145,6 +145,18 @@ describe('Topic Actions', () => {
       await expect(addComment(formData)).rejects.toThrow('Pro přidání komentáře se musíte přihlásit.');
     });
 
+    it('returns error for invalid data (too short)', async () => {
+      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'user-123' } } });
+      const topicId = '123e4567-e89b-12d3-a456-426614174000';
+      const formData = new FormData();
+      formData.append('topic_id', topicId);
+      formData.append('content', 'A'); // Too short
+      
+      const result = await addComment(formData);
+      expect(result).toHaveProperty('error');
+      expect(result.error).toBe('Komentář je příliš krátký.');
+    });
+
     it('successfully adds a comment', async () => {
       mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'user-123' } } });
       const topicId = '123e4567-e89b-12d3-a456-426614174000';

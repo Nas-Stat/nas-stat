@@ -1,5 +1,20 @@
 # Developer Log
 
+## 2026-02-28 - Final Polish for Issue #9 and MVP visualization
+
+### Changes
+
+- Added 'Geografický pulz' (Map preview) to the Dashboard to fulfill MVP requirement for heatmap/pulse visualization.
+- Updated Map component popup to include report status with color-coded badges (pending, in_review, resolved, rejected).
+- Added validation test for 'addComment' server action in `src/app/topics/actions.test.ts` to ensure robust error handling.
+- Improved Dashboard tests in `src/app/dashboard/page.test.tsx` to verify map rendering and data fetching.
+- Verified that all 57 tests pass across the entire codebase.
+
+### Verification
+
+- Ran `npm test`: PASS (57 tests).
+- Verified map visualization on the dashboard and status badges in map popups.
+
 ## 2026-02-28 - Refactor and Polish Topics Feed (Issue #9)
 
 ### Changes

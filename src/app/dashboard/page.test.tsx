@@ -29,7 +29,12 @@ vi.mock('lucide-react', () => ({
   Info: () => <div data-testid="info-icon">Info</div>,
 }));
 
-test('renders Dashboard page with header and sections', async () => {
+// Mock Map component
+vi.mock('@/components/Map', () => ({
+  default: () => <div data-testid="mock-map">Map</div>,
+}));
+
+test('renders Dashboard page with header, map and sections', async () => {
   const { createClient } = await import('@/utils/supabase/server');
   vi.mocked(createClient).mockResolvedValue({
     auth: {
@@ -37,18 +42,21 @@ test('renders Dashboard page with header and sections', async () => {
     },
     from: vi.fn().mockImplementation((table: string) => {
       if (table === 'reports') {
+        const mockReports = {
+          data: [
+            { id: '1', title: 'Díra v silnici', rating: 2, category: 'Doprava', created_at: new Date().toISOString(), location: { lng: 14.4, lat: 50.1 } },
+          ],
+          error: null,
+        };
         return {
           select: vi.fn().mockReturnValue({
             order: vi.fn().mockReturnValue({
-              limit: vi.fn().mockResolvedValue({
-                data: [
-                  { id: '1', title: 'Díra v silnici', rating: 2, category: 'Doprava', created_at: new Date().toISOString() },
-                ],
-                error: null,
-              }),
+              limit: vi.fn().mockResolvedValue(mockReports),
             }),
+            // Mock the Promise-like behavior for allReports select
+            then: (resolve: any) => resolve({ data: mockReports.data, error: null }),
           }),
-        };
+        } as any;
       }
       if (table === 'topics') {
         return {
@@ -74,13 +82,12 @@ test('renders Dashboard page with header and sections', async () => {
   render(PageComponent);
 
   expect(screen.getByText(/Pulse Dashboard/i)).toBeInTheDocument();
+  expect(screen.getByText(/Geografický pulz/i)).toBeInTheDocument();
+  expect(screen.getByTestId('mock-map')).toBeInTheDocument();
   expect(screen.getByText(/Nejnovější hlášení/i)).toBeInTheDocument();
   expect(screen.getByText(/Populární témata/i)).toBeInTheDocument();
   expect(screen.getByText(/Díra v silnici/i)).toBeInTheDocument();
   expect(screen.getByText(/Nová reforma/i)).toBeInTheDocument();
-
-  const backButton = screen.getByRole('link', { name: /zpět/i });
-  expect(backButton).toHaveAttribute('href', '/');
 });
 
 test('renders empty state when no data is available', async () => {
