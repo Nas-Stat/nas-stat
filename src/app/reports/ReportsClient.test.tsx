@@ -73,4 +73,27 @@ describe('ReportsClient', () => {
     fireEvent.click(screen.getByTestId('x-icon'));
     expect(screen.queryByText(/Nový podnět/i)).not.toBeInTheDocument();
   });
+
+  test('submits form successfully', async () => {
+    const { createReport } = await import('./actions');
+    render(<ReportsClient initialReports={[]} user={mockUser} />);
+    
+    // Open form
+    fireEvent.click(screen.getByTestId('mocked-map'));
+    
+    // Fill form
+    fireEvent.change(screen.getByLabelText(/Název podnětu/i), { target: { value: 'Test report', name: 'title' } });
+    fireEvent.change(screen.getByLabelText(/Popis/i), { target: { value: 'Test description', name: 'description' } });
+    
+    // Submit
+    const form = screen.getByText(/Odeslat hlášení/i).closest('form')!;
+    fireEvent.submit(form);
+
+    expect(createReport).toHaveBeenCalled();
+    const formData = vi.mocked(createReport).mock.calls[0][0];
+    expect(formData.get('title')).toBe('Test report');
+    expect(formData.get('description')).toBe('Test description');
+    expect(formData.get('lng')).toBe('14.4378');
+    expect(formData.get('lat')).toBe('50.0755');
+  });
 });

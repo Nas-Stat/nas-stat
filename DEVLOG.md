@@ -1,5 +1,20 @@
 # Developer Log
 
+## 2026-02-28 - Finalize Report Creation and Pinning (Issue #7 - Story 1.3.2)
+
+### Changes
+
+- Verified and polished the implementation of report creation and map pinning.
+- Added comprehensive unit tests for `createReport` server action in `src/app/reports/actions.test.ts`.
+- Expanded `ReportsClient.test.tsx` and `page.test.tsx` to include form submission and PostGIS data transformation verification.
+- Confirmed that "Story 1.3.2: Vkládání špendlíků" is fully implemented and tested.
+- Note: Previous logs mis-identified some stories with issue numbers; this entry correctly maps Story 1.3.2 to GitHub Issue #7.
+
+### Verification
+
+- Ran `npm test src/app/reports/`: PASS (10 tests).
+- Verified validation logic and PostGIS `POINT` conversion.
+
 ## 2026-02-28 - Performance Polish and Refactoring (Issue #6 final)
 
 ### Changes
