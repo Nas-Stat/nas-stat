@@ -110,6 +110,48 @@ test('renders empty state when no data is available', async () => {
 
   expect(screen.getByText(/Zatím žádná hlášení/i)).toBeInTheDocument();
   expect(screen.getByText(/Zatím žádná témata/i)).toBeInTheDocument();
-  expect(screen.getByText(/0 /)).toBeInTheDocument(); // Total reports count
+  expect(screen.getAllByText('0').length).toBeGreaterThanOrEqual(2); // Total reports and Resolved count
   expect(screen.getByText(/0.0 \/ 5/)).toBeInTheDocument(); // Avg rating
+});
+
+test('calculates and displays correct statistics', async () => {
+  const { createClient } = await import('@/utils/supabase/server');
+  vi.mocked(createClient).mockResolvedValue({
+    auth: {
+      getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
+    },
+    from: vi.fn().mockImplementation((table: string) => {
+      if (table === 'reports') {
+        const mockReports = [
+          { id: '1', title: 'R1', rating: 5, category: 'C1', created_at: '2026-01-01', location: { type: 'Point', coordinates: [14.4, 50.1] }, status: 'resolved' },
+          { id: '2', title: 'R2', rating: 1, category: 'C2', created_at: '2026-01-02', location: { type: 'Point', coordinates: [14.4, 50.1] }, status: 'pending' },
+        ];
+        return {
+          select: vi.fn().mockReturnValue({
+            order: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue({ data: mockReports, error: null }),
+            }),
+            then: (resolve: (value: { data: typeof mockReports; error: null }) => void) => resolve({ data: mockReports, error: null }),
+          }),
+        } as unknown;
+      }
+      return {
+        select: vi.fn().mockReturnValue({
+          order: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+          }),
+        }),
+      };
+    }),
+  } as unknown as ReturnType<typeof createClient>);
+
+  const PageComponent = await Page();
+  render(PageComponent);
+
+  // Average of 5 and 1 is 3.0
+  expect(screen.getByText(/3.0 \/ 5/)).toBeInTheDocument();
+  // Total reports = 2
+  expect(screen.getByText('2')).toBeInTheDocument();
+  // Resolved count = 1
+  expect(screen.getByText('1')).toBeInTheDocument();
 });

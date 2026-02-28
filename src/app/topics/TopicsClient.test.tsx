@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { expect, test, vi, beforeEach, describe } from 'vitest';
 import TopicsClient from './TopicsClient';
 import { User } from '@supabase/supabase-js';
@@ -154,6 +154,41 @@ describe('TopicsClient', () => {
     await waitFor(() => {
       expect(createTopic).toHaveBeenCalled();
       expect(mockRefresh).toHaveBeenCalled();
+    });
+  });
+
+  test('optimistically updates vote count when voting up', async () => {
+    // Start with 1 upvote from user-123
+    render(<TopicsClient initialTopics={mockTopics} user={mockUser} />);
+    
+    // Upvote is currently 1. Clicking it should remove it (toggle).
+    const upButton = screen.getAllByTestId('thumb-up')[0].closest('button')!;
+    expect(within(upButton).getByText('1')).toBeInTheDocument();
+    
+    fireEvent.click(upButton);
+    
+    // Should immediately show 0 (optimistic)
+    expect(within(upButton).getByText('0')).toBeInTheDocument();
+    
+    await waitFor(() => {
+      expect(voteTopic).toHaveBeenCalledWith('topic-1', 'up');
+    });
+  });
+
+  test('optimistically adds a comment to the list', async () => {
+    render(<TopicsClient initialTopics={mockTopics} user={mockUser} />);
+    fireEvent.click(screen.getByTestId('message-square'));
+    
+    const input = screen.getByPlaceholderText('Napište komentář...') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'My Optimistic Comment', name: 'content' } });
+    
+    fireEvent.submit(input.closest('form')!);
+    
+    // Should immediately show the comment
+    expect(screen.getByText('My Optimistic Comment')).toBeInTheDocument();
+    
+    await waitFor(() => {
+      expect(addComment).toHaveBeenCalled();
     });
   });
 });
