@@ -44,7 +44,7 @@ test('renders Dashboard page with header, map and sections', async () => {
       if (table === 'reports') {
         const mockReports = {
           data: [
-            { id: '1', title: 'Díra v silnici', rating: 2, category: 'Doprava', created_at: new Date().toISOString(), location: { lng: 14.4, lat: 50.1 } },
+            { id: '1', title: 'Díra v silnici', rating: 2, category: 'Doprava', created_at: new Date().toISOString(), location: { type: 'Point', coordinates: [14.4, 50.1] } },
           ],
           error: null,
         };

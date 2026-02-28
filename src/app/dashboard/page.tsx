@@ -1,7 +1,12 @@
 import Link from 'next/link';
 import { ArrowLeft, LayoutDashboard, Star, MapPin, MessageSquare, TrendingUp, Info } from 'lucide-react';
 import { createClient } from '@/utils/supabase/server';
-import Map from '@/components/Map';
+import Map, { Report } from '@/components/Map';
+
+interface GeoJsonPoint {
+  type: string;
+  coordinates: [number, number];
+}
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -24,20 +29,31 @@ export default async function DashboardPage() {
   const popularTopics = topicsResponse.data || [];
 
   // Basic aggregation for stats
-  const { data: allReports } = await supabase.from('reports').select('id, rating, status, location');
+  const { data: allReportsData } = await supabase.from('reports').select('id, title, description, location, rating, category, status');
   
-  const totalReports = allReports?.length || 0;
+  const totalReports = allReportsData?.length || 0;
   const avgRating = totalReports > 0 
-    ? (allReports!.reduce((acc, curr) => acc + curr.rating, 0) / totalReports).toFixed(1)
+    ? (allReportsData!.reduce((acc, curr) => acc + (curr.rating || 0), 0) / totalReports).toFixed(1)
     : '0.0';
   
-  const resolvedCount = allReports?.filter(r => r.status === 'resolved').length || 0;
+  const resolvedCount = allReportsData?.filter(r => r.status === 'resolved').length || 0;
 
   // Format reports for the map
-  const mapReports = (allReports || []).map(r => ({
-    ...r,
-    location: r.location as unknown as { lng: number, lat: number }
-  }));
+  const mapReports: Report[] = (allReportsData || []).map(r => {
+    const geoJson = r.location as unknown as GeoJsonPoint;
+    return {
+      id: r.id,
+      title: r.title,
+      description: r.description,
+      rating: r.rating,
+      category: r.category,
+      status: r.status,
+      location: {
+        lng: geoJson.coordinates[0],
+        lat: geoJson.coordinates[1]
+      }
+    };
+  });
 
   return (
     <div className="flex min-h-screen flex-col bg-zinc-50 dark:bg-black">
@@ -112,7 +128,7 @@ export default async function DashboardPage() {
               <span className="text-xs text-zinc-500">Vizualizace hlášení v reálném čase</span>
             </div>
             <div className="h-80 overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-              <Map reports={mapReports as Report[]} readOnly zoom={10} />
+              <Map reports={mapReports} readOnly zoom={10} />
             </div>
           </section>
 

@@ -1,5 +1,20 @@
 # Developer Log
 
+## 2026-02-28 - Fix Dashboard type error and PostGIS location mapping
+
+### Changes
+
+- Fixed build failure in `src/app/dashboard/page.tsx` where `Report` was used without import and location mapping was incomplete.
+- Properly imported `Report` type and implemented `GeoJsonPoint` interface for robust PostGIS data transformation.
+- Updated `DashboardPage` to fetch all required report fields (title, description, category) needed for the map markers.
+- Updated `src/app/dashboard/page.test.tsx` with corrected mock data to match the GeoJSON format.
+- Verified successful production build with `npm run build`.
+
+### Verification
+
+- Ran `npm run build`: SUCCESS.
+- Ran `npm test src/app/dashboard/page.test.tsx`: PASS.
+
 ## 2026-02-28 - Clean up 'any' types and finalize Issue #9
 
 ### Changes
