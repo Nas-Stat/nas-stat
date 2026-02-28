@@ -18,16 +18,35 @@ test('Supabase migration includes necessary tables', () => {
   expect(content).toContain('CREATE EXTENSION IF NOT EXISTS postgis');
 });
 
-test('Supabase migration includes RLS policies', () => {
+test('Supabase migration includes robust RLS policies for all tables', () => {
   const migrationPath = join(process.cwd(), 'supabase/migrations/20260228000000_initial_schema.sql');
   const content = readFileSync(migrationPath, 'utf8');
   
-  expect(content).toContain('ENABLE ROW LEVEL SECURITY');
-  expect(content).toContain('CREATE POLICY');
+  const tables = ['profiles', 'topics', 'reports', 'votes'];
   
-  // Verify specific security fix for topics
-  expect(content).toContain("CREATE POLICY \"Authenticated users can create topics.\" ON public.topics");
-  expect(content).toContain("FOR INSERT WITH CHECK (auth.role() = 'authenticated' AND auth.uid() = created_by)");
+  tables.forEach(table => {
+    // Check if RLS is enabled
+    const rlsRegex = new RegExp(`ALTER TABLE public\\.${table} ENABLE ROW LEVEL SECURITY`, 'i');
+    expect(content).toMatch(rlsRegex);
+    
+    // Check for SELECT policy (everyone can view)
+    const selectPolicyRegex = new RegExp(`CREATE POLICY.*ON public\\.${table}\\s+FOR SELECT USING \\(true\\)`, 'i');
+    expect(content).toMatch(selectPolicyRegex);
+    
+    // Check for INSERT policy (authenticated and owner)
+    const insertPolicyRegex = new RegExp(`CREATE POLICY.*ON public\\.${table}\\s+FOR INSERT WITH CHECK \\(auth\\.role\\(\\) = 'authenticated'`, 'i');
+    expect(content).toMatch(insertPolicyRegex);
+    
+    // Ownership column depends on the table
+    const ownerColumn = table === 'profiles' ? 'id' : (table === 'reports' || table === 'votes' ? 'profile_id' : 'created_by');
+    const ownershipRegex = new RegExp(`auth\\.uid\\(\\) = ${ownerColumn}`, 'i');
+    expect(content).toMatch(ownershipRegex);
+  });
+
+  // Specifically verify the security fix for topics (INSERT, UPDATE, DELETE)
+  expect(content).toMatch(/CREATE POLICY.*ON public\.topics\s+FOR INSERT WITH CHECK \(auth\.role\(\) = 'authenticated' AND auth\.uid\(\) = created_by\)/i);
+  expect(content).toMatch(/CREATE POLICY.*ON public\.topics\s+FOR UPDATE USING \(auth\.uid\(\) = created_by\)/i);
+  expect(content).toMatch(/CREATE POLICY.*ON public\.topics\s+FOR DELETE USING \(auth\.uid\(\) = created_by\)/i);
 });
 
 test('Supabase config file exists', () => {

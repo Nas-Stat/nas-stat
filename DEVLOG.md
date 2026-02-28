@@ -1,5 +1,22 @@
 # Developer Log
 
+## 2026-02-28 - Framework Upgrade and RLS Policy Hardening
+
+### Changes
+
+- Renamed `src/middleware.ts` to `src/proxy.ts` to address Next.js 16 deprecation warning.
+- Renamed `src/utils/supabase/middleware.ts` to `src/utils/supabase/proxy.ts` for consistency.
+- Updated the `middleware` function to `proxy` and all related imports.
+- Replaced brittle string-matching tests in `supabase/schema.test.ts` with robust regex-based RLS verification for all tables.
+- Added `auth.role() = 'authenticated'` check to the `profiles` table `INSERT` policy for consistency.
+- Updated `QUALITY_REPORT.md` to reflect the fixed status [🟢 GOOD NUT].
+
+### Verification
+
+- Ran `npm run build`: SUCCESS (Clean build, no warnings).
+- Ran `npm test`: PASS (14 tests).
+- Verified RLS policies in `initial_schema.sql`.
+
 ## 2026-02-28 - Security Fix for topics Table RLS (Finalizing Issue #4)
 
 ### Changes
