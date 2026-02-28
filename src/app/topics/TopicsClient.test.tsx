@@ -191,4 +191,26 @@ describe('TopicsClient', () => {
       expect(addComment).toHaveBeenCalled();
     });
   });
+
+  test('optimistically switches vote from up to down', async () => {
+    // Start with 1 upvote from user-123
+    render(<TopicsClient initialTopics={mockTopics} user={mockUser} />);
+    
+    const upButton = screen.getAllByTestId('thumb-up')[0].closest('button')!;
+    const downButton = screen.getAllByTestId('thumb-down')[0].closest('button')!;
+    
+    expect(within(upButton).getByText('1')).toBeInTheDocument();
+    expect(within(downButton).getByText('1')).toBeInTheDocument(); // user-456 has downvoted
+    
+    // Switch to downvote
+    fireEvent.click(downButton);
+    
+    // Upvote should become 0, Downvote should become 2
+    expect(within(upButton).getByText('0')).toBeInTheDocument();
+    expect(within(downButton).getByText('2')).toBeInTheDocument();
+    
+    await waitFor(() => {
+      expect(voteTopic).toHaveBeenCalledWith('topic-1', 'down');
+    });
+  });
 });
