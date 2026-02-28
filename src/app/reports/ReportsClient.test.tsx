@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import ReportsClient from './ReportsClient';
-import { expect, test, vi, beforeEach } from 'vitest';
+import { expect, test, vi, beforeEach, describe } from 'vitest';
 import { User } from '@supabase/supabase-js';
 
 // Mock Map component
@@ -31,7 +31,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 describe('ReportsClient', () => {
-  const mockUser = { id: 'user-123', email: 'test@example.com' } as unknown as User;
+  const mockUser = { id: 'user-123', email: 'test@example.com' } as Partial<User> as User;
 
   beforeEach(() => {
     vi.clearAllMocks();

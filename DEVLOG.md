@@ -1,5 +1,15 @@
 # Developer Log
 
+## 2026-02-28 - Finalize Issue #6 (Fix regression and harden types)
+
+### Changes
+
+- Fixed TypeScript compilation error TS2582 in `ReportsClient.test.tsx` by importing `describe` from `vitest`.
+- Introduced `GeoJsonPoint` interface in `src/app/reports/page.tsx` for cleaner PostGIS data casting.
+- Improved mock user typing in `ReportsClient.test.tsx` using `Partial<User>`.
+- Verified 100% test pass rate (30 tests) and clean TypeScript check (`npx tsc --noEmit`).
+- Updated `QUALITY_REPORT.md` to [🟢 GOOD NUT].
+
 ## 2026-02-28 - Refactor and Polish Reports (Story 1.3.4 - Issue #6 cleanup)
 
 ### Changes

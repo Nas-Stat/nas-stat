@@ -4,6 +4,11 @@ import ReportsClient from './ReportsClient';
 import { createClient } from '@/utils/supabase/server';
 import { Report } from '@/components/Map';
 
+interface GeoJsonPoint {
+  type: string;
+  coordinates: [number, number];
+}
+
 export default async function ReportsPage() {
   const supabase = await createClient();
 
@@ -26,10 +31,7 @@ export default async function ReportsPage() {
   // Transform reports to match our Report interface
   const reports: Report[] = (reportsData || []).map((report) => {
     // PostgREST returns location as a GeoJSON object for GEOGRAPHY types
-    const location = report.location as unknown as {
-      type: string;
-      coordinates: [number, number];
-    };
+    const location = report.location as unknown as GeoJsonPoint;
     return {
       id: report.id,
       title: report.title,
