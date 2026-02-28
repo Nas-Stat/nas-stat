@@ -1,0 +1,28 @@
+project_id = "nas-stat"
+
+[api]
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://nas-stat.cz"]
+jwt_expiry = 3600
+enable_signup = true
+
+[storage]
+enabled = true
+# 100MB
+max_file_size = "100MiB"
+
+[inbucket]
+enabled = true
+port = 54324
+smtp_port = 54325

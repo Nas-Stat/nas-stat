@@ -33,13 +33,22 @@ To start the development server with hot-reloading:
 docker-compose up --build
 ```
 
-The application will be available at [http://localhost:3000](http://localhost:3000).
+## Supabase Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+This project uses Supabase for database and authentication. To set up your local environment:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Copy the `.env.example` file to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+2. Fill in the values for `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`.
+3. If you have the Supabase CLI installed, you can start the local development stack:
+   ```bash
+   supabase start
+   ```
+4. The database schema is defined in `supabase/migrations/`.
 
-## Learn More
+## Running with Docker
 
 To learn more about Next.js, take a look at the following resources:
 

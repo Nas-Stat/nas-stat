@@ -22,10 +22,10 @@ Tento dokument slouží jako detailní architektonický plán pro vývojový tý
 
 ### Epic 1.2: Databáze a Autentizace (Supabase)
 
-- [ ] **Story 1.2.1: Supabase Projekt & Schéma**
-  - [ ] Založit Supabase projekt.
-  - [ ] Vytvořit základní SQL tabulky: `users`, `reports` (s podporou PostGIS pro lokaci - lat, lng), `topics`, `votes`.
-  - [ ] Nastavit Row Level Security (RLS), aby data mohl číst každý, ale zapisovat jen přihlášený uživatel.
+- [x] **Story 1.2.1: Supabase Projekt & Schéma**
+  - [x] Založit Supabase projekt.
+  - [x] Vytvořit základní SQL tabulky: `users`, `reports` (s podporou PostGIS pro lokaci - lat, lng), `topics`, `votes`.
+  - [x] Nastavit Row Level Security (RLS), aby data mohl číst každý, ale zapisovat jen přihlášený uživatel.
 - [ ] **Story 1.2.2: Autentizace uživatelů**
   - [ ] Integrovat `@supabase/ssr` pro Next.js.
   - [ ] Implementovat přihlášení pomocí Emailu/Hesla.
