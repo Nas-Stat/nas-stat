@@ -24,6 +24,10 @@ test('Supabase migration includes RLS policies', () => {
   
   expect(content).toContain('ENABLE ROW LEVEL SECURITY');
   expect(content).toContain('CREATE POLICY');
+  
+  // Verify specific security fix for topics
+  expect(content).toContain("CREATE POLICY \"Authenticated users can create topics.\" ON public.topics");
+  expect(content).toContain("FOR INSERT WITH CHECK (auth.role() = 'authenticated' AND auth.uid() = created_by)");
 });
 
 test('Supabase config file exists', () => {

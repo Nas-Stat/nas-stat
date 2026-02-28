@@ -1,5 +1,21 @@
 # Developer Log
 
+## 2026-02-28 - Security Fix for topics Table RLS (Finalizing Issue #4)
+
+### Changes
+
+- Fixed security vulnerability in `topics` RLS policy where `created_by` was not being verified.
+- Added `UPDATE` and `DELETE` policies for the `topics` table to allow only creators to modify or delete their own content.
+- Resolved linter warning for unused variable `options` in `src/utils/supabase/middleware.ts`.
+- Updated `supabase/schema.test.ts` to include more robust checks for the new security policies.
+- Updated `QUALITY_REPORT.md` to reflect the fixed status [🟢 GOOD NUT].
+- Fully resolved GitHub issue #4.
+
+### Verification
+
+- Ran `npm test`: PASS (14 tests)
+- Manual inspection of SQL migration and middleware changes.
+
 ## 2026-02-28 - Implement Supabase Authentication (Story 1.2.2 - Issue #4)
 
 ### Changes

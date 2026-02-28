@@ -41,7 +41,13 @@ CREATE POLICY "Topics are viewable by everyone." ON public.topics
   FOR SELECT USING (true);
 
 CREATE POLICY "Authenticated users can create topics." ON public.topics
-  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+  FOR INSERT WITH CHECK (auth.role() = 'authenticated' AND auth.uid() = created_by);
+
+CREATE POLICY "Users can update their own topics." ON public.topics
+  FOR UPDATE USING (auth.uid() = created_by);
+
+CREATE POLICY "Users can delete their own topics." ON public.topics
+  FOR DELETE USING (auth.uid() = created_by);
 
 -- Create a table for geographic reports
 CREATE TABLE public.reports (
