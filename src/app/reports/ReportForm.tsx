@@ -1,0 +1,122 @@
+'use client';
+
+import React from 'react';
+import { Star, X } from 'lucide-react';
+
+interface ReportFormProps {
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
+  onClose: () => void;
+  isSubmitting: boolean;
+  categories: string[];
+}
+
+export default function ReportForm({
+  onSubmit,
+  onClose,
+  isSubmitting,
+  categories,
+}: ReportFormProps) {
+  return (
+    <div className="absolute inset-y-0 right-0 w-full max-w-md bg-white p-6 shadow-2xl dark:bg-zinc-900 sm:m-4 sm:rounded-2xl sm:inset-y-auto sm:top-4 sm:bottom-4">
+      <div className="mb-6 flex items-center justify-between">
+        <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
+          Nový podnět
+        </h2>
+        <button
+          onClick={onClose}
+          className="rounded-full p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+          type="button"
+        >
+          <X className="h-6 w-6 text-zinc-500" />
+        </button>
+      </div>
+
+      <form onSubmit={onSubmit} className="space-y-4">
+        <div>
+          <label
+            htmlFor="title"
+            className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+          >
+            Název podnětu *
+          </label>
+          <input
+            type="text"
+            id="title"
+            name="title"
+            required
+            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800"
+            placeholder="Např. Rozbitý chodník"
+          />
+        </div>
+
+        <div>
+          <label
+            htmlFor="category"
+            className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+          >
+            Kategorie
+          </label>
+          <select
+            id="category"
+            name="category"
+            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800"
+          >
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            Hodnocení (1-5)
+          </label>
+          <div className="flex gap-2">
+            {[1, 2, 3, 4, 5].map((val) => (
+              <label key={val} className="cursor-pointer">
+                <input
+                  type="radio"
+                  name="rating"
+                  value={val}
+                  defaultChecked={val === 3}
+                  className="peer sr-only"
+                />
+                <Star
+                  className={`h-8 w-8 text-zinc-300 peer-checked:fill-yellow-400 peer-checked:text-yellow-400`}
+                />
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label
+            htmlFor="description"
+            className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+          >
+            Popis
+          </label>
+          <textarea
+            id="description"
+            name="description"
+            rows={4}
+            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800"
+            placeholder="Popište podrobněji, o co jde..."
+          />
+        </div>
+
+        <div className="pt-4">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full rounded-full bg-zinc-900 py-3 font-bold text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+          >
+            {isSubmitting ? 'Ukládám...' : 'Odeslat hlášení'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}

@@ -26,9 +26,12 @@ interface MapProps {
   readOnly?: boolean;
 }
 
+const DEFAULT_CENTER: [number, number] = [14.4378, 50.0755];
+const DEFAULT_ZOOM = 12;
+
 const Map: React.FC<MapProps> = ({
-  center = [14.4378, 50.0755],
-  zoom = 12,
+  center = DEFAULT_CENTER,
+  zoom = DEFAULT_ZOOM,
   reports = [],
   selectedLocation = null,
   onMapClick,
@@ -40,43 +43,69 @@ const Map: React.FC<MapProps> = ({
   const selectionMarkerRef = useRef<maplibregl.Marker | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Initialize map
+  // Store callbacks in refs to avoid re-initializing the map when they change
+  const onMapClickRef = useRef(onMapClick);
+  useEffect(() => {
+    onMapClickRef.current = onMapClick;
+  }, [onMapClick]);
+
+  // Initialize map - only once on mount
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
     const apiKey = process.env.NEXT_PUBLIC_MAPTILER_KEY;
-    if (!apiKey || apiKey === 'your-maptiler-key-here') {
-      console.warn('MapTiler API key is missing. Using default OpenStreetMap style.');
-    }
-
     const style =
       apiKey && apiKey !== 'your-maptiler-key-here'
         ? `https://api.maptiler.com/maps/streets-v2/style.json?key=${apiKey}`
         : 'https://demotiles.maplibre.org/style.json';
 
-    mapRef.current = new maplibregl.Map({
+    const map = new maplibregl.Map({
       container: mapContainerRef.current,
       style: style,
       center: center,
       zoom: zoom,
     });
 
-    mapRef.current.addControl(new maplibregl.NavigationControl(), 'top-right');
+    mapRef.current = map;
 
-    mapRef.current.on('load', () => {
+    map.addControl(new maplibregl.NavigationControl(), 'top-right');
+
+    map.on('load', () => {
       setIsLoaded(true);
     });
 
-    if (!readOnly && onMapClick) {
-      mapRef.current.on('click', (e) => {
-        onMapClick(e.lngLat.lng, e.lngLat.lat);
-      });
-    }
+    map.on('click', (e) => {
+      if (!readOnly && onMapClickRef.current) {
+        onMapClickRef.current(e.lngLat.lng, e.lngLat.lat);
+      }
+    });
 
     return () => {
-      mapRef.current?.remove();
+      map.remove();
+      mapRef.current = null;
     };
-  }, [center, zoom, onMapClick, readOnly]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount
+
+  // Update map view when center or zoom changes
+  useEffect(() => {
+    if (!mapRef.current || !isLoaded) return;
+    
+    // Simple check to avoid unnecessary jumping
+    const currentCenter = mapRef.current.getCenter();
+    const currentZoom = mapRef.current.getZoom();
+    
+    if (
+      Math.abs(currentCenter.lng - center[0]) > 0.0001 ||
+      Math.abs(currentCenter.lat - center[1]) > 0.0001 ||
+      Math.abs(currentZoom - zoom) > 0.1
+    ) {
+      mapRef.current.jumpTo({
+        center: center,
+        zoom: zoom,
+      });
+    }
+  }, [center, zoom, isLoaded]);
 
   // Update report markers
   useEffect(() => {
@@ -124,13 +153,13 @@ const Map: React.FC<MapProps> = ({
         .addTo(mapRef.current!);
 
       selectionMarkerRef.current.on('dragend', () => {
-        if (selectionMarkerRef.current && onMapClick) {
+        if (selectionMarkerRef.current && onMapClickRef.current) {
           const lngLat = selectionMarkerRef.current.getLngLat();
-          onMapClick(lngLat.lng, lngLat.lat);
+          onMapClickRef.current(lngLat.lng, lngLat.lat);
         }
       });
     }
-  }, [selectedLocation, isLoaded, onMapClick]);
+  }, [selectedLocation, isLoaded]);
 
   return (
     <div className="relative h-full w-full overflow-hidden">

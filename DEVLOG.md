@@ -1,14 +1,22 @@
 # Developer Log
 
-## 2026-02-28 - Finalize Issue #6 (Fix regression and harden types)
+## 2026-02-28 - Performance Polish and Refactoring (Issue #6 final)
 
 ### Changes
 
-- Fixed TypeScript compilation error TS2582 in `ReportsClient.test.tsx` by importing `describe` from `vitest`.
-- Introduced `GeoJsonPoint` interface in `src/app/reports/page.tsx` for cleaner PostGIS data casting.
-- Improved mock user typing in `ReportsClient.test.tsx` using `Partial<User>`.
-- Verified 100% test pass rate (30 tests) and clean TypeScript check (`npx tsc --noEmit`).
-- Updated `QUALITY_REPORT.md` to [🟢 GOOD NUT].
+- Resolved critical performance regression in `Map` component where it was re-initialized on every user interaction.
+- Split map `useEffect` logic: one for one-time initialization (on mount) and another for view updates (`center`, `zoom`).
+- Used `useRef` to store latest `onMapClick` callback, removing it from `useEffect` dependency array.
+- Memoized `handleMapClick` and `closeForm` in `ReportsClient` using `useCallback`.
+- Extracted the report submission form into a separate, clean `ReportForm` component in `src/app/reports/ReportForm.tsx`.
+- Added regression tests in `Map.test.tsx` to verify that `map.remove()` is not called unnecessarily when props change.
+- Updated `QUALITY_REPORT.md` back to [🟢 GOOD NUT].
+
+### Verification
+
+- Ran `npm test`: PASS (34 tests).
+- Verified map stability via unit tests.
+- Verified TypeScript compilation: Clean.
 
 ## 2026-02-28 - Refactor and Polish Reports (Story 1.3.4 - Issue #6 cleanup)
 
