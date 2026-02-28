@@ -1,18 +1,22 @@
 'use client';
 
 import React from 'react';
-import { X } from 'lucide-react';
+import { X, AlertCircle } from 'lucide-react';
 
 interface TopicFormProps {
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
   onClose: () => void;
   isSubmitting: boolean;
+  error?: string | null;
+  onErrorClose?: () => void;
 }
 
 export default function TopicForm({
   onSubmit,
   onClose,
   isSubmitting,
+  error,
+  onErrorClose,
 }: TopicFormProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -29,6 +33,22 @@ export default function TopicForm({
             <X className="h-6 w-6 text-zinc-500" />
           </button>
         </div>
+
+        {error && (
+          <div className="mb-4 flex items-center gap-2 rounded-lg bg-red-50 p-4 text-red-700 dark:bg-red-900/20 dark:text-red-400">
+            <AlertCircle className="h-5 w-5 shrink-0" />
+            <p className="text-sm font-medium">{error}</p>
+            {onErrorClose && (
+              <button
+                onClick={onErrorClose}
+                className="ml-auto text-xs underline"
+                type="button"
+              >
+                Zavřít
+              </button>
+            )}
+          </div>
+        )}
 
         <form onSubmit={onSubmit} className="space-y-4">
           <div>

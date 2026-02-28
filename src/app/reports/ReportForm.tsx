@@ -9,6 +9,7 @@ interface ReportFormProps {
   isSubmitting: boolean;
   categories: string[];
   error?: string | null;
+  onErrorClose?: () => void;
 }
 
 export default function ReportForm({
@@ -17,6 +18,7 @@ export default function ReportForm({
   isSubmitting,
   categories,
   error,
+  onErrorClose,
 }: ReportFormProps) {
   return (
     <div className="absolute inset-y-0 right-0 w-full max-w-md bg-white p-6 shadow-2xl dark:bg-zinc-900 sm:m-4 sm:rounded-2xl sm:inset-y-auto sm:top-4 sm:bottom-4">
@@ -34,9 +36,18 @@ export default function ReportForm({
       </div>
 
       {error && (
-        <div className="mb-4 flex items-center gap-2 rounded-lg bg-red-50 p-3 text-red-700 dark:bg-red-900/20 dark:text-red-400">
-          <AlertCircle className="h-4 w-4 shrink-0" />
-          <p className="text-xs font-medium">{error}</p>
+        <div className="mb-4 flex items-center gap-2 rounded-lg bg-red-50 p-4 text-red-700 dark:bg-red-900/20 dark:text-red-400">
+          <AlertCircle className="h-5 w-5 shrink-0" />
+          <p className="text-sm font-medium">{error}</p>
+          {onErrorClose && (
+            <button
+              onClick={onErrorClose}
+              className="ml-auto text-xs underline"
+              type="button"
+            >
+              Zavřít
+            </button>
+          )}
         </div>
       )}
 

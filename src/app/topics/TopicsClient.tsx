@@ -146,7 +146,8 @@ export default function TopicsClient({
     if (!user) return;
 
     setError(null);
-    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
     const content = formData.get('content') as string;
 
     startTransition(async () => {
@@ -156,6 +157,7 @@ export default function TopicsClient({
         if (result?.error) {
           setError(result.error);
         } else {
+          form.reset();
           router.refresh();
         }
       } catch {
@@ -182,7 +184,10 @@ export default function TopicsClient({
         </h2>
         {user ? (
           <button
-            onClick={() => setShowForm(true)}
+            onClick={() => {
+              setError(null);
+              setShowForm(true);
+            }}
             className="flex items-center gap-2 rounded-full bg-zinc-900 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
             <Plus className="h-4 w-4" />
@@ -199,8 +204,13 @@ export default function TopicsClient({
       {showForm && (
         <TopicForm
           onSubmit={handleCreateTopic}
-          onClose={() => setShowForm(false)}
+          onClose={() => {
+            setShowForm(false);
+            setError(null);
+          }}
           isSubmitting={isSubmitting}
+          error={error}
+          onErrorClose={() => setError(null)}
         />
       )}
 

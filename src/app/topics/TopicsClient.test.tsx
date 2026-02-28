@@ -23,12 +23,13 @@ vi.mock('next/navigation', () => ({
 
 // Mock Lucide-react
 vi.mock('lucide-react', () => ({
-  ThumbsUp: () => <div data-testid="thumb-up">Up</div>,
-  ThumbsDown: () => <div data-testid="thumb-down">Down</div>,
+  ThumbsUp: ({ className }: { className?: string }) => <div data-testid="thumb-up" className={className}>Up</div>,
+  ThumbsDown: ({ className }: { className?: string }) => <div data-testid="thumb-down" className={className}>Down</div>,
   MessageSquare: () => <div data-testid="message-square">Msg</div>,
   Plus: () => <div data-testid="plus-icon">Plus</div>,
   Send: () => <div data-testid="send-icon">Send</div>,
   X: () => <div data-testid="x-icon">X</div>,
+  AlertCircle: () => <div data-testid="alert-icon">Alert</div>,
 }));
 
 describe('TopicsClient', () => {
@@ -109,19 +110,34 @@ describe('TopicsClient', () => {
     expect(screen.queryByText('Comment 1')).not.toBeInTheDocument();
   });
 
-  test('submits a comment', async () => {
+  test('submits a comment and resets form', async () => {
     render(<TopicsClient initialTopics={mockTopics} user={mockUser} />);
     fireEvent.click(screen.getByTestId('message-square'));
     
-    const input = screen.getByPlaceholderText('Napište komentář...');
+    const input = screen.getByPlaceholderText('Napište komentář...') as HTMLInputElement;
     fireEvent.change(input, { target: { value: 'New Comment', name: 'content' } });
     
     const form = input.closest('form')!;
+    const resetSpy = vi.spyOn(form, 'reset');
     fireEvent.submit(form);
 
     await waitFor(() => {
       expect(addComment).toHaveBeenCalled();
+      expect(resetSpy).toHaveBeenCalled();
       expect(mockRefresh).toHaveBeenCalled();
+    });
+  });
+
+  test('displays error message when voting fails', async () => {
+    const { voteTopic } = await import('./actions');
+    vi.mocked(voteTopic).mockRejectedValueOnce(new Error('Chyba při hlasování'));
+
+    render(<TopicsClient initialTopics={mockTopics} user={mockUser} />);
+    const upButton = screen.getAllByTestId('thumb-up')[0];
+    fireEvent.click(upButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Chyba při hlasování.')).toBeInTheDocument();
     });
   });
 

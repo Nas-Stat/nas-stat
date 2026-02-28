@@ -1,5 +1,22 @@
 # Developer Log
 
+## 2026-02-28 - Final Error Feedback Polish and UX Fixes (Issue #9)
+
+### Changes
+
+- Unified error feedback across all forms with dismissible alert components.
+- Fixed a bug where errors in `TopicForm` were hidden behind the modal overlay by moving error display inside the form.
+- Fixed a UX bug in the topics feed where the comment input was not reset after a successful submission.
+- Updated `TopicsClient.test.tsx` with a new test for comment form reset and clarified error message matching.
+- Verified that all 59 tests pass across the entire project.
+- Updated `QUALITY_REPORT.md` to reflect the final polished state of Phase 1 MVP.
+
+### Verification
+
+- Ran `npm test`: PASS (59 tests).
+- Ran `npm run lint`: PASS.
+- Verified manual form resets and error dismissals in UI logic.
+
 ## 2026-02-28 - Unified Error Feedback and Final Cleanup (Issue #9)
 
 ### Changes

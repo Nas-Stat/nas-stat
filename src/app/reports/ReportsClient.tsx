@@ -100,6 +100,7 @@ export default function ReportsClient({
           isSubmitting={isSubmitting}
           categories={CATEGORIES}
           error={error}
+          onErrorClose={() => setError(null)}
         />
       )}
     </div>
