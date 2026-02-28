@@ -18,11 +18,11 @@ vi.mock('@/utils/supabase/server', () => ({
 
 // Mock TopicsClient component
 vi.mock('./TopicsClient', () => ({
-  default: ({ initialTopics }: { initialTopics: any[] }) => (
+  default: ({ initialTopics }: { initialTopics: unknown[] }) => (
     <div data-testid="mocked-topics-client">
       Mocked TopicsClient ({initialTopics.length} topics)
       {initialTopics.length > 0 && (
-        <span data-testid="first-topic-title">{initialTopics[0].title}</span>
+        <span data-testid="first-topic-title">{(initialTopics[0] as { title: string }).title}</span>
       )}
     </div>
   ),
