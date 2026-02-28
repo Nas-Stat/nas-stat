@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import ReportsClient from './ReportsClient';
 import { expect, test, vi, beforeEach, describe } from 'vitest';
 import { User } from '@supabase/supabase-js';
@@ -24,9 +24,10 @@ vi.mock('lucide-react', () => ({
 }));
 
 // Mock next/navigation
+const mockRefresh = vi.fn();
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
-    refresh: vi.fn(),
+    refresh: mockRefresh,
   }),
 }));
 
@@ -89,11 +90,20 @@ describe('ReportsClient', () => {
     const form = screen.getByText(/Odeslat hlášení/i).closest('form')!;
     fireEvent.submit(form);
 
-    expect(createReport).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(createReport).toHaveBeenCalled();
+    });
+
     const formData = vi.mocked(createReport).mock.calls[0][0];
     expect(formData.get('title')).toBe('Test report');
     expect(formData.get('description')).toBe('Test description');
     expect(formData.get('lng')).toBe('14.4378');
     expect(formData.get('lat')).toBe('50.0755');
+
+    // Check if form is closed and refresh is called
+    await waitFor(() => {
+      expect(screen.queryByText(/Nový podnět/i)).not.toBeInTheDocument();
+      expect(mockRefresh).toHaveBeenCalled();
+    });
   });
 });

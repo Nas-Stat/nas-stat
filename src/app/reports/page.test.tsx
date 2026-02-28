@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import Page from './page';
 import { expect, test, vi } from 'vitest';
+import { Report } from '@/components/Map';
 
 // Mock Supabase
 vi.mock('@/utils/supabase/server', () => ({
@@ -18,7 +19,7 @@ vi.mock('@/utils/supabase/server', () => ({
 
 // Mock ReportsClient component
 vi.mock('./ReportsClient', () => ({
-  default: ({ initialReports }: { initialReports: any[] }) => (
+  default: ({ initialReports }: { initialReports: Report[] }) => (
     <div data-testid="mocked-reports-client">
       Mocked ReportsClient ({initialReports.length} reports)
       {initialReports.length > 0 && (
@@ -56,7 +57,7 @@ test('renders Reports page with header and reports client', async () => {
         }),
       }),
     }),
-  } as any);
+  } as unknown as ReturnType<typeof createClient>);
 
   const PageComponent = await Page();
   render(PageComponent);

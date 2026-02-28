@@ -26,7 +26,6 @@ export default function ReportsClient({
   user,
 }: ReportsClientProps) {
   const router = useRouter();
-  const [reports] = useState<Report[]>(initialReports);
   const [selectedLocation, setSelectedLocation] = useState<
     [number, number] | null
   >(null);
@@ -71,7 +70,7 @@ export default function ReportsClient({
   return (
     <div className="relative h-full w-full">
       <Map
-        reports={reports}
+        reports={initialReports}
         selectedLocation={selectedLocation}
         onMapClick={handleMapClick}
       />
