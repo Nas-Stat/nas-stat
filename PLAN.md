@@ -9,17 +9,16 @@ Tento dokument slouží jako detailní architektonický plán pro vývojový tý
 ### Epic 1.1: Základní infrastruktura a Setup (Foundation)
 
 - [x] **Story 1.1.1: Inicializace Next.js a repozitáře**
+  - [x] Vytvořit novou Next.js aplikaci (App Router, TypeScript, Tailwind CSS).
 
-    - [x] Vytvořit novou Next.js aplikaci (App Router, TypeScript, Tailwind CSS).
+  - [x] Nastavit ESLint, Prettier.
 
-    - [x] Nastavit ESLint, Prettier.
-
-- [ ] **Story 1.1.2: Lokální vývojové prostředí (Docker)**
-  - [ ] Vytvořit `Dockerfile` a `docker-compose.yml` pro lokální běh Next.js aplikace.
-  - [ ] Zajistit, aby se změny v kódu okamžitě projevovaly i uvnitř kontejneru (hot-reloading).
-- [ ] **Story 1.1.3: Kostra dokumentace (README)**
-  - [ ] Vytvořit `README.md` s instrukcemi pro lokální spuštění přes Docker (hotovo, průběžně aktualizovat).
-  - [ ] Připravit sekce pro budoucí dokumentaci produkčního a testovacího nasazení.
+- [x] **Story 1.1.2: Lokální vývojové prostředí (Docker)**
+  - [x] Vytvořit `Dockerfile` a `docker-compose.yml` pro lokální běh Next.js aplikace.
+  - [x] Zajistit, aby se změny v kódu okamžitě projevovaly i uvnitř kontejneru (hot-reloading).
+- [x] **Story 1.1.3: Kostra dokumentace (README)**
+  - [x] Vytvořit `README.md` s instrukcemi pro lokální spuštění přes Docker (hotovo, průběžně aktualizovat).
+  - [x] Připravit sekce pro budoucí dokumentaci produkčního a testovacího nasazení.
 
 ### Epic 1.2: Databáze a Autentizace (Supabase)
 

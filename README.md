@@ -16,6 +16,25 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Running with Docker
+
+You can also run the development server using Docker and Docker Compose. This ensures a consistent environment for all developers.
+
+### Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+
+### Development
+
+To start the development server with hot-reloading:
+
+```bash
+docker-compose up --build
+```
+
+The application will be available at [http://localhost:3000](http://localhost:3000).
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
