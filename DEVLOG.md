@@ -1,5 +1,21 @@
 # Developer Log
 
+## 2026-02-28 - Secure Auth Actions and Add Server-Side Validation (Issue #5)
+
+### Changes
+
+- Installed `zod` for robust server-side schema validation.
+- Implemented `authSchema` in `src/app/login/actions.ts` to validate email (format) and password (length).
+- Added comprehensive unit tests for `login`, `signup`, `signInWithGoogle`, and `logout` server actions in `src/app/login/actions.test.ts`.
+- Fixed potential `TypeError` in `signInWithGoogle` by adding optional chaining to the `data` object.
+- Ensured all auth actions now have 100% test coverage and perform proper input validation.
+- Resolved "SUSPICIOUS NUT" findings from the Tech Lead's report for GitHub issue #5.
+
+### Verification
+
+- Ran `npm test src/app/login/actions.test.ts`: PASS (9 tests).
+- Verified error redirection and message passing for both validation and Supabase errors.
+
 ## 2026-02-28 - Integrate MapTiler with MapLibre GL (Story 1.3.1 - Issue #5)
 
 ### Changes

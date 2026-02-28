@@ -4,18 +4,24 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 import { headers } from 'next/headers'
+import { z } from 'zod'
+
+const authSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters long'),
+})
 
 export async function login(formData: FormData) {
   const supabase = await createClient()
 
-  // type-casting here for simplicity
-  // for a real app, you'd use a validation library like zod
-  const data = {
-    email: formData.get('email') as string,
-    password: formData.get('password') as string,
+  const rawData = Object.fromEntries(formData.entries())
+  const validated = authSchema.safeParse(rawData)
+
+  if (!validated.success) {
+    redirect('/login?error=' + encodeURIComponent(validated.error.issues[0].message))
   }
 
-  const { error } = await supabase.auth.signInWithPassword(data)
+  const { error } = await supabase.auth.signInWithPassword(validated.data)
 
   if (error) {
     redirect('/login?error=' + encodeURIComponent(error.message))
@@ -28,14 +34,14 @@ export async function login(formData: FormData) {
 export async function signup(formData: FormData) {
   const supabase = await createClient()
 
-  // type-casting here for simplicity
-  // for a real app, you'd use a validation library like zod
-  const data = {
-    email: formData.get('email') as string,
-    password: formData.get('password') as string,
+  const rawData = Object.fromEntries(formData.entries())
+  const validated = authSchema.safeParse(rawData)
+
+  if (!validated.success) {
+    redirect('/login?error=' + encodeURIComponent(validated.error.issues[0].message))
   }
 
-  const { error } = await supabase.auth.signUp(data)
+  const { error } = await supabase.auth.signUp(validated.data)
 
   if (error) {
     redirect('/login?error=' + encodeURIComponent(error.message))
@@ -60,7 +66,7 @@ export async function signInWithGoogle() {
     redirect('/login?error=' + encodeURIComponent(error.message))
   }
 
-  if (data.url) {
+  if (data?.url) {
     redirect(data.url)
   }
 }
