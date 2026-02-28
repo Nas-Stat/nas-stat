@@ -34,9 +34,9 @@ Tento dokument slouží jako detailní architektonický plán pro vývojový tý
 
 ### Epic 1.3: Geografické hlášení (MapTiler)
 
-- [ ] **Story 1.3.1: Integrace mapy**
-  - [ ] Integrovat MapTiler pomocí maplibregl nebo react-map-gl.
-  - [ ] Zobrazit mapu s možností navigace (pan, zoom).
+- [x] **Story 1.3.1: Integrace mapy**
+  - [x] Integrovat MapTiler pomocí maplibregl nebo react-map-gl.
+  - [x] Zobrazit mapu s možností navigace (pan, zoom).
 - [ ] **Story 1.3.2: Vkládání "špendlíků" (Reports)**
   - [ ] Umožnit uživateli kliknout do mapy a umístit špendlík.
   - [ ] Vytvořit formulář (drawer/modal) pro přidání hodnocení (1-5 hvězd, text, kategorie) k dané lokaci.

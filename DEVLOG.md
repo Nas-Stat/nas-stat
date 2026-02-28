@@ -1,5 +1,22 @@
 # Developer Log
 
+## 2026-02-28 - Integrate MapTiler with MapLibre GL (Story 1.3.1 - Issue #5)
+
+### Changes
+
+- Installed `maplibre-gl` for map visualization.
+- Created a reusable `Map` component in `src/components/Map.tsx`.
+- Implemented `/reports` page in `src/app/reports/page.tsx` that displays the map.
+- Added a "Zobrazit mapu" link on the Home page to navigate to the map.
+- Added comprehensive unit tests for the `Map` component and the `Reports` page.
+- Configured the map to use MapTiler style if `NEXT_PUBLIC_MAPTILER_KEY` is provided, otherwise falling back to a default MapLibre style.
+- Resolved GitHub issue #5 (Story 1.3.1).
+
+### Verification
+
+- Ran `npm test`: PASS (17 tests)
+- Verified map rendering with mocked `maplibre-gl` in tests.
+
 ## 2026-02-28 - Framework Upgrade and RLS Policy Hardening
 
 ### Changes
