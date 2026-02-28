@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { ThumbsUp, ThumbsDown, MessageSquare, Plus, Send } from 'lucide-react';
+import React, { useState, useOptimistic, useTransition } from 'react';
+import { ThumbsUp, ThumbsDown, MessageSquare, Plus, Send, AlertCircle } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 import { createTopic, voteTopic, addComment } from './actions';
 import { useRouter } from 'next/navigation';
@@ -44,8 +44,55 @@ export default function TopicsClient({
   const [showForm, setShowForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [commentingOn, setCommentingOn] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
-  const topics = initialTopics;
+  // Optimistic UI for Topics (votes and comments)
+  const [optimisticTopics, addOptimisticAction] = useOptimistic(
+    initialTopics,
+    (state, action: { type: 'vote'; topicId: string; voteType: 'up' | 'down' } | { type: 'comment'; topicId: string; content: string }) => {
+      if (action.type === 'vote') {
+        return state.map((topic) => {
+          if (topic.id !== action.topicId) return topic;
+          
+          const existingVote = topic.votes.find((v) => v.profile_id === user?.id);
+          let newVotes = [...topic.votes];
+
+          if (existingVote && existingVote.vote_type === action.voteType) {
+            // Remove vote
+            newVotes = newVotes.filter((v) => v.profile_id !== user?.id);
+          } else if (existingVote) {
+            // Update vote
+            newVotes = newVotes.map((v) => 
+              v.profile_id === user?.id ? { ...v, vote_type: action.voteType } : v
+            );
+          } else if (user) {
+            // Add vote
+            newVotes.push({ profile_id: user.id, vote_type: action.voteType });
+          }
+
+          return { ...topic, votes: newVotes };
+        });
+      }
+
+      if (action.type === 'comment') {
+        return state.map((topic) => {
+          if (topic.id !== action.topicId) return topic;
+          
+          const newComment = {
+            id: 'temp-id-' + Math.random(),
+            content: action.content,
+            created_at: new Date().toISOString(),
+            profiles: { username: user?.user_metadata?.username || 'Já' }
+          };
+
+          return { ...topic, comments: [...topic.comments, newComment] };
+        });
+      }
+
+      return state;
+    }
+  );
 
   const handleVote = async (topicId: string, type: 'up' | 'down') => {
     if (!user) {
@@ -53,12 +100,20 @@ export default function TopicsClient({
       return;
     }
 
-    try {
-      await voteTopic(topicId, type);
-      router.refresh();
-    } catch {
-      alert('Chyba při hlasování.');
-    }
+    setError(null);
+    startTransition(async () => {
+      addOptimisticAction({ type: 'vote', topicId, voteType: type });
+      try {
+        const result = await voteTopic(topicId, type);
+        if (result?.error) {
+          setError(result.error);
+        } else {
+          router.refresh();
+        }
+      } catch {
+        setError('Chyba při hlasování.');
+      }
+    });
   };
 
   const handleCreateTopic = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -66,20 +121,21 @@ export default function TopicsClient({
     if (!user) return;
 
     setIsSubmitting(true);
+    setError(null);
     const formData = new FormData(e.currentTarget);
 
     try {
       const result = await createTopic(formData);
       if (result?.errors) {
-        alert(Object.values(result.errors).flat().join(', '));
+        setError(Object.values(result.errors).flat().join(', '));
       } else if (result?.error) {
-        alert(result.error);
+        setError(result.error);
       } else {
         setShowForm(false);
         router.refresh();
       }
     } catch {
-      alert('Něco se nepovedlo.');
+      setError('Něco se nepovedlo.');
     } finally {
       setIsSubmitting(false);
     }
@@ -89,24 +145,36 @@ export default function TopicsClient({
     e.preventDefault();
     if (!user) return;
 
+    setError(null);
     const formData = new FormData(e.currentTarget);
-    formData.append('topic_id', topicId);
+    const content = formData.get('content') as string;
 
-    try {
-      const result = await addComment(formData);
-      if (result?.error) {
-        alert(result.error);
-      } else {
-        setCommentingOn(null);
-        router.refresh();
+    startTransition(async () => {
+      addOptimisticAction({ type: 'comment', topicId, content });
+      try {
+        const result = await addComment(formData);
+        if (result?.error) {
+          setError(result.error);
+        } else {
+          router.refresh();
+        }
+      } catch {
+        setError('Chyba při přidávání komentáře.');
       }
-    } catch {
-      alert('Chyba při přidávání komentáře.');
-    }
+    });
   };
 
   return (
     <div className="space-y-6">
+      {/* Error Message */}
+      {error && (
+        <div className="flex items-center gap-2 rounded-lg bg-red-50 p-4 text-red-700 dark:bg-red-900/20 dark:text-red-400">
+          <AlertCircle className="h-5 w-5 shrink-0" />
+          <p className="text-sm font-medium">{error}</p>
+          <button onClick={() => setError(null)} className="ml-auto text-xs underline">Zavřít</button>
+        </div>
+      )}
+
       {/* Action Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
@@ -138,18 +206,18 @@ export default function TopicsClient({
 
       {/* Topics Feed */}
       <div className="space-y-4">
-        {topics.length === 0 ? (
+        {optimisticTopics.length === 0 ? (
           <div className="rounded-xl border border-dashed border-zinc-300 bg-white p-12 text-center dark:border-zinc-700 dark:bg-zinc-900">
             <p className="text-zinc-500">Zatím nebyla přidána žádná témata.</p>
           </div>
         ) : (
-          topics.map((topic) => {
+          optimisticTopics.map((topic) => {
             const upVotes = topic.votes.filter(v => v.vote_type === 'up').length;
             const downVotes = topic.votes.filter(v => v.vote_type === 'down').length;
             const userVote = topic.votes.find(v => v.profile_id === user?.id)?.vote_type;
 
             return (
-              <div key={topic.id} className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+              <div key={topic.id} className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 transition-opacity duration-200">
                 <div className="mb-2 flex items-center gap-2">
                   <span className="text-xs font-medium text-zinc-500">
                     {topic.profiles?.username || 'Anonymní uživatel'} • {new Date(topic.created_at).toLocaleDateString('cs-CZ')}
@@ -168,6 +236,7 @@ export default function TopicsClient({
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleVote(topic.id, 'up')}
+                      disabled={isPending}
                       className={`flex items-center gap-1 rounded-md px-2 py-1 transition-colors ${userVote === 'up' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500'}`}
                     >
                       <ThumbsUp className={`h-4 w-4 ${userVote === 'up' ? 'fill-current' : ''}`} />
@@ -175,6 +244,7 @@ export default function TopicsClient({
                     </button>
                     <button
                       onClick={() => handleVote(topic.id, 'down')}
+                      disabled={isPending}
                       className={`flex items-center gap-1 rounded-md px-2 py-1 transition-colors ${userVote === 'down' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500'}`}
                     >
                       <ThumbsDown className={`h-4 w-4 ${userVote === 'down' ? 'fill-current' : ''}`} />
@@ -210,11 +280,14 @@ export default function TopicsClient({
                           name="content"
                           placeholder="Napište komentář..."
                           required
-                          className="flex-1 rounded-md border border-zinc-300 bg-white px-3 py-1 text-sm focus:border-blue-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800"
+                          disabled={isPending}
+                          className="flex-1 rounded-md border border-zinc-300 bg-white px-3 py-1 text-sm focus:border-blue-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 disabled:opacity-50"
                         />
+                        <input type="hidden" name="topic_id" value={topic.id} />
                         <button
                           type="submit"
-                          className="rounded-md bg-zinc-900 px-3 py-1 text-sm text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900"
+                          disabled={isPending}
+                          className="rounded-md bg-zinc-900 px-3 py-1 text-sm text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 disabled:opacity-50"
                         >
                           <Send className="h-4 w-4" />
                         </button>
@@ -232,3 +305,4 @@ export default function TopicsClient({
     </div>
   );
 }
+

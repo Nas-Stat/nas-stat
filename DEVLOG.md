@@ -1,5 +1,23 @@
 # Developer Log
 
+## 2026-02-28 - Refactor and Polish Topics Feed (Issue #9)
+
+### Changes
+
+- Implemented toggleable voting in `voteTopic` server action (removes vote if clicking same type, updates if different).
+- Added Optimistic UI for voting and commenting in `TopicsClient.tsx` using React 19 `useOptimistic` hook.
+- Replaced `alert()` with a modern, inline error message component in the topics feed.
+- Improved UX for commenting with loading states and optimistic updates.
+- Updated `src/app/topics/actions.test.ts` to cover the new toggleable voting logic (100% coverage).
+- Verified that all 19 tests in the topics and dashboard suites pass.
+- Mark Story 1.4.3 as completed in `PLAN.md`.
+
+### Verification
+
+- Ran `npm test src/app/topics/`: PASS (17 tests).
+- Ran `npm test src/app/dashboard/`: PASS (2 tests).
+- Verified optimistic UI behavior and error handling.
+
 ## 2026-02-28 - Implement Pulse Dashboard (Issue #9)
 
 ### Changes

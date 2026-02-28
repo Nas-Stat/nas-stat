@@ -64,26 +64,49 @@ export async function voteTopic(topicId: string, voteType: 'up' | 'down') {
     throw new Error('Pro hlasování se musíte přihlásit.');
   }
 
-  // Upsert vote
-  const { error } = await supabase.from('votes').upsert(
-    {
-      profile_id: user.id,
-      topic_id: topicId,
-      vote_type: voteType,
-    },
-    { onConflict: 'profile_id,topic_id' }
-  );
+  // Check for existing vote
+  const { data: existingVote } = await supabase
+    .from('votes')
+    .select('id, vote_type')
+    .eq('profile_id', user.id)
+    .eq('topic_id', topicId)
+    .maybeSingle();
 
-  if (error) {
-    console.error('Error voting on topic:', error);
-    return {
-      error: 'Nepodařilo se uložit hlas. Zkuste to prosím znovu.',
-    };
+  if (existingVote && existingVote.vote_type === voteType) {
+    // Toggle: remove vote if same type
+    const { error } = await supabase.from('votes').delete().eq('id', existingVote.id);
+
+    if (error) {
+      console.error('Error removing vote:', error);
+      return { error: 'Nepodařilo se zrušit hlas.' };
+    }
+  } else {
+    // Upsert: replace or create new vote
+    const { error } = await supabase.from('votes').upsert(
+      {
+        profile_id: user.id,
+        topic_id: topicId,
+        vote_type: voteType,
+      },
+      { onConflict: 'profile_id,topic_id' }
+    );
+
+    if (error) {
+      console.error('Error voting on topic:', error);
+      return {
+        error: 'Nepodařilo se uložit hlas. Zkuste to prosím znovu.',
+      };
+    }
   }
 
   revalidatePath('/topics');
   return { success: true };
 }
+
+const commentSchema = z.object({
+  topic_id: z.string().uuid(),
+  content: z.string().min(2, 'Komentář je příliš krátký.').max(500),
+});
 
 export async function addComment(formData: FormData) {
   const supabase = await createClient();
@@ -96,17 +119,23 @@ export async function addComment(formData: FormData) {
     throw new Error('Pro přidání komentáře se musíte přihlásit.');
   }
 
-  const topicId = formData.get('topic_id') as string;
-  const content = formData.get('content') as string;
+  const validatedFields = commentSchema.safeParse({
+    topic_id: formData.get('topic_id'),
+    content: formData.get('content'),
+  });
 
-  if (!content || content.length < 2) {
-    return { error: 'Komentář je příliš krátký.' };
+  if (!validatedFields.success) {
+    return {
+      error: validatedFields.error.flatten().fieldErrors.content?.[0] || 'Neplatná data.',
+    };
   }
+
+  const { topic_id, content } = validatedFields.data;
 
   const { error } = await supabase.from('comments').insert({
     profile_id: user.id,
-    topic_id: topicId,
-    content: content,
+    topic_id,
+    content,
   });
 
   if (error) {

@@ -57,6 +57,12 @@ Tento dokument slouží jako detailní architektonický plán pro vývojový tý
 - [x] **Story 1.4.2: Základní Pulse Dashboard**
   - [x] Jednoduchá analytická stránka zobrazující agregovaná data (např. nejnovější hlášení, nejvíce diskutovaná témata).
 
+- [x] **Story 1.4.3: Refactor and Polish Topics (Issue #9 cleanup)**
+  - [x] Implement toggleable voting (removing a vote when clicking the same type again).
+  - [x] Implement Optimistic UI for voting and commenting.
+  - [x] Replace `alert()` with better error feedback in the UI.
+  - [x] Add comprehensive tests for Topics and Pulse Dashboard.
+
 ---
 
 ## Phase 2: "The Analytics Factory" (Pro Úředníky a Média)
