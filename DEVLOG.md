@@ -1,5 +1,24 @@
 # Developer Log
 
+## 2026-02-28 - Implement Report Creation and Visualization (Story 1.3.2 & 1.3.3 - Issue #6)
+
+### Changes
+
+- Updated `Map` component to support interactive marker placement, dragging, and display of existing reports.
+- Implemented `ReportsClient` as a client-side wrapper for the reports page, handling map interactions and the report submission form.
+- Created `createReport` Server Action in `src/app/reports/actions.ts` for secure report submission to Supabase.
+- Updated `/reports` page to fetch the current user and existing reports from Supabase.
+- Added color-coded markers for reports based on their rating (red for ≤ 2, blue otherwise).
+- Implemented category selection (Infrastruktura, Doprava, Zeleň, etc.) and 5-star rating system.
+- Added comprehensive unit tests for `ReportsClient` and updated `ReportsPage` and `Map` tests.
+- Resolved GitHub issue #6 (Story 1.3.2 & 1.3.3).
+
+### Verification
+
+- Ran `npm test`: PASS (22 tests)
+- Verified Server Action logic for PostGIS coordinate conversion.
+- Verified RLS policies for `reports` table (authenticated users can insert, anyone can select).
+
 ## 2026-02-28 - Secure Auth Actions and Add Server-Side Validation (Issue #5)
 
 ### Changes

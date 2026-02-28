@@ -3,7 +3,6 @@ import { login, signup, signInWithGoogle, logout } from './actions'
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
-import { headers } from 'next/headers'
 
 vi.mock('@/utils/supabase/server', () => ({
   createClient: vi.fn(),
@@ -37,7 +36,7 @@ describe('Auth Actions', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    ;(createClient as any).mockResolvedValue(mockSupabase)
+    vi.mocked(createClient).mockResolvedValue(mockSupabase as never)
   })
 
   describe('login', () => {

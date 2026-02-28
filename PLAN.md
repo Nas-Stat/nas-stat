@@ -37,12 +37,12 @@ Tento dokument slouží jako detailní architektonický plán pro vývojový tý
 - [x] **Story 1.3.1: Integrace mapy**
   - [x] Integrovat MapTiler pomocí maplibregl nebo react-map-gl.
   - [x] Zobrazit mapu s možností navigace (pan, zoom).
-- [ ] **Story 1.3.2: Vkládání "špendlíků" (Reports)**
-  - [ ] Umožnit uživateli kliknout do mapy a umístit špendlík.
-  - [ ] Vytvořit formulář (drawer/modal) pro přidání hodnocení (1-5 hvězd, text, kategorie) k dané lokaci.
-  - [ ] Uložit data do Supabase (vyžaduje přihlášení z Epicu 1.2).
-- [ ] **Story 1.3.3: Zobrazení existujících hlášení**
-  - [ ] Načíst hlášení ze Supabase a zobrazit je jako body na mapě (např. barevně odlišené podle hodnocení).
+- [x] **Story 1.3.2: Vkládání "špendlíků" (Reports)**
+  - [x] Umožnit uživateli kliknout do mapy a umístit špendlík.
+  - [x] Vytvořit formulář (drawer/modal) pro přidání hodnocení (1-5 hvězd, text, kategorie) k dané lokaci.
+  - [x] Uložit data do Supabase (vyžaduje přihlášení z Epicu 1.2).
+- [x] **Story 1.3.3: Zobrazení existujících hlášení**
+  - [x] Načíst hlášení ze Supabase a zobrazit je jako body na mapě (např. barevně odlišené podle hodnocení).
 
 ### Epic 1.4: Tématické hlášení a Dashboard
 
