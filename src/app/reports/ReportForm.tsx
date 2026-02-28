@@ -1,13 +1,14 @@
 'use client';
 
 import React from 'react';
-import { Star, X } from 'lucide-react';
+import { Star, X, AlertCircle } from 'lucide-react';
 
 interface ReportFormProps {
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
   onClose: () => void;
   isSubmitting: boolean;
   categories: string[];
+  error?: string | null;
 }
 
 export default function ReportForm({
@@ -15,6 +16,7 @@ export default function ReportForm({
   onClose,
   isSubmitting,
   categories,
+  error,
 }: ReportFormProps) {
   return (
     <div className="absolute inset-y-0 right-0 w-full max-w-md bg-white p-6 shadow-2xl dark:bg-zinc-900 sm:m-4 sm:rounded-2xl sm:inset-y-auto sm:top-4 sm:bottom-4">
@@ -30,6 +32,13 @@ export default function ReportForm({
           <X className="h-6 w-6 text-zinc-500" />
         </button>
       </div>
+
+      {error && (
+        <div className="mb-4 flex items-center gap-2 rounded-lg bg-red-50 p-3 text-red-700 dark:bg-red-900/20 dark:text-red-400">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <p className="text-xs font-medium">{error}</p>
+        </div>
+      )}
 
       <form onSubmit={onSubmit} className="space-y-4">
         <div>

@@ -21,6 +21,7 @@ vi.mock('./actions', () => ({
 vi.mock('lucide-react', () => ({
   Star: () => <div data-testid="star-icon">Star</div>,
   X: () => <div data-testid="x-icon">X</div>,
+  AlertCircle: () => <div data-testid="alert-icon">Alert</div>,
 }));
 
 // Mock next/navigation
@@ -104,6 +105,34 @@ describe('ReportsClient', () => {
     await waitFor(() => {
       expect(screen.queryByText(/Nový podnět/i)).not.toBeInTheDocument();
       expect(mockRefresh).toHaveBeenCalled();
+    });
+  });
+
+  test('displays error message when submission fails', async () => {
+    const { createReport } = await import('./actions');
+    vi.mocked(createReport).mockRejectedValueOnce(new Error('Chyba při ukládání'));
+
+    render(<ReportsClient initialReports={[]} user={mockUser} />);
+    
+    // Open form
+    fireEvent.click(screen.getByTestId('mocked-map'));
+    
+    // Fill form
+    fireEvent.change(screen.getByLabelText(/Název podnětu/i), { target: { value: 'Test report', name: 'title' } });
+    
+    // Submit
+    const form = screen.getByText(/Odeslat hlášení/i).closest('form')!;
+    fireEvent.submit(form);
+
+    await waitFor(() => {
+      expect(createReport).toHaveBeenCalled();
+    });
+
+    // Check if error is displayed and form remains open
+    await waitFor(() => {
+      expect(screen.getByText('Chyba při ukládání')).toBeInTheDocument();
+      expect(screen.getByText(/Nový podnět/i)).toBeInTheDocument();
+      expect(mockRefresh).not.toHaveBeenCalled();
     });
   });
 });

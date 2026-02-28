@@ -1,5 +1,22 @@
 # Developer Log
 
+## 2026-02-28 - Unified Error Feedback and Final Cleanup (Issue #9)
+
+### Changes
+
+- Replaced all remaining `alert()` calls with modern, inline error message components in `ReportsClient.tsx` and `ReportForm.tsx`.
+- Updated `ReportForm.tsx` to accept an optional `error` prop and display it using the `AlertCircle` icon from Lucide.
+- Added comprehensive error handling tests in `src/app/reports/ReportsClient.test.tsx` to verify UI feedback on submission failure.
+- Verified that all 31 tests for reports, topics, and dashboard pass.
+- Verified that `npm run lint` and `npm run build` are clean.
+- Phase 1 MVP is now fully polished and ready.
+
+### Verification
+
+- Ran `npm test`: PASS (58 tests total in project).
+- Ran `npm run lint`: PASS.
+- Ran `npm run build`: SUCCESS.
+
 ## 2026-02-28 - Fix Dashboard type error and PostGIS location mapping
 
 ### Changes

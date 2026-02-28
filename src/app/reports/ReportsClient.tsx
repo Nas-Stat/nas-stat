@@ -31,11 +31,13 @@ export default function ReportsClient({
   >(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleMapClick = useCallback(
     (lng: number, lat: number) => {
       if (!user) return; // Only logged in users can select location
       setSelectedLocation([lng, lat]);
+      setError(null);
       setShowForm(true);
     },
     [user]
@@ -44,6 +46,7 @@ export default function ReportsClient({
   const closeForm = useCallback(() => {
     setShowForm(false);
     setSelectedLocation(null);
+    setError(null);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -51,6 +54,7 @@ export default function ReportsClient({
     if (!selectedLocation || !user) return;
 
     setIsSubmitting(true);
+    setError(null);
     const formData = new FormData(e.currentTarget);
     formData.append('lng', selectedLocation[0].toString());
     formData.append('lat', selectedLocation[1].toString());
@@ -60,8 +64,8 @@ export default function ReportsClient({
       closeForm();
       // Use Next.js refresh instead of full page reload
       router.refresh();
-    } catch (error) {
-      alert(error instanceof Error ? error.message : 'Něco se nepovedlo.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Něco se nepovedlo.');
     } finally {
       setIsSubmitting(false);
     }
@@ -95,6 +99,7 @@ export default function ReportsClient({
           onClose={closeForm}
           isSubmitting={isSubmitting}
           categories={CATEGORIES}
+          error={error}
         />
       )}
     </div>
