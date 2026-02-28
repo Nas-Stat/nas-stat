@@ -1,5 +1,24 @@
 # Developer Log
 
+## 2026-02-28 - Implement Thematic Feed and Social Interactions (Issue #8)
+
+### Changes
+
+- Implemented Thematic Feed in `/topics`.
+- Created `comments` table in Supabase migration `20260228000001_add_comments.sql`.
+- Created Server Actions for topic creation, voting (upsert), and commenting.
+- Implemented `TopicsClient` with a feed layout, voting buttons, and inline comments section.
+- Added `TopicForm` for authenticated users to create new topics.
+- Updated Home page with a link to "Tématický feed".
+- Added comprehensive unit tests for `TopicsClient` and server actions (15 new tests).
+- Resolved all linting issues and verified all 52 tests pass.
+
+### Verification
+
+- Ran `npm test`: PASS (52 tests).
+- Ran `npm run lint`: PASS.
+- Verified nested Supabase joins and RLS for the new `comments` table.
+
 ## 2026-02-28 - Fix State Management and Test Quality (Issue #7 - Final Fixes)
 
 ### Changes

@@ -51,9 +51,9 @@ Tento dokument slouží jako detailní architektonický plán pro vývojový tý
 
 ### Epic 1.4: Tématické hlášení a Dashboard
 
-- [ ] **Story 1.4.1: Feed témat**
-  - [ ] Vytvořit UI pro zobrazení seznamu aktuálních témat bez geografické vazby.
-  - [ ] Umožnit přihlášeným uživatelům hlasovat (palec nahoru/dolů) a přidat komentář.
+- [x] **Story 1.4.1: Feed témat**
+  - [x] Vytvořit UI pro zobrazení seznamu aktuálních témat bez geografické vazby.
+  - [x] Umožnit přihlášeným uživatelům hlasovat (palec nahoru/dolů) a přidat komentář.
 - [ ] **Story 1.4.2: Základní Pulse Dashboard**
   - [ ] Jednoduchá analytická stránka zobrazující agregovaná data (např. nejnovější hlášení, nejvíce diskutovaná témata).
 
