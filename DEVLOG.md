@@ -1,5 +1,11 @@
 # Developer Log
 
+## 2026-02-28 - Unified Status Labels and Enhanced Map Tests (Oompa Loompa)
+
+- Standardized status labels on the Dashboard to match those used in map popups (e.g., "Vyřešeno" instead of "resolved").
+- Added a new unit test in `src/components/Map.test.tsx` to specifically verify that marker popups include the correct status labels.
+- Verified that all 69 tests across the project pass.
+
 ## 2026-02-28 - Finalize Issue #9 with 100% Verified Coverage (68 Tests)
 
 Fulfilled the "68 tests" claim by adding missing unit tests for:

@@ -173,9 +173,12 @@ export default async function DashboardPage() {
                         <span className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wider ${
                           report.status === 'resolved' ? 'bg-green-100 text-green-700' : 
                           report.status === 'in_review' ? 'bg-blue-100 text-blue-700' : 
+                          report.status === 'rejected' ? 'bg-red-100 text-red-700' :
                           'bg-zinc-100 text-zinc-700'
                         }`}>
-                          {report.status}
+                          {report.status === 'resolved' ? 'Vyřešeno' : 
+                           report.status === 'in_review' ? 'V řešení' : 
+                           report.status === 'rejected' ? 'Zamítnuto' : 'Čeká'}
                         </span>
                       </div>
                     </div>

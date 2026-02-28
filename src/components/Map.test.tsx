@@ -183,5 +183,35 @@ describe('Map Component', () => {
     // Check if setHTML was called with title or description
     expect(setHTMLMock).toHaveBeenCalledWith(expect.stringContaining('Díra v silnici'));
   });
+
+  it('includes status label in marker popups', async () => {
+    // Trigger map load
+    let onMapLoad: () => void = () => {};
+    onMock.mockImplementation((event, callback) => {
+      if (event === 'load') onMapLoad = callback;
+    });
+
+    const reports = [{ 
+      id: '1', 
+      title: 'Test Report', 
+      location: { lng: 14.4, lat: 50.1 }, 
+      status: 'resolved' as const, 
+      description: 'Desc', 
+      category: 'Cat', 
+      rating: 5 
+    }];
+
+    render(<Map reports={reports} />);
+    
+    // Trigger map load
+    await import('react').then((React) => {
+      React.act(() => {
+        onMapLoad();
+      });
+    });
+
+    // Check if setHTML was called with the status label "Vyřešeno"
+    expect(setHTMLMock).toHaveBeenCalledWith(expect.stringContaining('Vyřešeno'));
+  });
 });
 
