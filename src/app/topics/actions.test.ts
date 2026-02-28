@@ -157,6 +157,16 @@ describe('Topic Actions', () => {
       expect(result.error).toBe('Komentář je příliš krátký.');
     });
 
+    it('returns error for invalid data (missing topic_id)', async () => {
+      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'user-123' } } });
+      const formData = new FormData();
+      formData.append('content', 'To je zajímavé.');
+      
+      const result = await addComment(formData);
+      expect(result).toHaveProperty('error');
+      expect(result.error).toBe('Neplatná data.');
+    });
+
     it('successfully adds a comment', async () => {
       mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'user-123' } } });
       const topicId = '123e4567-e89b-12d3-a456-426614174000';

@@ -151,3 +151,42 @@ test('calculates and displays correct statistics', async () => {
   // Resolved count = 1
   expect(screen.getByText('1')).toBeInTheDocument();
 });
+
+test('sorts popular topics by comment count', async () => {
+  const { createClient } = await import('@/utils/supabase/server');
+  vi.mocked(createClient).mockResolvedValue({
+    auth: {
+      getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
+    },
+    from: vi.fn().mockImplementation((table: string) => {
+      if (table === 'topics') {
+        return {
+          select: vi.fn().mockReturnValue({
+            order: vi.fn().mockResolvedValue({
+              data: [
+                { id: '1', title: 'Less Popular', comments: [{ id: 'c1' }], created_at: new Date().toISOString() },
+                { id: '2', title: 'More Popular', comments: [{ id: 'c2' }, { id: 'c3' }], created_at: new Date().toISOString() },
+              ],
+              error: null,
+            }),
+          }),
+        };
+      }
+      return {
+        select: vi.fn().mockReturnValue({
+          order: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+          }),
+          then: (resolve: (value: { data: []; error: null }) => void) => resolve({ data: [], error: null }),
+        }),
+      };
+    }),
+  } as unknown as ReturnType<typeof createClient>);
+
+  const PageComponent = await Page();
+  render(PageComponent);
+
+  const topicElements = screen.getAllByText(/Popular/);
+  expect(topicElements[0]).toHaveTextContent('More Popular');
+  expect(topicElements[1]).toHaveTextContent('Less Popular');
+});

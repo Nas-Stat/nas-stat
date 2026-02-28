@@ -17,6 +17,9 @@ const removeLayerMock = vi.fn();
 const getLayerMock = vi.fn();
 const getSourceMock = vi.fn();
 
+const setPopupMock = vi.fn().mockReturnThis();
+const setHTMLMock = vi.fn().mockReturnThis();
+
 vi.mock('maplibre-gl', () => {
   class MapMock {
     on = onMock;
@@ -41,13 +44,13 @@ vi.mock('maplibre-gl', () => {
     setLngLat = vi.fn().mockReturnThis();
     addTo = vi.fn().mockReturnThis();
     remove = vi.fn().mockReturnThis();
-    setPopup = vi.fn().mockReturnThis();
+    setPopup = setPopupMock;
     on = vi.fn().mockReturnThis();
     getElement = vi.fn(() => document.createElement('div'));
   }
 
   class PopupMock {
-    setHTML = vi.fn().mockReturnThis();
+    setHTML = setHTMLMock;
   }
 
   return {
@@ -147,6 +150,38 @@ describe('Map Component', () => {
     
     expect(removeLayerMock).toHaveBeenCalledWith('reports-heatmap');
     expect(removeSourceMock).toHaveBeenCalledWith('reports-source');
+  });
+
+  it('sets up popups for markers', async () => {
+    // Trigger map load
+    let onMapLoad: () => void = () => {};
+    onMock.mockImplementation((event, callback) => {
+      if (event === 'load') onMapLoad = callback;
+    });
+
+    const reports = [{ 
+      id: '1', 
+      title: 'Díra v silnici', 
+      location: { lng: 14.4, lat: 50.1 }, 
+      status: 'pending' as const, 
+      description: 'Velká díra', 
+      category: 'Doprava', 
+      rating: 5 
+    }];
+
+    render(<Map reports={reports} />);
+    
+    // Trigger map load
+    await import('react').then((React) => {
+      React.act(() => {
+        onMapLoad();
+      });
+    });
+
+    // Check if setPopup was called
+    expect(setPopupMock).toHaveBeenCalled();
+    // Check if setHTML was called with title or description
+    expect(setHTMLMock).toHaveBeenCalledWith(expect.stringContaining('Díra v silnici'));
   });
 });
 
