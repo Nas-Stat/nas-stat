@@ -2,11 +2,14 @@ import { render, screen } from '@testing-library/react';
 import Page from './page';
 import { expect, test, vi } from 'vitest';
 
-// Mock Supabase client
+// Mock Supabase client with logged in user
 vi.mock('@/utils/supabase/server', () => ({
   createClient: vi.fn(() => ({
     auth: {
-      getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
+      getUser: vi.fn().mockResolvedValue({
+        data: { user: { email: 'test@example.com' } },
+        error: null,
+      }),
     },
   })),
 }));
@@ -20,23 +23,21 @@ vi.mock('./login/actions', () => ({
   logout: vi.fn(),
 }));
 
-test('renders Home page with welcome message', async () => {
+test('shows user email when logged in', async () => {
   const ResolvedPage = await Page();
   render(ResolvedPage);
-  const element = screen.getByText(/Vítejte v aplikaci Náš stát/i);
-  expect(element).toBeInTheDocument();
+  expect(screen.getByText(/test@example.com/i)).toBeInTheDocument();
 });
 
-test('shows login button when user is not logged in', async () => {
+test('shows logout button when logged in', async () => {
   const ResolvedPage = await Page();
   render(ResolvedPage);
-  const loginLink = screen.getByRole('link', { name: /přihlásit se/i });
-  expect(loginLink).toHaveAttribute('href', '/login');
+  expect(screen.getByRole('button', { name: /odhlásit se/i })).toBeInTheDocument();
 });
 
-test('shows report button disabled when not logged in', async () => {
+test('enables report button when logged in', async () => {
   const ResolvedPage = await Page();
   render(ResolvedPage);
   const reportButton = screen.getByRole('button', { name: /nahlásit podnět/i });
-  expect(reportButton).toBeDisabled();
+  expect(reportButton).not.toBeDisabled();
 });

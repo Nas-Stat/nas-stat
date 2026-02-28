@@ -26,11 +26,11 @@ Tento dokument slouží jako detailní architektonický plán pro vývojový tý
   - [x] Založit Supabase projekt.
   - [x] Vytvořit základní SQL tabulky: `users`, `reports` (s podporou PostGIS pro lokaci - lat, lng), `topics`, `votes`.
   - [x] Nastavit Row Level Security (RLS), aby data mohl číst každý, ale zapisovat jen přihlášený uživatel.
-- [ ] **Story 1.2.2: Autentizace uživatelů**
-  - [ ] Integrovat `@supabase/ssr` pro Next.js.
-  - [ ] Implementovat přihlášení pomocí Emailu/Hesla.
-  - [ ] Implementovat přihlášení pomocí Google OAuth.
-  - [ ] Vytvořit jednoduché UI pro login/registraci.
+- [x] **Story 1.2.2: Autentizace uživatelů**
+  - [x] Integrovat `@supabase/ssr` pro Next.js.
+  - [x] Implementovat přihlášení pomocí Emailu/Hesla.
+  - [x] Implementovat přihlášení pomocí Google OAuth.
+  - [x] Vytvořit jednoduché UI pro login/registraci.
 
 ### Epic 1.3: Geografické hlášení (MapTiler)
 

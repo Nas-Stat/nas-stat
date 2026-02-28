@@ -1,5 +1,25 @@
 # Developer Log
 
+## 2026-02-28 - Implement Supabase Authentication (Story 1.2.2 - Issue #4)
+
+### Changes
+
+- Integrated `@supabase/ssr` into Next.js.
+- Created Supabase client/server/middleware utilities in `src/utils/supabase/`.
+- Implemented `middleware.ts` for session management and route protection.
+- Created `src/app/login/page.tsx` with a clean UI for authentication.
+- Implemented server actions for login, signup, logout, and Google OAuth in `src/app/login/actions.ts`.
+- Added auth callback route in `src/app/auth/callback/route.ts`.
+- Updated Home page to show current user and logout button.
+- Added comprehensive unit tests for Home page (authenticated/unauthenticated states) and Login page.
+- Configured Vitest path aliases to resolve `@/*` imports.
+- Resolved GitHub issue #4 (Story 1.2.2).
+
+### Verification
+
+- Ran `npm test`: PASS (14 tests)
+- Verified server actions and middleware structure.
+
 ## 2026-02-28 - Fix README.md and .gitignore (Story 1.1.3 - Issue #3)
 
 ### Changes
