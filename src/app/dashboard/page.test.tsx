@@ -54,9 +54,9 @@ test('renders Dashboard page with header, map and sections', async () => {
               limit: vi.fn().mockResolvedValue(mockReports),
             }),
             // Mock the Promise-like behavior for allReports select
-            then: (resolve: any) => resolve({ data: mockReports.data, error: null }),
+            then: (resolve: (value: { data: typeof mockReports.data; error: null }) => void) => resolve({ data: mockReports.data, error: null }),
           }),
-        } as any;
+        } as unknown;
       }
       if (table === 'topics') {
         return {

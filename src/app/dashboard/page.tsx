@@ -112,7 +112,7 @@ export default async function DashboardPage() {
               <span className="text-xs text-zinc-500">Vizualizace hlášení v reálném čase</span>
             </div>
             <div className="h-80 overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-              <Map reports={mapReports as any} readOnly zoom={10} />
+              <Map reports={mapReports as Report[]} readOnly zoom={10} />
             </div>
           </section>
 

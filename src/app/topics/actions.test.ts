@@ -83,7 +83,7 @@ describe('Topic Actions', () => {
         eq: vi.fn().mockReturnThis(),
         maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
         upsert: vi.fn().mockResolvedValue({ error: null }),
-      } as any);
+      } as unknown);
 
       const result = await voteTopic('topic-123', 'up');
       
@@ -102,7 +102,7 @@ describe('Topic Actions', () => {
           error: null 
         }),
         delete: vi.fn().mockReturnValue({ eq: mockDelete }),
-      } as any);
+      } as unknown);
 
       const result = await voteTopic('topic-123', 'up');
       
@@ -122,7 +122,7 @@ describe('Topic Actions', () => {
           error: null 
         }),
         upsert: mockUpsert,
-      } as any);
+      } as unknown);
 
       const result = await voteTopic('topic-123', 'up');
       

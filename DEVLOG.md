@@ -1,5 +1,18 @@
 # Developer Log
 
+## 2026-02-28 - Clean up 'any' types and finalize Issue #9
+
+### Changes
+
+- Removed `any` type casts in `src/app/dashboard/page.tsx`, `src/app/dashboard/page.test.tsx`, and `src/app/topics/actions.test.ts`.
+- Replaced `any` with `unknown` or more specific types where possible to improve type safety.
+- Verified that all 57 tests pass and `npm run lint` is clean.
+
+### Verification
+
+- Ran `npm run lint`: PASS.
+- Ran `npm test`: PASS (57 tests).
+
 ## 2026-02-28 - Final Polish for Issue #9 and MVP visualization
 
 ### Changes

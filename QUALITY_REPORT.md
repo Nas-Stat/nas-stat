@@ -1,7 +1,7 @@
 # Quality Report
 
 *   **Status:** [🟢 GOOD NUT]
-*   **Executive Summary:** The implementation for Issue #9 (Topics feed & Pulse Dashboard) has been finalized and polished. The dashboard now includes a geographic "pulse" visualization, and the map popups have been improved to show report status. All core MVP features are now implemented, well-tested (57 tests passing), and conform to the project specifications.
+*   **Executive Summary:** The implementation for Issue #9 (Topics feed & Pulse Dashboard) has been finalized and polished. The dashboard now includes a geographic "pulse" visualization, and the map popups have been improved to show report status. All core MVP features are now implemented, well-tested (57 tests passing), and conform to the project specifications. All remaining `any` type casts have been removed for better type safety.
 *   **Critical Issues (Showstoppers):**
     *   None.
 *   **Code Smells & Improvements:**
