@@ -2,6 +2,15 @@
 
 Náš stát je komunitní platforma pro hlášení a sledování stavu veřejného prostoru v České republice. Projekt umožňuje občanům interaktivně mapovat podněty k veřejnému prostoru a sledovat "puls" své lokality.
 
+## Klíčové vlastnosti (MVP Phase 1)
+
+- **Geografické hlášení:** Uživatelé mohou umístit špendlík do mapy a nahlásit problém nebo pochvalu k určitému místu (např. rozbitá lavička, nový park).
+- **Tématický feed:** Prostor pro diskusi o celospolečenských tématech (např. zákony, reformy) bez vazby na konkrétní místo.
+- **Pulse Dashboard:** Přehledná analytika v reálném čase zobrazující "teplotu" veřejného mínění, nejnovější hlášení a populární témata.
+- **Interaktivní mapy:** Integrace MapTileru pro vizualizaci podnětů přímo v terénu.
+- **Hlasování a komentáře:** Možnost vyjádřit podporu nebo nesouhlas (optimistic UI) a diskutovat s ostatními uživateli.
+- **Bezpečná autentizace:** Přihlášení přes e-mail nebo Google (Supabase Auth).
+
 ## Running with Docker
 
 Projekt je připraven pro snadný lokální běh v Dockeru, což zajišťuje stejné prostředí pro všechny vývojáře.
