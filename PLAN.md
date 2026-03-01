@@ -67,6 +67,16 @@ Tento dokument slouží jako detailní architektonický plán pro vývojový tý
 
 ## Phase 2: "The Analytics Factory" (Pro Úředníky a Média)
 
+### Epic 2.1: Přístupnost a veřejné čtení
+
+- [x] **Story 2.1.1: Veřejné čtení bez přihlášení (Issue #12)**
+  - [x] Upravit middleware (`src/utils/supabase/proxy.ts`), aby `/reports` a `/topics` (GET) byly veřejně přístupné.
+  - [x] Ověřit, že RLS politiky v Supabase povolují SELECT bez autentizace (již bylo nastaveno).
+  - [x] Na stránce `/topics` skrýt hlasovací tlačítka pro nepřihlášené — zobrazit read-only počty hlasů a odkaz na přihlášení.
+  - [x] Napsat testy pro middleware (veřejné vs. chráněné routes) v `src/utils/supabase/proxy.test.ts`.
+
+
+
 _(Detailní plánování bude následovat po dokončení Fáze 1)_
 
 ## Phase 3: "The Omnipresent Pulse" (Rozšíření)
