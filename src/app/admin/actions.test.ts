@@ -1,10 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { updateReportStatus, deleteTopic, deleteComment } from './actions';
 import { createClient } from '@/utils/supabase/server';
+import { createAdminClient } from '@/utils/supabase/admin';
+import { sendStatusChangeEmail } from '@/lib/email';
 import { revalidatePath } from 'next/cache';
 
 vi.mock('@/utils/supabase/server', () => ({
   createClient: vi.fn(),
+}));
+
+vi.mock('@/utils/supabase/admin', () => ({
+  createAdminClient: vi.fn(),
+}));
+
+vi.mock('@/lib/email', () => ({
+  sendStatusChangeEmail: vi.fn(),
 }));
 
 vi.mock('next/cache', () => ({
@@ -15,6 +25,16 @@ describe('Admin Actions', () => {
   const mockMaybeSingle = vi.fn();
   const mockReportsEq = vi.fn();
   const mockDeleteEq = vi.fn();
+  const mockReportsSelectSingle = vi.fn();
+  const mockGetUserById = vi.fn();
+
+  const mockAdminClient = {
+    auth: {
+      admin: {
+        getUserById: mockGetUserById,
+      },
+    },
+  };
 
   const mockSupabase = {
     auth: {
@@ -26,6 +46,12 @@ describe('Admin Actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(createClient).mockResolvedValue(mockSupabase as never);
+    vi.mocked(createAdminClient).mockReturnValue(mockAdminClient as never);
+    vi.mocked(sendStatusChangeEmail).mockResolvedValue(undefined);
+
+    // Default: email lookup returns no report → email silently skipped
+    mockReportsSelectSingle.mockResolvedValue({ data: null });
+    mockGetUserById.mockResolvedValue({ data: { user: null } });
 
     mockSupabase.from.mockImplementation((table: string) => {
       if (table === 'admins') {
@@ -41,6 +67,11 @@ describe('Admin Actions', () => {
         return {
           update: vi.fn().mockReturnValue({
             eq: mockReportsEq,
+          }),
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: mockReportsSelectSingle,
+            }),
           }),
         };
       }
@@ -143,6 +174,78 @@ describe('Admin Actions', () => {
       );
 
       expect(result).toEqual({ success: true });
+    });
+
+    describe('email notification', () => {
+      const REPORT_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+
+      beforeEach(() => {
+        mockSupabase.auth.getUser.mockResolvedValue({
+          data: { user: { id: 'admin-1' } },
+        });
+        mockMaybeSingle.mockResolvedValue({ data: { user_id: 'admin-1' } });
+        mockReportsEq.mockResolvedValue({ error: null });
+      });
+
+      it('sends email to report author when status update succeeds', async () => {
+        mockReportsSelectSingle.mockResolvedValue({
+          data: { title: 'Rozbité hřiště', profile_id: 'user-profile-id' },
+        });
+        mockGetUserById.mockResolvedValue({
+          data: { user: { email: 'author@example.com' } },
+        });
+
+        await updateReportStatus(REPORT_ID, 'in_review');
+
+        expect(sendStatusChangeEmail).toHaveBeenCalledWith(
+          'author@example.com',
+          'Rozbité hřiště',
+          'in_review',
+          REPORT_ID
+        );
+      });
+
+      it('still returns success when report lookup returns null (email skipped)', async () => {
+        mockReportsSelectSingle.mockResolvedValue({ data: null });
+
+        const result = await updateReportStatus(REPORT_ID, 'resolved');
+
+        expect(result).toEqual({ success: true });
+        expect(sendStatusChangeEmail).not.toHaveBeenCalled();
+      });
+
+      it('still returns success when user email is not available', async () => {
+        mockReportsSelectSingle.mockResolvedValue({
+          data: { title: 'Test', profile_id: 'user-id' },
+        });
+        mockGetUserById.mockResolvedValue({ data: { user: { email: null } } });
+
+        const result = await updateReportStatus(REPORT_ID, 'resolved');
+
+        expect(result).toEqual({ success: true });
+        expect(sendStatusChangeEmail).not.toHaveBeenCalled();
+      });
+
+      it('still returns success when email sending throws', async () => {
+        mockReportsSelectSingle.mockResolvedValue({
+          data: { title: 'Test', profile_id: 'user-id' },
+        });
+        mockGetUserById.mockResolvedValue({
+          data: { user: { email: 'user@example.com' } },
+        });
+        vi.mocked(sendStatusChangeEmail).mockRejectedValue(new Error('SMTP error'));
+
+        const result = await updateReportStatus(REPORT_ID, 'rejected');
+
+        expect(result).toEqual({ success: true });
+      });
+
+      it('does not send email when status update itself fails', async () => {
+        mockReportsEq.mockResolvedValue({ error: { message: 'DB error' } });
+
+        await expect(updateReportStatus(REPORT_ID, 'in_review')).rejects.toThrow();
+        expect(sendStatusChangeEmail).not.toHaveBeenCalled();
+      });
     });
   });
 

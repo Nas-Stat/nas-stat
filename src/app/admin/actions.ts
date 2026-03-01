@@ -1,6 +1,8 @@
 'use server';
 
 import { createClient } from '@/utils/supabase/server';
+import { createAdminClient } from '@/utils/supabase/admin';
+import { sendStatusChangeEmail } from '@/lib/email';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
@@ -88,6 +90,31 @@ export async function updateReportStatus(reportId: string, status: string) {
 
   revalidatePath('/admin');
   revalidatePath('/reports');
+
+  // Send email notification — non-blocking, failures must not break the action
+  try {
+    const { data: report } = await supabase
+      .from('reports')
+      .select('title, profile_id')
+      .eq('id', validated.data.reportId)
+      .single();
+
+    if (report) {
+      const adminClient = createAdminClient();
+      const { data: userData } = await adminClient.auth.admin.getUserById(report.profile_id);
+      if (userData?.user?.email) {
+        await sendStatusChangeEmail(
+          userData.user.email,
+          report.title,
+          validated.data.status,
+          validated.data.reportId
+        );
+      }
+    }
+  } catch (emailError) {
+    console.error('Failed to send status change email:', emailError);
+  }
+
   return { success: true };
 }
 
