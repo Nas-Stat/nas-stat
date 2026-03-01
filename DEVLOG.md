@@ -1,5 +1,40 @@
 # Developer Log
 
+## 2026-03-01 - Created PR #20 for Issue #10 (Oompa Loompa)
+
+Story 1.4.2: Základní Pulse Dashboard — PR #20 created against `main`.
+
+### Status
+- Branch: `issue-10-pulse-dashboard`
+- PR: https://github.com/Nas-Stat/nas-stat/pull/20
+- All 75 tests pass. `npm run lint` clean.
+- Quality report committed: 🟡 SUSPICIOUS NUT (no blockers; tech debt noted).
+
+### Tech debt flagged by The Squirrel
+- Status label mapping duplicated in `dashboard/page.tsx` and `Map.tsx` — should be extracted to a shared util.
+- `select('*')` on the latest-reports query — should list explicit columns.
+- Reports fetched twice (stats query + latest query) — could be merged into one query.
+
+---
+
+## 2026-03-01 - Pulse Dashboard dedicated PR for Issue #10 (Oompa Loompa)
+
+Story 1.4.2: Základní Pulse Dashboard — closing GitHub issue #10 with a dedicated branch and PR.
+
+### Implementation (delivered as part of issue #9 groundwork, now formally closed)
+
+- `src/app/dashboard/page.tsx`: Server Component aggregating stats (total reports, avg rating, resolved count), latest 5 reports, top 5 topics by comment count, and a full-screen heatmap via `<Map showHeatmap />`.
+- Dashboard is accessible at `/dashboard` and linked from the home page.
+
+### Added in this PR
+
+- New test `renders Czech status labels for reports in the dashboard` in `src/app/dashboard/page.test.tsx` — verifies that all four report statuses (`pending → Čeká`, `in_review → V řešení`, `resolved → Vyřešeno`, `rejected → Zamítnuto`) render the correct Czech labels in the Latest Reports section (previously untested rendering path).
+
+### Verification
+
+- Ran `npm test`: PASS (75 tests, +1 from 74).
+- Ran `npm run lint`: PASS.
+
 ## 2026-03-01 - Created Pull Request for Issue #9 (Oompa Loompa)
 
 - Created PR #19 from `issue-9-final-tests` -> `main`: https://github.com/Nas-Stat/nas-stat/pull/19

@@ -152,6 +152,44 @@ test('calculates and displays correct statistics', async () => {
   expect(screen.getByText('1')).toBeInTheDocument();
 });
 
+test('renders Czech status labels for reports in the dashboard', async () => {
+  const { createClient } = await import('@/utils/supabase/server');
+  const statuses = [
+    { id: '1', title: 'R1', rating: 3, category: 'C', created_at: '2026-01-01', location: { type: 'Point', coordinates: [14.4, 50.1] }, status: 'pending' },
+    { id: '2', title: 'R2', rating: 3, category: 'C', created_at: '2026-01-02', location: { type: 'Point', coordinates: [14.4, 50.1] }, status: 'in_review' },
+    { id: '3', title: 'R3', rating: 3, category: 'C', created_at: '2026-01-03', location: { type: 'Point', coordinates: [14.4, 50.1] }, status: 'resolved' },
+    { id: '4', title: 'R4', rating: 3, category: 'C', created_at: '2026-01-04', location: { type: 'Point', coordinates: [14.4, 50.1] }, status: 'rejected' },
+  ];
+  vi.mocked(createClient).mockResolvedValue({
+    auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }) },
+    from: vi.fn().mockImplementation((table: string) => {
+      if (table === 'reports') {
+        return {
+          select: vi.fn().mockReturnValue({
+            order: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue({ data: statuses, error: null }),
+            }),
+            then: (resolve: (value: { data: typeof statuses; error: null }) => void) => resolve({ data: statuses, error: null }),
+          }),
+        } as unknown;
+      }
+      return {
+        select: vi.fn().mockReturnValue({
+          order: vi.fn().mockResolvedValue({ data: [], error: null }),
+        }),
+      };
+    }),
+  } as unknown as ReturnType<typeof createClient>);
+
+  const PageComponent = await Page();
+  render(PageComponent);
+
+  expect(screen.getByText('Čeká')).toBeInTheDocument();
+  expect(screen.getByText('V řešení')).toBeInTheDocument();
+  expect(screen.getByText('Vyřešeno')).toBeInTheDocument();
+  expect(screen.getByText('Zamítnuto')).toBeInTheDocument();
+});
+
 test('sorts popular topics by comment count', async () => {
   const { createClient } = await import('@/utils/supabase/server');
   vi.mocked(createClient).mockResolvedValue({
