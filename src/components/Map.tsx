@@ -30,6 +30,15 @@ interface MapProps {
 const DEFAULT_CENTER: [number, number] = [14.4378, 50.0755];
 const DEFAULT_ZOOM = 12;
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 const Map: React.FC<MapProps> = ({
   center = DEFAULT_CENTER,
   zoom = DEFAULT_ZOOM,
@@ -227,10 +236,10 @@ const Map: React.FC<MapProps> = ({
               </span>
               <span class="text-xs text-zinc-500">${'★'.repeat(report.rating || 0)}</span>
             </div>
-            <h3 class="font-bold text-zinc-900">${report.title}</h3>
-            <p class="text-sm text-zinc-600 mt-1">${report.description || ''}</p>
+            <h3 class="font-bold text-zinc-900">${escapeHtml(report.title)}</h3>
+            <p class="text-sm text-zinc-600 mt-1">${escapeHtml(report.description || '')}</p>
             <div class="mt-2 pt-2 border-t border-zinc-100">
-              <span class="text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-100 text-zinc-600">${report.category || 'Bez kategorie'}</span>
+              <span class="text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-100 text-zinc-600">${escapeHtml(report.category || 'Bez kategorie')}</span>
             </div>
           </div>
         `);

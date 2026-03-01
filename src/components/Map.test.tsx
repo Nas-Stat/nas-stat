@@ -213,5 +213,38 @@ describe('Map Component', () => {
     // Check if setHTML was called with the status label "Vyřešeno"
     expect(setHTMLMock).toHaveBeenCalledWith(expect.stringContaining('Vyřešeno'));
   });
+
+  it('escapes HTML in popup content to prevent XSS', async () => {
+    let onMapLoad: () => void = () => {};
+    onMock.mockImplementation((event, callback) => {
+      if (event === 'load') onMapLoad = callback;
+    });
+
+    const reports = [{
+      id: '1',
+      title: '<script>alert("xss")</script>',
+      location: { lng: 14.4, lat: 50.1 },
+      status: 'pending' as const,
+      description: '<img src=x onerror=alert(1)>',
+      category: '<b>Hack</b>',
+      rating: 3,
+    }];
+
+    render(<Map reports={reports} />);
+
+    await import('react').then((React) => {
+      React.act(() => {
+        onMapLoad();
+      });
+    });
+
+    const html: string = setHTMLMock.mock.calls[0][0];
+    expect(html).not.toContain('<script>');
+    expect(html).toContain('&lt;script&gt;');
+    expect(html).not.toContain('<img');
+    expect(html).toContain('&lt;img');
+    expect(html).not.toContain('<b>');
+    expect(html).toContain('&lt;b&gt;');
+  });
 });
 
