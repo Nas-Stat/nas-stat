@@ -1,3 +1,90 @@
+# Quality Report — Issue #10 Review
+
+**Reviewed by:** The Squirrel
+**PR:** #20 (`issue-10-pulse-dashboard` → `main`)
+**Date:** 2026-03-01
+
+---
+
+## Status: 🟡 SUSPICIOUS NUT — Ship with caution
+
+---
+
+## Executive Summary
+
+Story 1.4.2 (Pulse Dashboard) delivers what was asked: an analytics page with aggregated stats, latest reports, popular topics, and a geographic heatmap. All 75 tests pass, lint is clean. The PR itself is minimal and correct — one new test, one DEVLOG entry. However, the underlying dashboard implementation (delivered as groundwork in a prior sprint) carries three technical debt items that the Squirrel cannot ignore: duplicated status-label logic across two files, an over-fetching `select('*')`, and a double database query that fetches reports twice.
+
+None of these are showstoppers. The story requirements are fully met. This is mergeable, but the DRY violation should be addressed before the status system grows any further.
+
+---
+
+## Critical Issues (Showstoppers)
+
+None.
+
+---
+
+## Code Smells & Improvements
+
+### 1. DRY Violation — Status Labels Duplicated in Two Files
+
+`dashboard/page.tsx:174-181` uses chained ternary expressions to map status codes to Czech labels and Tailwind colour classes. `Map.tsx:215-225` solves the same problem with a `Record<string, string>` lookup object.
+
+The same four labels (`Čeká`, `V řešení`, `Vyřešeno`, `Zamítnuto`) and similar colour classes appear in two independent locations. If a fifth status is ever added, someone will update one and forget the other.
+
+**Fix:** Extract status labels and colours into a shared `src/lib/reportStatus.ts` constant and import it in both files.
+
+### 2. Double Fetch of Reports (`dashboard/page.tsx:15-28`)
+
+Reports are queried **twice** in the same server component:
+- `reportsResponse` — fetches all reports (specific columns) for stats aggregation.
+- `latestReportsResponse` — fetches `*` from the same table, ordered by date, limited to 5.
+
+The "latest 5" are a strict subset of the first query's data. At current scale this is harmless, but two round-trips to the same table in a single page load is wasteful and will show up as duplicate queries in the Supabase dashboard.
+
+### 3. `select('*')` in Latest Reports Query (`dashboard/page.tsx:22`)
+
+The `latestReports` fetch uses `select('*')` but the UI only consumes `id`, `title`, `rating`, `category`, `status`, and `created_at`. This silently over-fetches `description`, `location`, and any future columns added to the `reports` table.
+
+### 4. Silent Error Swallowing (`dashboard/page.tsx:30-31`)
+
+All three Supabase responses destructure only `.data`, ignoring `.error`. A failing query produces an empty list with no indication to the user that something went wrong. A comment, a log call, or a minimal error state would make this easier to debug in production.
+
+### 5. Hardcoded "Aktivní" System Status (`dashboard/page.tsx:121`)
+
+The system-status card always renders the string `"Aktivní"` regardless of actual system health. This is fine for an MVP placeholder, but the field label promises something it does not deliver. Either derive a real status or rename it to something honest (e.g., "Verze", "Datum nasazení").
+
+---
+
+## Test Coverage Analysis
+
+**Result: Good.** 5 tests, all passing. 75 total tests pass across the suite.
+
+The new test (`renders Czech status labels for reports in the dashboard`) is well-structured: it seeds all four status variants and asserts the correct Czech text for each. It follows the established mock pattern and is readable.
+
+Existing tests cover:
+- Happy-path rendering with data present
+- Empty state (no reports, no topics, zero stats)
+- Statistics calculation (average rating, resolved count)
+- Topic sort order (by comment count)
+- Czech status labels (new, added in this PR)
+
+**Gap:** No test exercises the `location.coordinates` path for the heatmap map data transformation (`mapReports` on line 46-60). A null/malformed `location` would cause an unguarded runtime crash.
+
+---
+
+## Verdict
+
+Merge with the following tracked as follow-up work:
+
+1. **Extract status labels/colours to a shared constant** — kills the DRY violation before it spawns a third copy.
+2. **Consolidate the double reports fetch** — one query, derive latest-5 from the result.
+3. **Fix `select('*')`** — name only the columns the UI actually reads.
+
+The PR itself (one test + DEVLOG) is clean. The issues live in the implementation layer that landed before this PR. Flag them on the backlog and ship it.
+
+---
+
 # Quality Report — Issue #9 Review
 
 **Reviewed by:** The Squirrel
