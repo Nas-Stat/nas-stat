@@ -244,22 +244,32 @@ export default function TopicsClient({
 
                 <div className="flex items-center gap-6 border-t border-zinc-100 pt-4 dark:border-zinc-800">
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleVote(topic.id, 'up')}
-                      disabled={isPending}
-                      className={`flex items-center gap-1 rounded-md px-2 py-1 transition-colors ${userVote === 'up' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500'}`}
-                    >
-                      <ThumbsUp className={`h-4 w-4 ${userVote === 'up' ? 'fill-current' : ''}`} />
-                      <span className="text-sm font-bold">{upVotes}</span>
-                    </button>
-                    <button
-                      onClick={() => handleVote(topic.id, 'down')}
-                      disabled={isPending}
-                      className={`flex items-center gap-1 rounded-md px-2 py-1 transition-colors ${userVote === 'down' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500'}`}
-                    >
-                      <ThumbsDown className={`h-4 w-4 ${userVote === 'down' ? 'fill-current' : ''}`} />
-                      <span className="text-sm font-bold">{downVotes}</span>
-                    </button>
+                    {user ? (
+                      <>
+                        <button
+                          onClick={() => handleVote(topic.id, 'up')}
+                          disabled={isPending}
+                          className={`flex items-center gap-1 rounded-md px-2 py-1 transition-colors ${userVote === 'up' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500'}`}
+                        >
+                          <ThumbsUp className={`h-4 w-4 ${userVote === 'up' ? 'fill-current' : ''}`} />
+                          <span className="text-sm font-bold">{upVotes}</span>
+                        </button>
+                        <button
+                          onClick={() => handleVote(topic.id, 'down')}
+                          disabled={isPending}
+                          className={`flex items-center gap-1 rounded-md px-2 py-1 transition-colors ${userVote === 'down' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500'}`}
+                        >
+                          <ThumbsDown className={`h-4 w-4 ${userVote === 'down' ? 'fill-current' : ''}`} />
+                          <span className="text-sm font-bold">{downVotes}</span>
+                        </button>
+                      </>
+                    ) : (
+                      <span className="flex items-center gap-3 text-sm text-zinc-400">
+                        <span className="flex items-center gap-1"><ThumbsUp className="h-4 w-4" />{upVotes}</span>
+                        <span className="flex items-center gap-1"><ThumbsDown className="h-4 w-4" />{downVotes}</span>
+                        <a href="/login" className="text-blue-600 hover:underline text-xs">Přihlaste se pro hlasování</a>
+                      </span>
+                    )}
                   </div>
 
                   <button

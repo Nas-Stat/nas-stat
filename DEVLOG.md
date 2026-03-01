@@ -1,5 +1,22 @@
 # Developer Log
 
+## 2026-03-01 - Story 2.1.1: Veřejné čtení bez přihlášení (Issue #12) — Oompa Loompa
+
+### Changes
+
+- **`src/utils/supabase/proxy.ts`**: Added `/reports` and `/topics` to the public-routes allowlist so unauthenticated users are no longer redirected to `/login` when accessing these pages.
+- **`src/app/topics/TopicsClient.tsx`**: Vote buttons (ThumbsUp / ThumbsDown) are now hidden for unauthenticated users. Read-only vote counts are shown alongside a "Přihlaste se pro hlasování" login link instead.
+- **`src/utils/supabase/proxy.test.ts`** *(new)*: 13 tests covering public routes (`/`, `/login`, `/auth/*`, `/reports`, `/topics`) pass through without redirect, protected routes (`/dashboard`, `/profile`, `/settings`) redirect unauthenticated users to `/login`, and all routes pass through for authenticated users.
+- **`src/app/topics/TopicsClient.test.tsx`**: Updated two tests to match the new UX — replaced the "redirects on vote click" test with "shows login link for votes when logged out" and tightened the login-message assertion.
+- **`PLAN.md`**: Added and checked off Story 2.1.1 under new Epic 2.1.
+
+### Verification
+
+- Ran `npm test`: PASS (88 tests, +13 from 75).
+- Ran `npm run lint`: PASS (0 errors, 0 warnings).
+
+---
+
 ## 2026-03-01 - Created PR #20 for Issue #10 (Oompa Loompa)
 
 Story 1.4.2: Základní Pulse Dashboard — PR #20 created against `main`.

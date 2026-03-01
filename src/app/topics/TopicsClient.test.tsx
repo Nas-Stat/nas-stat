@@ -64,7 +64,7 @@ describe('TopicsClient', () => {
 
   test('shows login message if not logged in', () => {
     render(<TopicsClient initialTopics={mockTopics} user={null} />);
-    expect(screen.getByText(/přihlaste/i)).toBeInTheDocument();
+    expect(screen.getByText(/Pro přidání tématu se/i)).toBeInTheDocument();
   });
 
   test('shows creation button if logged in', () => {
@@ -83,14 +83,13 @@ describe('TopicsClient', () => {
     });
   });
 
-  test('redirects to login if voting (logged out)', async () => {
+  test('shows login link for votes when logged out', () => {
     render(<TopicsClient initialTopics={mockTopics} user={null} />);
-    const upButton = screen.getAllByTestId('thumb-up')[0];
-    fireEvent.click(upButton);
-
-    await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/login');
-    });
+    const loginLink = screen.getByText('Přihlaste se pro hlasování');
+    expect(loginLink).toBeInTheDocument();
+    expect(loginLink.closest('a')).toHaveAttribute('href', '/login');
+    // Vote buttons must not be rendered as interactive buttons
+    expect(screen.queryByRole('button', { name: /up/i })).not.toBeInTheDocument();
   });
 
   test('toggles comments section', () => {
