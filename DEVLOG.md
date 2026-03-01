@@ -1,5 +1,38 @@
 # Developer Log
 
+## 2026-03-01 - Story 2.2.1: Fix Squirrel showstopper — controlled select in AdminClient (Issue #14) — Oompa Loompa
+
+### Changes
+
+- **`src/app/admin/AdminClient.tsx`**: Replaced uncontrolled `defaultValue={report.status}` with a controlled `value={statuses[report.id]}`. Added `statuses` state record (keyed by report ID, initialised from props). Status is updated optimistically on change and rolled back on server error. Fixes split-brain UI where badge showed new status but dropdown remained frozen at old value.
+- **`src/app/admin/actions.test.ts`**: Removed unused `mockUpdate` and `mockSelectChain` variables to silence ESLint `no-unused-vars` warnings.
+- **`QUALITY_REPORT.md`**: Updated Issue #14 section from 🟡 SUSPICIOUS NUT → 🟢 GOOD NUT.
+
+### Verification
+
+- Ran `npm test`: PASS (121/121)
+- Ran `npm run lint`: PASS (0 errors, 0 warnings)
+
+---
+
+## 2026-03-01 - Story 2.2.1: Admin panel — správa hlášení (Issue #14) — Oompa Loompa
+
+### Changes
+
+- **`supabase/migrations/20260301000000_add_admin_role.sql`**: Creates `public.admins` table (`user_id UUID PK` → `auth.users`). RLS: SELECT allowed if `auth.uid() = user_id`. Adds an additional UPDATE policy on `reports` for admins.
+- **`src/app/admin/actions.ts`**: Server Action `updateReportStatus(reportId, status)`. Validates user is authenticated, checks admin row in `admins` table, validates input with Zod (`uuid` + `refine` for status enum), then updates `reports.status` and calls `revalidatePath('/admin')` and `revalidatePath('/reports')`.
+- **`src/app/admin/page.tsx`**: Server Component. Fetches user, verifies admin row (redirects to `/` if not admin), fetches all reports ordered by `created_at DESC`, renders `AdminClient`.
+- **`src/app/admin/AdminClient.tsx`**: Client Component. Renders a table of reports with title, category, rating, date, status badge, and a `<select>` dropdown to change status. Uses `useTransition` for non-blocking updates with inline loading state.
+- **`src/utils/supabase/proxy.ts`**: Extended `updateSession` to also protect `/admin`. After auth check, queries `admins` table for authenticated users hitting `/admin`; redirects to `/` if no admin row found.
+- **`src/app/admin/actions.test.ts`**: 10 unit tests covering: unauthenticated throws, non-admin throws, invalid UUID throws, invalid status throws, successful update, DB error throws, and all 4 valid status values accepted.
+- **`src/utils/supabase/proxy.test.ts`**: Extended with 3 new `/admin` middleware tests: unauthenticated → `/login`, non-admin → `/`, admin → pass-through. Updated mock to support `from().select().eq().maybeSingle()` chain with `isAdmin` flag.
+
+### Verification
+
+- Ran `npm test`: PASS (121 tests, +16 from 105).
+
+---
+
 ## 2026-03-01 - Story 2.1.2: Stránkování a filtrování hlášení (Issue #13) — Oompa Loompa
 
 ### Changes

@@ -35,18 +35,35 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  const pathname = request.nextUrl.pathname
+
   if (
     !user &&
-    !request.nextUrl.pathname.startsWith('/login') &&
-    !request.nextUrl.pathname.startsWith('/auth') &&
-    !request.nextUrl.pathname.startsWith('/reports') &&
-    !request.nextUrl.pathname.startsWith('/topics') &&
-    request.nextUrl.pathname !== '/'
+    !pathname.startsWith('/login') &&
+    !pathname.startsWith('/auth') &&
+    !pathname.startsWith('/reports') &&
+    !pathname.startsWith('/topics') &&
+    pathname !== '/'
   ) {
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
+  }
+
+  // Protect /admin — only users with an admin record may access it
+  if (user && pathname.startsWith('/admin')) {
+    const { data: adminRow } = await supabase
+      .from('admins')
+      .select('user_id')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (!adminRow) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/'
+      return NextResponse.redirect(url)
+    }
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as is. If you're

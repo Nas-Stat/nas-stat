@@ -84,6 +84,17 @@ Tento dokument slouží jako detailní architektonický plán pro vývojový tý
   - [x] Napsat testy pro logiku filtrování a stránkování.
 
 
+### Epic 2.2: Admin panel
+
+- [x] **Story 2.2.1: Admin panel — správa hlášení (Issue #14)**
+  - [x] Navrhnout a přidat admin role — tabulka `admins` (supabase/migrations/20260301000000_add_admin_role.sql)
+  - [x] Vytvořit migraci pro admin role
+  - [x] Vytvořit `src/app/admin/page.tsx` — Server Component s přehledem hlášení
+  - [x] Vytvořit `src/app/admin/AdminClient.tsx` — Client Component pro změnu statusu hlášení
+  - [x] Vytvořit `src/app/admin/actions.ts` — Server Action pro update statusu s Zod validací
+  - [x] Middleware ochrání `/admin` — pouze přihlášení uživatelé s admin rolí
+  - [x] Napsat testy pro admin actions a middleware
+
 _(Detailní plánování bude následovat po dokončení Fáze 1)_
 
 ## Phase 3: "The Omnipresent Pulse" (Rozšíření)
