@@ -1,3 +1,140 @@
+# Quality Report — Issue #13 / PR #24
+
+**Reviewed by:** The Squirrel
+**PR:** #24 (`issue-13-pagination-filters` → `main`)
+**Date:** 2026-03-01 (initial) / 2026-03-01 (re-review after fixes)
+
+---
+
+## Status: 🟢 GOOD NUT
+
+---
+
+## Executive Summary
+
+Both showstoppers from the initial review were fixed in `a32eef1` and verified by the Squirrel on re-review. NaN guard is correct (`parseInt(...) || 1`), visual collision resolved (`bottom-20` offset when pagination visible), and two regression tests were added covering each fix. 108 / 108 tests pass, lint is clean. Architecture is sound, `buildUrl` abstraction is clean, server-side query construction is idiomatic. **Approved for merge.**
+
+---
+
+## Critical Issues (Showstoppers)
+
+None. Previously raised issues resolved:
+
+| Issue | Fix | Regression Test |
+|---|---|---|
+| NaN propagation for `?page=abc` | `parseInt(...) \|\| 1` at `page.tsx:20` | `page.test.tsx:169` — `range(0, 19)` asserted |
+| Pagination bar / logged-out prompt overlap | `bottom-20` when `totalPages > 1` at `ReportsClient.tsx:201` | `ReportsClient.test.tsx:191–201` — two tests |
+
+---
+
+## Code Smells & Improvements (non-blocking)
+
+- **No allowlist validation on `status` / `category` params**: Arbitrary strings (e.g. `?status=garbage`) reach `.eq()` unchecked. Not a SQL injection risk (Supabase uses parameterised queries), but the user gets a silently empty map with no guidance.
+- **`CATEGORIES` constant is duplicated**: Same array in `ReportsClient.tsx` and `ReportForm.tsx`. A shared `src/app/reports/constants.ts` would prevent drift.
+- **Redundant guard in `handlePrevPage`**: The `if (currentPage > 1)` guard duplicates the `disabled={currentPage <= 1}` on the button. Harmless dead-path code.
+
+---
+
+## Test Coverage Analysis
+
+| Area | Status |
+|---|---|
+| Happy-path pagination (range calculation) | ✅ |
+| Filter params → `.eq()` calls | ✅ |
+| `totalPages` computed from `count` | ✅ |
+| Negative page clamped to 1 | ✅ |
+| No `.eq()` when no filters active | ✅ |
+| Filter bar UI rendered | ✅ |
+| Pagination bar visibility | ✅ |
+| Prev / Next navigation | ✅ |
+| Disabled states | ✅ |
+| Filter state preserved across pages | ✅ |
+| `?page=abc` (NaN) case | ✅ Added in fix commit |
+| Logged-out prompt position with pagination | ✅ Added in fix commit (2 tests) |
+
+**108 / 108 tests pass.**
+
+---
+
+## Verdict
+
+All showstoppers resolved. Code is clean, tested, and idiomatic. **→ Merge.**
+
+---
+
+# Quality Report — Issue #12 Review
+
+**Reviewed by:** The Squirrel
+**PR:** #23 (`issue-12-public-read` → `main`)
+**Date:** 2026-03-01
+
+---
+
+## Status: 🟢 GOOD NUT
+
+---
+
+## Executive Summary
+
+Surgical, minimal, and correct. Two `startsWith` guards added to middleware, 26 lines changed in `TopicsClient.tsx` to gate interactive controls for anonymous users, 13 comprehensive middleware tests added. All 88 tests pass. Lint clean. The existing RLS policies already covered the DB layer (`FOR SELECT USING (true)` on both `reports` and `topics`). The approach is consistent with the project's architecture: middleware bypass → action-layer auth guard as a double fence. Ready to ship.
+
+---
+
+## Critical Issues (Showstoppers)
+
+None.
+
+---
+
+## Code Smells & Improvements
+
+### 1. Stray Dev Comment in Test File (`TopicsClient.test.tsx:99–101`)
+
+```ts
+// Comments are initially hidden? Wait, I should check the code.
+// In my code: {commentingOn === topic.id && (...)}
+// Initially commentingOn is null.
+```
+
+Live-coding thought process left committed. Harmless but unprofessional in a test suite.
+
+### 2. Method-Agnostic Middleware Bypass (`proxy.ts:42–43`)
+
+The `startsWith('/reports')` and `startsWith('/topics')` guards bypass the login redirect for **all HTTP methods**, not just GET. An unauthenticated POST to `/reports/anything` passes the middleware unchallenged. This is not a vulnerability — Server Actions check `auth.getUser()` independently, and RLS blocks unauthenticated writes — but it is a defense-in-depth gap that may confuse future maintainers.
+
+### 3. Unreachable Guard in `handleVote` (`TopicsClient.tsx:98–101`)
+
+```ts
+if (!user) {
+  router.push('/login');
+  return;
+}
+```
+
+Vote buttons are only rendered in the `{user ? (...) : (...)}` branch, so this guard can never be reached by an anonymous user through the normal UI. Defensive, harmless, but dead code.
+
+---
+
+## Test Coverage Analysis
+
+| File | Tests | Assessment |
+|---|---|---|
+| `proxy.test.ts` | 13 (new) | Excellent. Public routes (/, /login, /auth/*, /reports, /reports/123, /topics, /topics/456), protected routes (/dashboard, /profile, /settings), and authenticated passthrough all covered. |
+| `TopicsClient.test.tsx` | 12 | Updated. New `shows login link for votes when logged out` test directly validates the anonymous UX. Optimistic-UI and toggle tests retained and all green. |
+| Remaining suites | 63 | Unchanged, no regressions. |
+
+**Total: 88 / 88 passing.**
+
+---
+
+## Verdict
+
+The three issues above are cosmetic (stray comment), an acceptable architectural style choice (action-layer is the authoritative gate), and dead defensive code. None are blockers.
+
+**→ Approved for merge.**
+
+---
+
 # Quality Report — Issue #10 Review
 
 **Reviewed by:** The Squirrel

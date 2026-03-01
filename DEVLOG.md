@@ -1,5 +1,21 @@
 # Developer Log
 
+## 2026-03-01 - Story 2.1.2: Stránkování a filtrování hlášení (Issue #13) — Oompa Loompa
+
+### Changes
+
+- **`src/app/reports/page.tsx`**: Accepts `searchParams` (Next.js 15+ Promise API) with `page`, `status`, and `category` params. Builds a filtered + paginated Supabase query using `.eq()` for active filters and `.range(offset, offset + PAGE_SIZE - 1)` with `{ count: 'exact' }`. Computes `totalPages` and passes all pagination/filter state down to `ReportsClient`.
+- **`src/app/reports/ReportsClient.tsx`**: Added `currentPage`, `totalPages`, `currentStatus`, `currentCategory` props. New filter bar (top overlay) with status and category `<select>` dropdowns. New pagination bar (bottom overlay, hidden when `totalPages ≤ 1`) with Prev/Next buttons. Both use `router.push()` with a `buildUrl` helper that serialises active filters into URL params; filter changes reset `page` to 1.
+- **`src/app/reports/page.test.tsx`**: Replaced with 5 tests covering: default render with props, filter params passed to Supabase `.eq()`, `totalPages` calculation from `count`, page clamping for invalid values, and no `.eq()` calls when no filters are active.
+- **`src/app/reports/ReportsClient.test.tsx`**: Added 10 new tests for filter/pagination behaviour: filter bar render, select reflection of props, status/category change navigation, clearing filters, pagination bar visibility, prev/next navigation, disabled states, and filter preservation in paginated URLs.
+
+### Verification
+
+- Ran `npm test`: PASS (105 tests, +17 from 88).
+- Ran `npm run lint`: PASS (0 errors, 0 warnings).
+
+---
+
 ## 2026-03-01 - Story 2.1.1: Veřejné čtení bez přihlášení (Issue #12) — Oompa Loompa
 
 ### Changes
@@ -485,3 +501,21 @@ As part of Issue #9 finalization, I have improved test coverage and addressed mi
 - Confirmed that toggleable voting, optimistic UI, and error handling are correctly implemented and well-tested.
 - Pulse Dashboard stats and heatmap visualization are functional and verified.
 - Mark Story 1.4.3 as [x] and finalized.
+## 2026-03-01 - Story 2.1.2: Pagination & Filtering for /reports (Issue #13)
+
+### Changes
+
+- **`src/app/reports/page.tsx`**: Added offset-based pagination (`PAGE_SIZE=20`) reading `?page`, `?status`, `?category` from `searchParams`. Applies `.eq()` filters and `.range()` with `{ count: 'exact' }` to compute `totalPages`. Fixed NaN propagation for malformed `?page=` values with `parseInt(...) || 1` guard.
+- **`src/app/reports/ReportsClient.tsx`**: Added floating filter bar (status + category `<select>`) and pagination bar (Prev/Next with disabled states). `buildUrl` helper serialises active filters into URL params; filter changes reset to page 1. Fixed visual collision between pagination bar and logged-out login prompt by using `bottom-20` offset when pagination is visible.
+- **Tests**: 3 new tests added for NaN guard and logged-out+pagination overlap (108 total, all pass).
+
+### Verification
+
+- Ran `npm test`: 108/108 PASS
+- Ran `npm run lint`: PASS
+- Fixed both showstoppers from The Squirrel's quality review (SUSPICIOUS NUT → fixes applied)
+
+### Related
+
+- Closes Issue #13
+- PR #24 (`issue-13-pagination-filters` → `main`)
