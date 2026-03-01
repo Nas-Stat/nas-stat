@@ -1,3 +1,98 @@
+# Quality Report — Issue #16 / PR #27
+
+**Reviewed by:** The Squirrel
+**PR:** #27 (`issue-16-email-notifications` → `main`)
+**Date:** 2026-03-01
+
+---
+
+## Status: 🟡 SUSPICIOUS NUT
+
+---
+
+## Executive Summary
+
+Story 2.3.1 is functionally correct: Czech email templates for all four statuses, Resend integration without a new npm dependency, non-blocking send (failures never break the status update), 20 new tests across two files, all 153 tests passing, `.env.example` documented. The implementation is lean and the structure is clean.
+
+However, one real observability bug is present: `sendStatusChangeEmail` silently swallows Resend HTTP errors (`4xx`/`5xx`). In a production environment where the `RESEND_API_KEY` is misconfigured or the `from` domain is unverified, the action returns `{ success: true }`, the admin sees no error, and the user never receives a notification — with zero log evidence. The `try/catch` in `actions.ts` only fires on thrown exceptions, not on HTTP-level failures. Additionally, a pre-existing DRY violation (flagged in the prior review) was not addressed and now accumulates more code around it.
+
+---
+
+## Critical Issues (Showstoppers)
+
+None. The feature works correctly when properly configured.
+
+---
+
+## Code Smells & Improvements
+
+### A. Silent HTTP failure in `sendStatusChangeEmail` (`email.ts:48-55`) — REAL BUG
+
+```ts
+await fetch('https://api.resend.com/emails', { ... });
+// response is never checked
+```
+
+`sendStatusChangeEmail` awaits the Resend HTTP call but never inspects `response.ok`. The scenarios where this silently fails with no logging:
+
+| Cause | Resend response | Logged? |
+|---|---|---|
+| Wrong `RESEND_API_KEY` | `401 Unauthorized` | ❌ No |
+| Unverified `from` domain | `422 Unprocessable` | ❌ No |
+| Resend rate limit | `429 Too Many Requests` | ❌ No |
+| Network timeout (fetch throws) | — | ✅ Yes (catch fires) |
+
+The `try/catch` in `actions.ts:114-116` logs `'Failed to send status change email'` — but only for thrown exceptions, not HTTP error responses. A misconfigured production deployment will appear healthy while silently dropping every notification.
+
+**Fix:** Add `if (!response.ok) throw new Error(\`Resend error: ${response.status}\`)` after the `fetch` call. The surrounding `try/catch` in the caller already handles it correctly — this one-liner makes HTTP failures visible in logs without changing any behaviour.
+
+### B. Pre-existing DRY violation — `updateReportStatus` still does not use `getAdminUser()` (`actions.ts:54-73`)
+
+This was flagged as "Smell A" in the Issue #15/PR #26 review and remains unaddressed. The `updateReportStatus` function now has more code added to it while still carrying a hand-rolled copy of the auth + admin-role check instead of calling `getAdminUser()`. Noted again for the record; non-blocking but the drift risk grows with each PR that touches this function.
+
+### C. HTML content injection in email template (`email.ts:17-19`)
+
+`reportTitle` is interpolated directly into the HTML body:
+
+```ts
+<h2 ...>Aktualizace hlášení: ${reportTitle}</h2>
+<p>... <strong>&quot;${reportTitle}&quot;</strong> ...
+```
+
+Email clients do not execute JavaScript so this is not a practical XSS risk. However, a title containing `</strong></p><p>` would break the HTML structure of the email. The `&quot;` escaping around the title in the `<p>` is inconsistent — the `<h2>` receives no escaping at all. Low severity for a civic platform MVP; escaping the title with a minimal HTML-escape helper would make this airtight.
+
+---
+
+## Test Coverage Analysis
+
+| Scope | Tests | Quality |
+|---|---|---|
+| `buildStatusChangeEmail` — all 4 statuses | 4 | ✅ Excellent |
+| `buildStatusChangeEmail` — title in body, URL in link, unknown status fallback | 3 | ✅ Excellent |
+| `sendStatusChangeEmail` — missing API key no-op | 1 | ✅ |
+| `sendStatusChangeEmail` — correct headers/method | 1 | ✅ |
+| `sendStatusChangeEmail` — recipient, subject, report link | 1 | ✅ |
+| `sendStatusChangeEmail` — fallback app URL | 1 | ✅ |
+| `sendStatusChangeEmail` — all 4 Czech labels | 4 | ✅ Excellent |
+| `updateReportStatus` email — sent to author | 1 | ✅ |
+| `updateReportStatus` email — null report skipped | 1 | ✅ |
+| `updateReportStatus` email — null email skipped | 1 | ✅ |
+| `updateReportStatus` email — throw returns success | 1 | ✅ |
+| `updateReportStatus` email — no email on failed update | 1 | ✅ |
+| **Gap: Resend HTTP 4xx handling** | 0 | ❌ Not tested — because the code path doesn't exist yet |
+
+**153 / 153 tests pass.** Coverage is thorough on the happy path and edge cases that are currently implemented. The gap in the HTTP error test is a consequence of the bug, not an independent omission.
+
+---
+
+## Verdict
+
+🟡 Fix Smell A (silent HTTP failure) and re-submit. The fix is a single line. Everything else is clean, well-tested, and shippable.
+
+**→ DO NOT MERGE until `response.ok` check is added.**
+
+---
+
 # Quality Report — Issue #15 / PR #26
 
 **Reviewed by:** The Squirrel
