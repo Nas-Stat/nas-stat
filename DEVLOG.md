@@ -17,6 +17,7 @@
 
 ---
 
+
 ## 2026-03-01 - Story 2.2.1: Fix Squirrel showstopper — controlled select in AdminClient (Issue #14) — Oompa Loompa
 
 ### Changes

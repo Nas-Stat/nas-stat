@@ -1,3 +1,66 @@
+# Quality Report — Issue #15 / PR #26
+
+**Reviewed by:** The Squirrel
+**PR:** #26 (`issue-14-admin-panel` → `main`)
+**Date:** 2026-03-01
+
+---
+
+## Status: 🟢 GOOD NUT
+
+---
+
+## Executive Summary
+
+Story 2.2.2 (content moderation) delivers exactly what was specified: delete buttons on Topics and Comments tabs, a shared `getAdminUser()` auth helper, cascade deletion (votes → comments → topic), three-step error handling with granular messages, `window.confirm` guard, and optimistic client-side removal. 133/133 tests pass (+12 new), lint is clean. RLS policies are correct. Two code smells are identified (DRY violation and non-atomic cascade) — neither blocks shipping.
+
+---
+
+## Critical Issues (Showstoppers)
+
+None.
+
+---
+
+## Code Smells & Improvements
+
+### A. DRY violation — `updateReportStatus` does not use `getAdminUser()` (`actions.ts:51-71`)
+
+`getAdminUser()` was introduced specifically to consolidate the auth + admin-role check into one place. `deleteTopic` and `deleteComment` use it correctly. `updateReportStatus` — sitting three lines above the helper — still carries its own hand-rolled copy (21 lines: `createClient` → `auth.getUser` → admins query → not-found throw). The two code paths are semantically identical, which means they can drift independently in future. Non-blocking now, but the next person to touch `getAdminUser()` will likely miss `updateReportStatus`.
+
+### B. Non-atomic cascade delete (`actions.ts:106-122`)
+
+Three sequential DELETEs are issued without a Postgres transaction: votes → comments → topic. If the `comments` DELETE succeeds and the `topics` DELETE then fails (e.g. transient DB error), the caller gets an error thrown, but the votes for that topic are already gone. The admin retrying the operation will succeed on the second attempt (votes DELETE is now a no-op), but the asymmetric state window is avoidable. Fix: wrap in an RPC function or use a `ON DELETE CASCADE` FK at the DB layer. Not a showstopper at current scale and data volume.
+
+### C. Incomplete error handling for topics/comments fetch (`page.tsx:29-47`)
+
+`reportsError` is logged when the reports query fails (line 45), but `topicsError` and `commentsError` are silently discarded — the destructuring on line 29 doesn't even name them. If a topics or comments fetch fails, the admin sees empty tables with no indication of failure. Low risk (internal tool), but inconsistent with how `reportsError` is handled.
+
+### D. Comment delete confirm dialog lacks identifying context (`AdminClient.tsx:102`)
+
+The topic confirm dialog helpfully includes the topic title: `„${topicTitle}"`. The comment dialog says only "Opravdu chcete smazat tento komentář?" with no excerpt or identifier. When comments are truncated in the table the admin might delete the wrong row. Minor UX gap.
+
+---
+
+## Test Coverage Analysis
+
+| Scope | Tests | Quality |
+|---|---|---|
+| `deleteTopic` | 6 | Excellent — unauthenticated, non-admin, invalid UUID, each of the 3 cascade failure modes, happy path with `mockDeleteEq` call-count assertion |
+| `deleteComment` | 5 | Excellent — unauthenticated, non-admin, invalid UUID, DB error, happy path |
+| `updateReportStatus` | 10 (existing) | Unchanged, still excellent |
+| `AdminClient` | 0 | Gap — optimistic Sets, tab badge counts, and confirm dialog logic are untested |
+
+**133 / 133 tests pass. Lint clean.**
+
+---
+
+## Verdict
+
+🟢 All story requirements met. Security posture is sound (defence-in-depth: middleware + page + action each guard independently). Tests are thorough on the critical server-action paths. Smells A–D are non-blocking tech debt for a future iteration. **→ Merge.**
+
+---
+
 # Quality Report — Issue #14 / PR #25
 
 **Reviewed by:** The Squirrel
