@@ -197,7 +197,9 @@ export default function ReportsClient({
 
       {/* Floating UI for logged out users */}
       {!user && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded-lg bg-white p-4 shadow-xl dark:bg-zinc-900">
+        <div
+          className={`absolute left-1/2 -translate-x-1/2 rounded-lg bg-white p-4 shadow-xl dark:bg-zinc-900 ${totalPages > 1 ? 'bottom-20' : 'bottom-6'}`}
+        >
           <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
             Pro nahlášení podnětu se prosím{' '}
             <a href="/login" className="text-blue-600 hover:underline">

@@ -17,7 +17,7 @@ export default async function ReportsPage({
   searchParams: Promise<{ page?: string; status?: string; category?: string }>;
 }) {
   const params = await searchParams;
-  const page = Math.max(1, parseInt(params.page ?? '1', 10));
+  const page = Math.max(1, parseInt(params.page ?? '1', 10) || 1);
   const statusFilter = params.status ?? '';
   const categoryFilter = params.category ?? '';
 

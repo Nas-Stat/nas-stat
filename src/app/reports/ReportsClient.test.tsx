@@ -188,6 +188,18 @@ describe('ReportsClient', () => {
 
   // --- Pagination tests ---
 
+  test('logged-out prompt uses higher bottom offset when pagination is visible', () => {
+    render(<ReportsClient {...DEFAULT_PROPS} user={null} currentPage={1} totalPages={3} />);
+    const prompt = screen.getByText(/Pro nahlášení podnětu se prosím/i).closest('div')!;
+    expect(prompt.className).toContain('bottom-20');
+  });
+
+  test('logged-out prompt uses normal bottom offset when no pagination', () => {
+    render(<ReportsClient {...DEFAULT_PROPS} user={null} currentPage={1} totalPages={1} />);
+    const prompt = screen.getByText(/Pro nahlášení podnětu se prosím/i).closest('div')!;
+    expect(prompt.className).toContain('bottom-6');
+  });
+
   test('hides pagination bar when totalPages is 1', () => {
     render(<ReportsClient {...DEFAULT_PROPS} totalPages={1} />);
     expect(screen.queryByTestId('pagination-bar')).not.toBeInTheDocument();

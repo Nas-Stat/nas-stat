@@ -166,6 +166,27 @@ describe('ReportsPage', () => {
     expect(qb.range).toHaveBeenCalledWith(0, 19);
   });
 
+  test('clamps non-numeric ?page= to 1 (NaN guard)', async () => {
+    const { createClient } = await import('@/utils/supabase/server');
+    const qb = makeQueryBuilder({ data: [], error: null, count: 0 });
+    vi.mocked(createClient).mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
+      },
+      from: vi.fn().mockReturnValue(qb),
+    } as unknown as ReturnType<typeof createClient>);
+
+    const PageComponent = await Page({
+      searchParams: Promise.resolve({ page: 'abc' }),
+    });
+    render(PageComponent);
+
+    // Must not propagate NaN — page should resolve to 1
+    expect(screen.getByTestId('current-page')).toHaveTextContent('1');
+    // offset=0, limit end=19
+    expect(qb.range).toHaveBeenCalledWith(0, 19);
+  });
+
   test('does not call eq() when no filters provided', async () => {
     const { createClient } = await import('@/utils/supabase/server');
     const qb = makeQueryBuilder({ data: [], error: null, count: 0 });
