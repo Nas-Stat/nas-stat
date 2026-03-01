@@ -1,5 +1,22 @@
 # Developer Log
 
+## 2026-03-01 - Story 2.2.2: Moderace obsahu (Issue #15) — Oompa Loompa
+
+### Changes
+
+- **`supabase/migrations/20260301000001_admin_delete_policies.sql`**: Adds RLS DELETE policies for admins on `topics`, `comments`, and `votes` (votes needed for cascade when deleting a topic).
+- **`src/app/admin/actions.ts`**: Added `deleteTopic(topicId)` — validates UUID, cascade-deletes votes then comments for the topic, then deletes the topic itself; calls `revalidatePath('/admin')` and `revalidatePath('/topics')`. Added `deleteComment(commentId)` — validates UUID, deletes comment row, revalidates paths. Extracted shared `getAdminUser()` helper to DRY up auth + admin checks.
+- **`src/app/admin/page.tsx`**: Extended to fetch `topics` and `comments` in parallel alongside `reports` (via `Promise.all`). Header now shows counts for all three content types.
+- **`src/app/admin/AdminClient.tsx`**: Added `Topic` and `Comment` interfaces. Introduced a three-tab UI (`Hlášení` / `Témata` / `Komentáře`). Topics and Comments tabs each render a table with a red "Smazat" delete button; clicking triggers `window.confirm()` before calling the server action. Optimistic removal via `deletedTopicIds` / `deletedCommentIds` sets — rows disappear immediately without waiting for a router refresh.
+- **`src/app/admin/actions.test.ts`**: Added 12 new tests covering `deleteTopic` (auth, admin, UUID validation, votes-error, comments-error, topic-error, success + cascade count) and `deleteComment` (auth, admin, UUID validation, DB error, success).
+
+### Verification
+
+- Ran `npm test`: PASS (133/133, +12 from 121)
+- Ran `npm run lint`: PASS (0 errors, 0 warnings)
+
+---
+
 ## 2026-03-01 - Story 2.2.1: Fix Squirrel showstopper — controlled select in AdminClient (Issue #14) — Oompa Loompa
 
 ### Changes

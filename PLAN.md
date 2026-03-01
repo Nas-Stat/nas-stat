@@ -95,7 +95,14 @@ Tento dokument slouží jako detailní architektonický plán pro vývojový tý
   - [x] Middleware ochrání `/admin` — pouze přihlášení uživatelé s admin rolí
   - [x] Napsat testy pro admin actions a middleware
 
-_(Detailní plánování bude následovat po dokončení Fáze 1)_
+- [x] **Story 2.2.2: Moderace obsahu (Issue #15)**
+  - [x] Přidat tlačítko "Smazat" u každého tématu v admin panelu
+  - [x] Přidat tlačítko "Smazat" u každého komentáře v admin panelu
+  - [x] Vytvořit Server Actions `deleteTopic` a `deleteComment` v `src/app/admin/actions.ts`
+  - [x] Implementovat potvrzovací dialog před smazáním (`window.confirm`)
+  - [x] Zajistit kaskádové mazání (hlasy a komentáře tématu) v akci
+  - [x] RLS: smazání povoleno pouze pro admin roli (migrace `20260301000001_admin_delete_policies.sql`)
+  - [x] Napsat testy pro delete actions (12 nových testů)
 
 ## Phase 3: "The Omnipresent Pulse" (Rozšíření)
 

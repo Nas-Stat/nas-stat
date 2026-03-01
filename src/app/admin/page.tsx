@@ -26,16 +26,29 @@ export default async function AdminPage() {
     redirect('/');
   }
 
-  const { data: reportsData, error } = await supabase
-    .from('reports')
-    .select('id, title, description, category, status, rating, created_at')
-    .order('created_at', { ascending: false });
+  const [{ data: reportsData, error: reportsError }, { data: topicsData }, { data: commentsData }] =
+    await Promise.all([
+      supabase
+        .from('reports')
+        .select('id, title, description, category, status, rating, created_at')
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('topics')
+        .select('id, title, description, created_by, created_at')
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('comments')
+        .select('id, content, profile_id, topic_id, report_id, created_at')
+        .order('created_at', { ascending: false }),
+    ]);
 
-  if (error) {
-    console.error('Error fetching reports:', error);
+  if (reportsError) {
+    console.error('Error fetching reports:', reportsError);
   }
 
   const reports = reportsData ?? [];
+  const topics = topicsData ?? [];
+  const comments = commentsData ?? [];
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black">
@@ -49,15 +62,15 @@ export default async function AdminPage() {
           Zpět
         </Link>
         <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
-          Admin — správa hlášení
+          Admin panel
         </h1>
         <span className="ml-3 rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
-          {reports.length} hlášení
+          {reports.length} hlášení · {topics.length} témat · {comments.length} komentářů
         </span>
       </header>
 
       <main>
-        <AdminClient reports={reports} />
+        <AdminClient reports={reports} topics={topics} comments={comments} />
       </main>
     </div>
   );

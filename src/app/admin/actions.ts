@@ -16,6 +16,38 @@ const updateStatusSchema = z.object({
     ),
 });
 
+const deleteTopicSchema = z.object({
+  topicId: z.string().uuid('Neplatné ID tématu'),
+});
+
+const deleteCommentSchema = z.object({
+  commentId: z.string().uuid('Neplatné ID komentáře'),
+});
+
+async function getAdminUser() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error('Musíte být přihlášeni.');
+  }
+
+  const { data: adminRow } = await supabase
+    .from('admins')
+    .select('user_id')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (!adminRow) {
+    throw new Error('Přístup odepřen.');
+  }
+
+  return { supabase, user };
+}
+
 export async function updateReportStatus(reportId: string, status: string) {
   const supabase = await createClient();
 
@@ -56,5 +88,60 @@ export async function updateReportStatus(reportId: string, status: string) {
 
   revalidatePath('/admin');
   revalidatePath('/reports');
+  return { success: true };
+}
+
+export async function deleteTopic(topicId: string) {
+  const { supabase } = await getAdminUser();
+
+  const validated = deleteTopicSchema.safeParse({ topicId });
+
+  if (!validated.success) {
+    throw new Error(validated.error.issues[0].message);
+  }
+
+  const id = validated.data.topicId;
+
+  // Cascade: remove votes and comments before deleting the topic
+  const { error: votesError } = await supabase.from('votes').delete().eq('topic_id', id);
+  if (votesError) {
+    console.error('Error deleting votes for topic:', votesError);
+    throw new Error('Nepodařilo se smazat hlasy tématu.');
+  }
+
+  const { error: commentsError } = await supabase.from('comments').delete().eq('topic_id', id);
+  if (commentsError) {
+    console.error('Error deleting comments for topic:', commentsError);
+    throw new Error('Nepodařilo se smazat komentáře tématu.');
+  }
+
+  const { error } = await supabase.from('topics').delete().eq('id', id);
+  if (error) {
+    console.error('Error deleting topic:', error);
+    throw new Error('Nepodařilo se smazat téma.');
+  }
+
+  revalidatePath('/admin');
+  revalidatePath('/topics');
+  return { success: true };
+}
+
+export async function deleteComment(commentId: string) {
+  const { supabase } = await getAdminUser();
+
+  const validated = deleteCommentSchema.safeParse({ commentId });
+
+  if (!validated.success) {
+    throw new Error(validated.error.issues[0].message);
+  }
+
+  const { error } = await supabase.from('comments').delete().eq('id', validated.data.commentId);
+  if (error) {
+    console.error('Error deleting comment:', error);
+    throw new Error('Nepodařilo se smazat komentář.');
+  }
+
+  revalidatePath('/admin');
+  revalidatePath('/topics');
   return { success: true };
 }
