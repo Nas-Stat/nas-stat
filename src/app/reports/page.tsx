@@ -4,12 +4,23 @@ import ReportsClient from './ReportsClient';
 import { createClient } from '@/utils/supabase/server';
 import { Report } from '@/components/Map';
 
+const PAGE_SIZE = 20;
+
 interface GeoJsonPoint {
   type: string;
   coordinates: [number, number];
 }
 
-export default async function ReportsPage() {
+export default async function ReportsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string; status?: string; category?: string }>;
+}) {
+  const params = await searchParams;
+  const page = Math.max(1, parseInt(params.page ?? '1', 10));
+  const statusFilter = params.status ?? '';
+  const categoryFilter = params.category ?? '';
+
   const supabase = await createClient();
 
   // Get user
@@ -17,12 +28,21 @@ export default async function ReportsPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Fetch reports
-  // Note: We're fetching raw PostGIS location. PostgREST returns it as GeoJSON object.
-  const { data: reportsData, error } = await supabase
+  // Build filtered + paginated query
+  let query = supabase
     .from('reports')
-    .select('id, title, description, location, rating, category, status, created_at')
+    .select('id, title, description, location, rating, category, status, created_at', {
+      count: 'exact',
+    })
     .order('created_at', { ascending: false });
+
+  if (statusFilter) query = query.eq('status', statusFilter);
+  if (categoryFilter) query = query.eq('category', categoryFilter);
+
+  const offset = (page - 1) * PAGE_SIZE;
+  query = query.range(offset, offset + PAGE_SIZE - 1);
+
+  const { data: reportsData, error, count } = await query;
 
   if (error) {
     console.error('Error fetching reports:', error);
@@ -46,6 +66,8 @@ export default async function ReportsPage() {
     };
   });
 
+  const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
+
   return (
     <div className="flex h-screen flex-col bg-zinc-50 dark:bg-black">
       {/* Header */}
@@ -64,7 +86,14 @@ export default async function ReportsPage() {
 
       {/* Main content - Map & Client logic */}
       <main className="relative flex-1">
-        <ReportsClient initialReports={reports} user={user} />
+        <ReportsClient
+          initialReports={reports}
+          user={user}
+          currentPage={page}
+          totalPages={totalPages}
+          currentStatus={statusFilter}
+          currentCategory={categoryFilter}
+        />
       </main>
     </div>
   );

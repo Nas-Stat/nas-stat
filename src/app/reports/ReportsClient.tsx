@@ -6,10 +6,15 @@ import { createReport } from './actions';
 import { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import ReportForm from './ReportForm';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface ReportsClientProps {
   initialReports: Report[];
   user: User | null;
+  currentPage: number;
+  totalPages: number;
+  currentStatus: string;
+  currentCategory: string;
 }
 
 const CATEGORIES = [
@@ -21,9 +26,21 @@ const CATEGORIES = [
   'Jiné',
 ];
 
+const STATUS_OPTIONS = [
+  { value: '', label: 'Všechny stavy' },
+  { value: 'pending', label: 'Čeká' },
+  { value: 'in_review', label: 'V řešení' },
+  { value: 'resolved', label: 'Vyřešeno' },
+  { value: 'rejected', label: 'Zamítnuto' },
+];
+
 export default function ReportsClient({
   initialReports,
   user,
+  currentPage,
+  totalPages,
+  currentStatus,
+  currentCategory,
 }: ReportsClientProps) {
   const router = useRouter();
   const [selectedLocation, setSelectedLocation] = useState<
@@ -71,6 +88,44 @@ export default function ReportsClient({
     }
   };
 
+  const buildUrl = useCallback(
+    (overrides: { page?: number; status?: string; category?: string }) => {
+      const p = overrides.page ?? currentPage;
+      const s = overrides.status !== undefined ? overrides.status : currentStatus;
+      const c =
+        overrides.category !== undefined ? overrides.category : currentCategory;
+      const params = new URLSearchParams();
+      if (s) params.set('status', s);
+      if (c) params.set('category', c);
+      if (p > 1) params.set('page', p.toString());
+      const qs = params.toString();
+      return `/reports${qs ? `?${qs}` : ''}`;
+    },
+    [currentPage, currentStatus, currentCategory]
+  );
+
+  const handleStatusChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      router.push(buildUrl({ status: e.target.value, page: 1 }));
+    },
+    [router, buildUrl]
+  );
+
+  const handleCategoryChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      router.push(buildUrl({ category: e.target.value, page: 1 }));
+    },
+    [router, buildUrl]
+  );
+
+  const handlePrevPage = useCallback(() => {
+    if (currentPage > 1) router.push(buildUrl({ page: currentPage - 1 }));
+  }, [router, buildUrl, currentPage]);
+
+  const handleNextPage = useCallback(() => {
+    if (currentPage < totalPages) router.push(buildUrl({ page: currentPage + 1 }));
+  }, [router, buildUrl, currentPage, totalPages]);
+
   return (
     <div className="relative h-full w-full">
       <Map
@@ -78,6 +133,67 @@ export default function ReportsClient({
         selectedLocation={selectedLocation}
         onMapClick={handleMapClick}
       />
+
+      {/* Filter bar */}
+      <div
+        data-testid="filter-bar"
+        className="absolute left-1/2 top-4 z-10 flex -translate-x-1/2 items-center gap-2 rounded-lg bg-white px-4 py-2 shadow-lg dark:bg-zinc-900"
+      >
+        <select
+          aria-label="Filtrovat podle stavu"
+          value={currentStatus}
+          onChange={handleStatusChange}
+          className="rounded border border-zinc-200 bg-white px-2 py-1 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+        >
+          {STATUS_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+
+        <select
+          aria-label="Filtrovat podle kategorie"
+          value={currentCategory}
+          onChange={handleCategoryChange}
+          className="rounded border border-zinc-200 bg-white px-2 py-1 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+        >
+          <option value="">Všechny kategorie</option>
+          {CATEGORIES.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Pagination bar */}
+      {totalPages > 1 && (
+        <div
+          data-testid="pagination-bar"
+          className="absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 items-center gap-3 rounded-lg bg-white px-4 py-2 shadow-lg dark:bg-zinc-900"
+        >
+          <button
+            aria-label="Předchozí strana"
+            onClick={handlePrevPage}
+            disabled={currentPage <= 1}
+            className="rounded p-1 text-zinc-600 hover:text-zinc-900 disabled:opacity-40 dark:text-zinc-400 dark:hover:text-zinc-100"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <span className="text-sm text-zinc-700 dark:text-zinc-300">
+            {currentPage} / {totalPages}
+          </span>
+          <button
+            aria-label="Další strana"
+            onClick={handleNextPage}
+            disabled={currentPage >= totalPages}
+            className="rounded p-1 text-zinc-600 hover:text-zinc-900 disabled:opacity-40 dark:text-zinc-400 dark:hover:text-zinc-100"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       {/* Floating UI for logged out users */}
       {!user && (

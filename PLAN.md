@@ -75,6 +75,13 @@ Tento dokument slouží jako detailní architektonický plán pro vývojový tý
   - [x] Na stránce `/topics` skrýt hlasovací tlačítka pro nepřihlášené — zobrazit read-only počty hlasů a odkaz na přihlášení.
   - [x] Napsat testy pro middleware (veřejné vs. chráněné routes) v `src/utils/supabase/proxy.test.ts`.
 
+- [x] **Story 2.1.2: Stránkování a filtrování hlášení (Issue #13)**
+  - [x] Implementovat stránkování (offset-based, PAGE_SIZE=20) v `src/app/reports/page.tsx`.
+  - [x] Přidat URL parametry `?page=`, `?status=`, `?category=` pro filtrování.
+  - [x] Upravit `ReportsClient.tsx` — přidat ovládací prvky pro filtry (status, kategorie) a navigaci stránek.
+  - [x] Supabase dotaz omezit pomocí `.range()` a `.eq()` pro aktivní filtry.
+  - [x] Zachovat kompatibilitu s mapovým pohledem (heatmapa/piny) — mapa zobrazuje aktuálně filtrované záznamy.
+  - [x] Napsat testy pro logiku filtrování a stránkování.
 
 
 _(Detailní plánování bude následovat po dokončení Fáze 1)_
