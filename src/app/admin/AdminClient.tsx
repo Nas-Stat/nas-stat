@@ -35,14 +35,20 @@ export default function AdminClient({ reports }: AdminClientProps) {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [statuses, setStatuses] = useState<Record<string, string>>(
+    () => Object.fromEntries(reports.map((r) => [r.id, r.status]))
+  );
 
   function handleStatusChange(reportId: string, newStatus: string) {
+    const previousStatus = statuses[reportId];
     setError(null);
     setUpdatingId(reportId);
+    setStatuses((prev) => ({ ...prev, [reportId]: newStatus }));
     startTransition(async () => {
       try {
         await updateReportStatus(reportId, newStatus);
       } catch (err) {
+        setStatuses((prev) => ({ ...prev, [reportId]: previousStatus }));
         setError(err instanceof Error ? err.message : 'Nastala chyba.');
       } finally {
         setUpdatingId(null);
@@ -116,7 +122,7 @@ export default function AdminClient({ reports }: AdminClientProps) {
                       </span>
                       <select
                         aria-label={`Změnit status pro ${report.title}`}
-                        defaultValue={report.status}
+                        value={statuses[report.id]}
                         disabled={isPending && updatingId === report.id}
                         onChange={(e) => handleStatusChange(report.id, e.target.value)}
                         className="rounded border border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-700 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"

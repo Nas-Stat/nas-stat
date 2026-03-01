@@ -12,12 +12,8 @@ vi.mock('next/cache', () => ({
 }));
 
 describe('Admin Actions', () => {
-  const mockUpdate = vi.fn();
   const mockEq = vi.fn();
   const mockMaybeSingle = vi.fn();
-  const mockSelectChain = {
-    eq: vi.fn(),
-  };
 
   const mockSupabase = {
     auth: {

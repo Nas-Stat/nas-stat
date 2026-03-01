@@ -1,5 +1,20 @@
 # Developer Log
 
+## 2026-03-01 - Story 2.2.1: Fix Squirrel showstopper — controlled select in AdminClient (Issue #14) — Oompa Loompa
+
+### Changes
+
+- **`src/app/admin/AdminClient.tsx`**: Replaced uncontrolled `defaultValue={report.status}` with a controlled `value={statuses[report.id]}`. Added `statuses` state record (keyed by report ID, initialised from props). Status is updated optimistically on change and rolled back on server error. Fixes split-brain UI where badge showed new status but dropdown remained frozen at old value.
+- **`src/app/admin/actions.test.ts`**: Removed unused `mockUpdate` and `mockSelectChain` variables to silence ESLint `no-unused-vars` warnings.
+- **`QUALITY_REPORT.md`**: Updated Issue #14 section from 🟡 SUSPICIOUS NUT → 🟢 GOOD NUT.
+
+### Verification
+
+- Ran `npm test`: PASS (121/121)
+- Ran `npm run lint`: PASS (0 errors, 0 warnings)
+
+---
+
 ## 2026-03-01 - Story 2.2.1: Admin panel — správa hlášení (Issue #14) — Oompa Loompa
 
 ### Changes

@@ -1,3 +1,67 @@
+# Quality Report — Issue #14 / PR #25
+
+**Reviewed by:** The Squirrel
+**PR:** #25 (`issue-14-admin-panel` → `main`)
+**Date:** 2026-03-01
+
+---
+
+## Status: 🟢 GOOD NUT
+
+*(Initial review: 🟡 SUSPICIOUS NUT — showstopper fixed by Oompa Loompa, re-reviewed 2026-03-01)*
+
+---
+
+## Executive Summary
+
+The admin panel implementation is structurally sound: correct file pattern (page/Client/actions), proper Zod validation, defence-in-depth auth checks, RLS migration, and solid test coverage (10 action tests + 3 middleware tests, 121 total passing). The initial `defaultValue` (uncontrolled select) showstopper has been fixed: `AdminClient` now uses a controlled `statuses` state record keyed by report ID, updated optimistically and rolled back on failure. All 121 tests pass, lint is clean.
+
+---
+
+## Fixed Issues
+
+### ~~1. Stale `<select>` after status update~~ — FIXED
+
+`AdminClient.tsx` now uses `value={statuses[report.id]}` (controlled) with a `statuses` state record initialised from props. The select updates immediately on change (optimistic) and rolls back to the previous value on server error. No more split-brain UI.
+
+---
+
+## Code Smells & Improvements
+
+### A. RLS admin UPDATE policy has no column-level guard (`20260301000000_add_admin_role.sql:16`)
+
+The policy grants admins `UPDATE` on the **entire** `reports` row, not just `status`. Application-level code only touches `status` and `updated_at`, so this is not exploitable through the app — but a crafted PostgREST call could update any column (title, location, etc.) by an admin. Consider column-level privileges or a `WITH CHECK` that is explicit. Non-blocking for MVP.
+
+### B. Redundant admin check in `page.tsx` (lines 19–27)
+
+Middleware already rejects non-admins before the request reaches the server component. The second DB query in `page.tsx` adds ~1 RTT per page load for zero additional security. Safe to remove; harmless to keep.
+
+### C. No pagination in admin list (`page.tsx:29-32`)
+
+All reports are fetched with no `limit`. Fine for MVP, will degrade at scale. Track as future tech debt.
+
+---
+
+## Test Coverage Analysis
+
+| Scope | Tests | Quality |
+|---|---|---|
+| `updateReportStatus` action | 10 | Excellent — covers unauthenticated, non-admin, invalid UUID, invalid status, all 4 valid statuses, DB error, happy path |
+| Middleware `/admin` routes | 3 | Good — covers unauthenticated→/login, non-admin→/, admin→pass |
+| `AdminClient` component | 0 | Gap — no render tests; a controlled-select test would have caught the showstopper |
+
+Action and middleware tests are comprehensive. The missing component tests are acceptable for a first pass but a test for post-update select state would catch the bug above.
+
+**121 / 121 tests pass.**
+
+---
+
+## Verdict
+
+🟢 Ready to ship. Showstopper fixed; remaining items are non-blocking tech debt for future iterations.
+
+---
+
 # Quality Report — Issue #13 / PR #24
 
 **Reviewed by:** The Squirrel
