@@ -2,19 +2,19 @@
 
 **Reviewed by:** The Squirrel
 **PR:** #25 (`issue-14-admin-panel` → `main`)
-**Date:** 2026-03-01
+**Date:** 2026-03-01 (initial) / 2026-03-01 (re-review — independent fresh audit)
 
 ---
 
 ## Status: 🟢 GOOD NUT
 
-*(Initial review: 🟡 SUSPICIOUS NUT — showstopper fixed by Oompa Loompa, re-reviewed 2026-03-01)*
+*(Initial review: 🟡 SUSPICIOUS NUT — uncontrolled `<select>` showstopper fixed, re-reviewed and independently confirmed 2026-03-01)*
 
 ---
 
 ## Executive Summary
 
-The admin panel implementation is structurally sound: correct file pattern (page/Client/actions), proper Zod validation, defence-in-depth auth checks, RLS migration, and solid test coverage (10 action tests + 3 middleware tests, 121 total passing). The initial `defaultValue` (uncontrolled select) showstopper has been fixed: `AdminClient` now uses a controlled `statuses` state record keyed by report ID, updated optimistically and rolled back on failure. All 121 tests pass, lint is clean.
+The admin panel is correctly architected (page/Client/actions pattern), implements defence-in-depth auth (middleware + server component + server action each independently verify), applies Zod validation on all user input, and is covered by 10 action tests + 16 middleware tests (121 total passing). Lint clean. `updated_at` column confirmed to exist in the migration schema — no phantom column risk. The `statuses` controlled-state fix resolves the original showstopper. One new code smell identified: the status colour badge uses stale `report.status` props during the optimistic window (see below). Not a blocker.
 
 ---
 
@@ -22,23 +22,27 @@ The admin panel implementation is structurally sound: correct file pattern (page
 
 ### ~~1. Stale `<select>` after status update~~ — FIXED
 
-`AdminClient.tsx` now uses `value={statuses[report.id]}` (controlled) with a `statuses` state record initialised from props. The select updates immediately on change (optimistic) and rolls back to the previous value on server error. No more split-brain UI.
+`AdminClient.tsx` now uses `value={statuses[report.id]}` (controlled) with a `statuses` state record initialised from props. The select updates immediately on change (optimistic) and rolls back to the previous value on server error.
 
 ---
 
 ## Code Smells & Improvements
 
-### A. RLS admin UPDATE policy has no column-level guard (`20260301000000_add_admin_role.sql:16`)
+### A. Status badge lags behind optimistic select update (`AdminClient.tsx:119,121`)
 
-The policy grants admins `UPDATE` on the **entire** `reports` row, not just `status`. Application-level code only touches `status` and `updated_at`, so this is not exploitable through the app — but a crafted PostgREST call could update any column (title, location, etc.) by an admin. Consider column-level privileges or a `WITH CHECK` that is explicit. Non-blocking for MVP.
+The colour pill and label beside the `<select>` read from `report.status` (immutable props), not `statuses[report.id]` (local state). During the optimistic pending window the dropdown shows the **new** status while the badge still shows the **old** status and colour. After the server round-trip `revalidatePath` forces a re-render and everything syncs. The "Ukládám…" indicator partially masks this, but it is a residual split-brain. Fix: apply `statuses[report.id]` in lines 119 and 121. Non-blocking for admin tooling.
 
-### B. Redundant admin check in `page.tsx` (lines 19–27)
+### B. RLS admin UPDATE policy has no column-level guard (`20260301000000_add_admin_role.sql:16`)
 
-Middleware already rejects non-admins before the request reaches the server component. The second DB query in `page.tsx` adds ~1 RTT per page load for zero additional security. Safe to remove; harmless to keep.
+The policy grants admins `UPDATE` on the **entire** `reports` row, not just `status`. A crafted PostgREST call could update title, location, etc. Application code only touches `status` and `updated_at`, so this is not currently exploitable through the UI. Consider column-level privileges for hardening. Non-blocking for MVP.
 
-### C. No pagination in admin list (`page.tsx:29-32`)
+### C. Redundant admin check in `page.tsx` (lines 19–27)
 
-All reports are fetched with no `limit`. Fine for MVP, will degrade at scale. Track as future tech debt.
+Middleware already rejects non-admins before the page is reached. The second `admins` DB query in `page.tsx` adds ~1 RTT per load. Safe to remove; harmless to keep as defence-in-depth.
+
+### D. No pagination in admin list (`page.tsx:29-32`)
+
+All reports fetched with no `limit`. Fine for MVP, will degrade at scale.
 
 ---
 
@@ -47,18 +51,16 @@ All reports are fetched with no `limit`. Fine for MVP, will degrade at scale. Tr
 | Scope | Tests | Quality |
 |---|---|---|
 | `updateReportStatus` action | 10 | Excellent — covers unauthenticated, non-admin, invalid UUID, invalid status, all 4 valid statuses, DB error, happy path |
-| Middleware `/admin` routes | 3 | Good — covers unauthenticated→/login, non-admin→/, admin→pass |
-| `AdminClient` component | 0 | Gap — no render tests; a controlled-select test would have caught the showstopper |
+| Middleware `/admin` routes | 16 | Excellent — covers unauthenticated→/login (admin + general routes), non-admin→/, admin→pass, public routes unaffected |
+| `AdminClient` component | 0 | Gap — optimistic rollback and badge-vs-select divergence are untested |
 
-Action and middleware tests are comprehensive. The missing component tests are acceptable for a first pass but a test for post-update select state would catch the bug above.
-
-**121 / 121 tests pass.**
+**121 / 121 tests pass. Lint clean.**
 
 ---
 
 ## Verdict
 
-🟢 Ready to ship. Showstopper fixed; remaining items are non-blocking tech debt for future iterations.
+🟢 Ready to ship. Showstopper resolved. Badge lag (A) and the remaining items are non-blocking tech debt for future iterations. **→ Merge.**
 
 ---
 
