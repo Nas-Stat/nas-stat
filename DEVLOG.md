@@ -1,5 +1,22 @@
 # Developer Log
 
+## 2026-03-01 - Created PR #20 for Issue #10 (Oompa Loompa)
+
+Story 1.4.2: Základní Pulse Dashboard — PR #20 created against `main`.
+
+### Status
+- Branch: `issue-10-pulse-dashboard`
+- PR: https://github.com/Nas-Stat/nas-stat/pull/20
+- All 75 tests pass. `npm run lint` clean.
+- Quality report committed: 🟡 SUSPICIOUS NUT (no blockers; tech debt noted).
+
+### Tech debt flagged by The Squirrel
+- Status label mapping duplicated in `dashboard/page.tsx` and `Map.tsx` — should be extracted to a shared util.
+- `select('*')` on the latest-reports query — should list explicit columns.
+- Reports fetched twice (stats query + latest query) — could be merged into one query.
+
+---
+
 ## 2026-03-01 - Pulse Dashboard dedicated PR for Issue #10 (Oompa Loompa)
 
 Story 1.4.2: Základní Pulse Dashboard — closing GitHub issue #10 with a dedicated branch and PR.
