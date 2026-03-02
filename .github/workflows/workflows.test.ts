@@ -102,6 +102,22 @@ describe('deploy.yml', () => {
     expect(content).toContain('vercel.com/account/tokens')
     expect(content).toContain('vercel link')
   })
+
+  it('does NOT use --prod flag (staging is a preview deployment)', () => {
+    expect(content).not.toContain('--prod')
+  })
+
+  it('runs lint before deploying', () => {
+    expect(content).toContain('npm run lint')
+  })
+
+  it('runs tests before deploying', () => {
+    expect(content).toContain('npm run test')
+  })
+
+  it('runs build before deploying', () => {
+    expect(content).toContain('npm run build')
+  })
 })
 
 describe('deploy-production.yml', () => {

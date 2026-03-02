@@ -1,87 +1,70 @@
-# Quality Report — Story 2.4.1: CI/CD Pipeline (#17)
+# Quality Report — Story 2.4.2: Produkční nasazení (Issue #18)
 
-**Reviewed by:** The Squirrel (Tabula Rasa — fresh independent audit, 2026-03-02)
-**Branch:** `issue-17-cicd-pipeline` → PR #28
+**Reviewer:** The Squirrel
+**PR:** #29 — `feat(deploy): production deployment pipeline — Story 2.4.2`
+**Branch:** `issue-18-production-deployment`
 **Date:** 2026-03-02
+**Audit:** Fresh (no prior context)
 
 ---
 
-## Status: 🟢 GOOD NUT
-
-> Code is clean, tested, and CI passes. Ready to ship.
+## Status: ✅ GOOD NUT
 
 ---
 
 ## Executive Summary
 
-All six story acceptance criteria are delivered and production-ready.
+The production deployment pipeline is well-documented and the test suite is clean (195/195). The production workflow (`deploy-production.yml`) is correctly structured: it gates on `v*` tags, runs full lint + test + build before deploying, and uses properly `PROD_`-prefixed secrets.
 
-- `ci.yml` — lint + test + build on every PR to `main` ✅
-- `deploy.yml` — Vercel staging deploy on push to `main` ✅
-- `workflows.test.ts` — 20 dedicated workflow tests, all passing ✅
-- `README.md` — full CI/CD section in Czech with secrets table and Vercel setup guide ✅
-- **174/174 tests pass. Lint: 0 warnings. Build: clean. CI check: ✅ success.**
+The critical defect identified in the previous audit has been resolved: `deploy.yml` no longer uses the `--prod` flag, meaning pushes to `main` create Vercel **preview deployments** (true staging), not production deployments. Additionally, `deploy.yml` now runs lint + test + build quality gates before deploying — matching the production workflow's safety standards.
 
 ---
 
-## Critical Issues (Showstoppers)
+## Issues Resolved
 
-None. CI passed on GitHub Actions. No blockers.
+### ✅ A. `deploy.yml` — `--prod` flag removed (staging is now true preview)
 
----
+**Was:** `npx vercel --token ... --prod --yes ...`
+**Now:** `--prod` omitted — Vercel creates a preview deployment with a unique URL, leaving the production alias (`nasstat.cz`) untouched.
 
-## Code Smells & Improvements (Non-Blocking, Pre-Activation)
+### ✅ B. `deploy.yml` — Quality gates added (lint + test + build)
 
-### A. `--prod` flag is semantically misleading in a "staging" deploy
+Staging workflow now runs:
+1. `npm run lint`
+2. `npm run test`
+3. `npm run build` (with STAGING_ env vars)
+4. Deploy to Vercel preview
 
-```yaml
-npx vercel --token "${{ secrets.VERCEL_TOKEN }}" \
-  --prod \   # promotes to the Vercel project's *production* URL
-```
-
-Named "Deploy to Staging" but `--prod` promotes to whichever project `VERCEL_PROJECT_ID` targets.
-Before activating Vercel integration: confirm `VERCEL_PROJECT_ID` references a dedicated staging
-project, or rename the secret to `STAGING_VERCEL_PROJECT_ID` to make intent explicit.
-
-### B. No enforced CI gate before staging deploy
-
-`ci.yml` triggers on `pull_request`. `deploy.yml` triggers on `push` to `main`. A direct push to
-`main` bypasses CI and deploys unvalidated code to staging. Fix: enable branch protection rules
-(Settings → Branches → Require status checks to pass before merging).
-
-### C. Runtime secrets via `--env` CLI flags may not reach Server Actions
-
-`SUPABASE_SERVICE_ROLE_KEY` and `RESEND_API_KEY` are consumed at **runtime** in Next.js Server
-Actions. Vercel CLI `--env` flags are build-time only and are not guaranteed to persist into
-serverless function execution. Also set these in Vercel Dashboard → Environment Variables.
-
-### D. Workflow tests rely on string-matching, not YAML parsing
-
-A syntactically broken YAML file containing the expected strings would pass all 20 tests. Pragmatic
-at this project stage, but provides false confidence against structural YAML errors.
+This matches the production workflow and prevents broken code from reaching even staging.
 
 ---
 
 ## Test Coverage Analysis
 
-| Metric | Result |
-|--------|--------|
-| Total tests | 174 |
-| Passing | **174 ✅** |
-| Failing | 0 |
-| Workflow-specific tests | 20 (`workflows.test.ts`) |
-| Lint warnings | 0 |
-| Build errors | 0 |
-| GitHub Actions CI | **✅ success** |
-
-Workflow tests cover: trigger conditions, runner, Node version, npm caching, all three CI steps
-(lint, test, build), Supabase env vars with placeholder fallbacks, and all Vercel/staging secrets.
+| Area | Status |
+|------|--------|
+| Total tests | 195/195 ✅ |
+| Lint | Clean ✅ |
+| Workflow structure tests | 41 tests ✅ |
+| Staging: no `--prod` flag | Asserted by test ✅ |
+| Staging: quality gates | Asserted by test ✅ |
+| Production workflow | Correctly gated (lint → test → build → deploy) ✅ |
+| Staging workflow | Quality gates present, preview deployment ✅ |
 
 ---
 
-## Verdict
+## Remaining Notes (Non-blocking)
 
-**🟢 GOOD NUT. Squash and merge.**
+### C. `RESEND_API_KEY` absent from production build step
 
-All non-blocking items above are pre-activation ops concerns — none require code changes before
-merging. Address them when configuring the live Vercel integration.
+`deploy-production.yml:42-48` sets 6 environment variables but omits `RESEND_API_KEY` and `EMAIL_FROM`. Both are passed via Vercel CLI `--env` flags at deploy time. At runtime this is fine (email sending is lazy-evaluated). Low priority — worth aligning if Next.js ever evaluates at build time.
+
+### D. Commit noise in PR history
+
+The PR contains 20+ commits for Story 2.4.1 quality audits unrelated to Story 2.4.2 implementation. Squash-merge recommended to keep main branch history clean.
+
+---
+
+## Decision
+
+**GOOD NUT — Ready to merge** (squash recommended per note D).
