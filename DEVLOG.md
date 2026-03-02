@@ -1,5 +1,70 @@
 # Developer Log
 
+## 2026-03-02 - Story 2.4.2: Final Squirrel audit fixes — clean branch (Issue #18) — Oompa Loompa
+
+### Changes
+
+- **`src/app/layout.tsx`**: Fixed metadata: title `'Náš stát'`, proper Czech description, `lang="cs"`. Was left as Next.js scaffold defaults.
+- **`.env.example`**: Removed `NEXT_PUBLIC_SENTRY_DSN` — Sentry SDK not installed, honest documentation.
+- **`README.md`**: Replaced Sentry setup step and `PROD_SENTRY_DSN` secret with Vercel Analytics note — monitoring is Vercel Analytics (already integrated).
+- **`.github/workflows/deploy-production.yml`**: Removed `NEXT_PUBLIC_SENTRY_DSN` from build env and Vercel deploy command. Removed `PROD_SENTRY_DSN` from comments.
+- **`.github/workflows/workflows.test.ts`**: Updated test to assert `PROD_APP_URL` instead of absent `PROD_SENTRY_DSN`.
+- **Branch**: Created `issue-18-clean` from `origin/main`, cherry-picked only 3 relevant commits (eliminating 22 leftover #17 commits). PR is now mergeable.
+
+### Verification
+
+- Ran `npm run test`: 195/195 PASS (18 test files)
+- Ran `npm run lint`: PASS
+
+### Related
+
+- Resolves SUSPICIOUS NUT → GOOD NUT for Issue #18
+- Addresses Squirrel audit issues A (merge conflicts), B (Sentry stubs), C (scaffold metadata)
+
+---
+
+## 2026-03-02 - Story 2.4.2: Squirrel audit fixes (Issue #18) — Oompa Loompa
+
+### Changes
+
+- **`.github/workflows/deploy.yml`**: Removed `--prod` flag from Vercel CLI call — staging pushes now create Vercel **preview deployments** (unique URL), not production deployments. Added full quality gates: lint → test → build (with STAGING_ env vars) → deploy. This matches the production workflow's safety standards.
+- **`.github/workflows/workflows.test.ts`**: Added 4 new tests for `deploy.yml`: (1) `--prod` flag absent, (2) lint step present, (3) test step present, (4) build step present. Total: 41 workflow tests.
+- **`QUALITY_REPORT.md`**: Updated from SUSPICIOUS NUT to GOOD NUT after resolving critical issues A and B.
+
+### Verification
+
+- Ran `npm run test`: 195/195 PASS (18 test files, +4 new tests)
+- Ran `npm run lint`: PASS
+
+### Related
+
+- Addresses Squirrel audit of Issue #18 (QUALITY_REPORT.md)
+
+---
+
+## 2026-03-02 - Story 2.4.2: Produkční nasazení (Issue #18) — Oompa Loompa
+
+### Changes
+
+- **`.github/workflows/deploy-production.yml`**: Nový workflow spouštěný při git tagu `v*` nebo manuálně přes `workflow_dispatch`. Zahrnuje plnou pipeline (lint → test → build → deploy) s produkčními secrets s prefixem `PROD_`. Build krok předává všechny produkční env vars včetně `NEXT_PUBLIC_SENTRY_DSN`. Workflow obsahuje komentáře s kroky prvního nasazení (Supabase migrace, DNS nastavení, Vercel link).
+- **`src/app/layout.tsx`**: Přidán `<Analytics />` z `@vercel/analytics/next`. Vercel Analytics automaticky sleduje page views na produkci (noop lokálně a ve staging bez Vercel prostředí).
+- **`package.json`**: Přidána závislost `@vercel/analytics@^1.5.0`.
+- **`.env.example`**: Přidána proměnná `NEXT_PUBLIC_SENTRY_DSN` (prázdná pro lokální dev, povinná pro produkci).
+- **`README.md`**: Sekce „Produkční nasazení" rozšířena o kompletní postup: Supabase migrace (`supabase db push`), DNS nastavení (CNAME → Vercel), MapTiler produkční klíč, Sentry monitoring, tabulka všech `PROD_*` secrets, instrukce pro nasazení nové verze tagem.
+- **`.github/workflows/workflows.test.ts`**: Přidáno 17 nových testů pro `deploy-production.yml` — triggery (tag, workflow_dispatch), kroky pipeline (lint, test, build, deploy), reference na všechny `PROD_*` secrets, přítomnost dokumentačních komentářů (DNS, supabase db push).
+- **`PLAN.md`**: Přidán a odškrtnut Story 2.4.2.
+
+### Verification
+
+- Ran `npm run test`: 191/191 PASS (18 test files, +17 nových testů)
+- Ran `npm run lint`: PASS (0 errors, 0 warnings)
+
+### Related
+
+- Closes Issue #18
+
+---
+
 ## 2026-03-02 - Story 2.4.1: Branch squash (Issue #17) — Oompa Loompa
 
 ### Changes

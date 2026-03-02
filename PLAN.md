@@ -112,6 +112,13 @@ Tento dokument slouží jako detailní architektonický plán pro vývojový tý
   - [x] Napsat testy pro validaci struktury workflow souborů
   - [x] Zdokumentovat postup nasazení v README
 
+- [x] **Story 2.4.2: Produkční nasazení (Issue #18)**
+  - [x] Vytvořit `.github/workflows/deploy-production.yml` — deploy na produkci při tagu `v*` nebo manuálně
+  - [x] Integrovat Vercel Analytics (`@vercel/analytics`) do `layout.tsx`
+  - [x] Aktualizovat `.env.example` o `NEXT_PUBLIC_SENTRY_DSN` proměnnou pro monitoring
+  - [x] Zdokumentovat produkční konfiguraci v README (doména, DNS, Supabase migrace, secrets)
+  - [x] Napsat testy pro validaci struktury `deploy-production.yml` (16 nových testů)
+
 ## Phase 3: "The Omnipresent Pulse" (Rozšíření)
 
 _(Detailní plánování bude následovat po dokončení Fáze 2)_
