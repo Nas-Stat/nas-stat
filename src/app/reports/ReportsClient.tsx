@@ -7,6 +7,7 @@ import { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import ReportForm from './ReportForm';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { STATUS_LABELS } from '@/lib/reportStatus';
 
 interface ReportsClientProps {
   initialReports: Report[];
@@ -28,10 +29,7 @@ const CATEGORIES = [
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Všechny stavy' },
-  { value: 'pending', label: 'Čeká' },
-  { value: 'in_review', label: 'V řešení' },
-  { value: 'resolved', label: 'Vyřešeno' },
-  { value: 'rejected', label: 'Zamítnuto' },
+  ...Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label })),
 ];
 
 export default function ReportsClient({

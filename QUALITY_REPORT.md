@@ -1,59 +1,89 @@
-# Quality Report — Story 2.4.2: Produkční nasazení (Issue #18)
+# Quality Report — Issue #21: Extract shared status labels/colours constant (DRY)
 
 **Reviewer:** The Squirrel
-**PR:** `issue-18-clean` → main
-**Branch:** `issue-18-clean`
+**PR:** #31 (`issue-21-report-status-constants` → `main`)
 **Date:** 2026-03-02
-**Audit:** Re-audit after Oompa Loompa fixes (prior SUSPICIOUS NUT overturned)
+**Scope:** 2 new files, 5 files modified (code), 2 docs updated
 
 ---
 
-## Status: ✅ GOOD NUT
+## Status: GOOD NUT
 
 ---
 
 ## Executive Summary
 
-All three SUSPICIOUS NUT blockers resolved:
+Clean, focused DRY refactoring. A single source of truth (`src/lib/reportStatus.ts`) now owns all four report status labels (Czech) and their Tailwind colour classes. Five consumer files that previously maintained independent copies now import from this module. Adding a fifth status requires editing exactly one file.
 
-- **A. Merge conflicts** — Fixed. Created `issue-18-clean` from `origin/main`, cherry-picked only 3 relevant commits. History is clean (3 commits). Branch is mergeable.
-- **B. Sentry referenced but not installed** — Fixed. Removed all Sentry references from `.env.example`, `README.md`, `deploy-production.yml`, and `workflows.test.ts`. Honest documentation: monitoring is Vercel Analytics (installed and working).
-- **C. layout.tsx boilerplate metadata** — Fixed. Title is now `'Náš stát'`, description is proper Czech civic platform copy, `lang="cs"`.
-
-Test suite: **195/195 PASS**. Lint: clean.
+**204/204 tests pass. Lint clean. Merge conflict-free.**
 
 ---
 
-## Test Coverage Analysis
+## Acceptance Criteria Checklist
 
-| Area | Status |
-|------|--------|
-| Total tests | 195/195 PASS |
-| Lint | Clean (0 errors, 0 warnings) |
-| Workflow structure tests | 41 tests (ci + deploy + deploy-production) |
-| `deploy.yml` no `--prod` flag | Asserted |
-| `deploy.yml` quality gates | Asserted (lint, test, build) |
-| `deploy-production.yml` PROD_ secrets | Asserted (6 secrets, no phantom SENTRY) |
-| Vercel Analytics in layout | Present (`<Analytics />`) |
-| Branch clean history | 3 commits on top of main |
+| Criterion | Verdict |
+|-----------|---------|
+| Single source of truth for status labels and colours | PASS — `src/lib/reportStatus.ts` |
+| Both dashboard and Map import from shared module | PASS — plus Admin, ReportsClient, email |
+| Tests pass, lint clean | PASS — 204/204, 0 lint errors |
+| Unit test for exhaustiveness | PASS — 9 tests in `reportStatus.test.ts` |
 
 ---
 
-## What's Good
+## Code Review
 
-- Clean three-file workflow architecture (CI / staging / production)
-- Proper secret namespacing (`STAGING_` vs `PROD_`)
-- Tag-based production releases with manual override (`workflow_dispatch`)
-- Staging uses preview deployments (no `--prod` flag)
-- All pipelines gate on lint + test + build before deploy
-- Comprehensive README documentation in Czech
-- Honest monitoring: Vercel Analytics only, no phantom Sentry
-- Proper HTML `lang="cs"` and app title
+### `src/lib/reportStatus.ts` (new, 21 lines)
+- Three well-named exports: `STATUS_LABELS`, `STATUS_COLORS`, `ADMIN_STATUS_COLORS`
+- `ADMIN_STATUS_COLORS` justified: dark-mode classes + yellow pending convention
+- Typed as `Record<string, string>` — pragmatic for runtime lookup with `??` fallback
+
+### Consumers
+| File | Change | Quality |
+|------|--------|---------|
+| `dashboard/page.tsx` | Replaced 8-line chained ternary with map lookup + `??` fallback | Clean |
+| `Map.tsx` | Removed 10-line inline `statusColors`/`statusLabels` objects | Clean |
+| `AdminClient.tsx` | Removed local constants; `<select>` options derived from `Object.entries` | Clean, DRYer |
+| `ReportsClient.tsx` | `STATUS_OPTIONS` derived from `STATUS_LABELS` with spread | Clean |
+| `email.ts` | Spreads base labels, overrides only `pending` with longer email copy | Well-documented |
+
+### Test file: `reportStatus.test.ts` (new, 66 lines, 9 tests)
+- Exhaustiveness checks for all three maps
+- Key-set parity assertions (labels ↔ colours)
+- Czech string snapshot assertions
+- Tailwind class format validation (`bg-` and `text-` present)
+- Dark-mode class assertion for admin variant
+
+---
+
+## Critical Issues (Showstoppers)
+
+None.
+
+---
+
+## Code Smells & Improvements
+
+**Minor (non-blocking):**
+1. `Record<string, string>` is loose — a union type `'pending' | 'in_review' | 'resolved' | 'rejected'` would catch typos at compile time. Acceptable trade-off for a small project.
+2. `ADMIN_STATUS_COLORS` duplicates the colour *structure* (blue/green/red) from `STATUS_COLORS` but with different shades. Not worth abstracting for 4 entries.
+
+Neither warrants blocking the merge.
+
+---
+
+## Security & Performance
+
+- No secrets, no runtime fetches, no side effects. Pure data module.
+- No N+1, no memory concerns.
+
+---
+
+## Note on PR Scope
+
+The PR branch carries 6 commits (some from prior issue #18 work). The #21-specific commits are `a61c544` and `2fe139d`. The unrelated changes (CI workflow, Vercel Analytics, metadata fix) were already reviewed and approved in prior Squirrel audits. Local merge-tree confirms no conflicts.
 
 ---
 
 ## Decision
 
-**GOOD NUT — Ready to merge.**
-
-Squash-merge `issue-18-clean` → `main`. Close Issue #18.
+**GOOD NUT — Approved to merge and close #21.**

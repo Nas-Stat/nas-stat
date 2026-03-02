@@ -2,20 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { updateReportStatus, deleteTopic, deleteComment } from './actions';
-
-const STATUS_LABELS: Record<string, string> = {
-  pending: 'Čeká',
-  in_review: 'V řešení',
-  resolved: 'Vyřešeno',
-  rejected: 'Zamítnuto',
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-  in_review: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-  resolved: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-  rejected: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-};
+import { STATUS_LABELS, ADMIN_STATUS_COLORS } from '@/lib/reportStatus';
 
 interface Report {
   id: string;
@@ -188,7 +175,7 @@ export default function AdminClient({ reports, topics, comments }: AdminClientPr
                     <td className="py-3">
                       <div className="flex items-center gap-2">
                         <span
-                          className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[report.status] ?? ''}`}
+                          className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${ADMIN_STATUS_COLORS[report.status] ?? ''}`}
                         >
                           {STATUS_LABELS[report.status] ?? report.status}
                         </span>
@@ -199,10 +186,9 @@ export default function AdminClient({ reports, topics, comments }: AdminClientPr
                           onChange={(e) => handleStatusChange(report.id, e.target.value)}
                           className="rounded border border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-700 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
                         >
-                          <option value="pending">Čeká</option>
-                          <option value="in_review">V řešení</option>
-                          <option value="resolved">Vyřešeno</option>
-                          <option value="rejected">Zamítnuto</option>
+                          {Object.entries(STATUS_LABELS).map(([value, label]) => (
+                            <option key={value} value={value}>{label}</option>
+                          ))}
                         </select>
                         {isPending && updatingId === report.id && (
                           <span className="text-xs text-zinc-400">Ukládám…</span>

@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { STATUS_COLORS, STATUS_LABELS } from '@/lib/reportStatus';
 
 export interface Report {
   id: string;
@@ -211,18 +212,6 @@ const Map: React.FC<MapProps> = ({
       // Add new markers for reports
       reports.forEach((report) => {
         const color = report.rating && report.rating <= 2 ? '#ef4444' : '#3b82f6';
-        const statusColors: Record<string, string> = {
-          pending: 'bg-zinc-100 text-zinc-700',
-          in_review: 'bg-blue-100 text-blue-700',
-          resolved: 'bg-green-100 text-green-700',
-          rejected: 'bg-red-100 text-red-700',
-        };
-        const statusLabels: Record<string, string> = {
-          pending: 'Čeká',
-          in_review: 'V řešení',
-          resolved: 'Vyřešeno',
-          rejected: 'Zamítnuto',
-        };
 
         const marker = new maplibregl.Marker({ color })
           .setLngLat([report.location.lng, report.location.lat])
@@ -231,8 +220,8 @@ const Map: React.FC<MapProps> = ({
         const popup = new maplibregl.Popup({ offset: 25 }).setHTML(`
           <div class="p-2 min-w-[200px]">
             <div class="flex items-center justify-between mb-1">
-              <span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${statusColors[report.status] || statusColors.pending}">
-                ${statusLabels[report.status] || report.status}
+              <span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${STATUS_COLORS[report.status] ?? STATUS_COLORS.pending}">
+                ${STATUS_LABELS[report.status] ?? report.status}
               </span>
               <span class="text-xs text-zinc-500">${'★'.repeat(report.rating || 0)}</span>
             </div>
