@@ -19,7 +19,7 @@ vi.mock('next/headers', () => ({
   cookies: vi.fn(),
 }));
 
-test('shows report link pointing to /reports when logged in', async () => {
+test('"Nahlásit podnět" CTA points to /reports when logged in', async () => {
   const ResolvedPage = await Page();
   render(ResolvedPage);
   const reportLink = screen.getByRole('link', { name: /nahlásit podnět/i });

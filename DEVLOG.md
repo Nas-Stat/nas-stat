@@ -1,5 +1,30 @@
 # Developer Log
 
+## 2026-03-02 - feat: redesign landing page (Issue #38) — Oompa Loompa
+
+### Changes
+
+- **`src/app/page.tsx`**: Replaced Next.js template boilerplate with civic-platform landing page.
+  - **Hero section**: full-viewport gradient (`from-blue-50 to-white` / dark: `from-zinc-900 to-zinc-950`), `<h1>` "Náš stát", platform description, two CTA buttons.
+  - **CTAs**: "Nahlásit podnět" (primary blue rounded-full) → `/login` (unauthenticated) or `/reports` (authenticated); "Prozkoumat mapu" (secondary border) → `/reports`.
+  - **Feature cards section**: 3 cards with `lucide-react` icons — `MapPin` (Hlášení), `MessageSquare` (Diskuze), `BarChart2` (Přehled). Responsive `sm:grid-cols-3`, dark-mode border/background tokens.
+  - Header remains in `layout.tsx` via shared `<Header />` from issue #37.
+
+### Tests
+
+- **`src/app/page.test.tsx`**: Replaced stale "welcome message" assertion with 4 tests:
+  - Hero `<h1>` renders "Náš stát"
+  - "Nahlásit podnět" → `/login` when not authenticated
+  - "Prozkoumat mapu" → `/reports`
+  - Three feature card `<h2>` headings present (Hlášení, Diskuze, Přehled)
+- **`src/app/page_auth.test.tsx`**: Updated test description for clarity; logic unchanged.
+
+### Verification
+
+- `npm run test` — 224/224 passed.
+
+---
+
 ## 2026-03-02 - feat: civic color system + shared Header (Issue #37) — Oompa Loompa
 
 ### Changes
