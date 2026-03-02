@@ -1,6 +1,6 @@
 # Quality Report — Story 2.4.1: CI/CD Pipeline (#17)
 
-**Reviewed by:** The Squirrel (Tabula Rasa — thirtieth independent audit)
+**Reviewed by:** The Squirrel (Tabula Rasa — thirty-first independent audit)
 **Branch:** `issue-17-cicd-pipeline`
 **Date:** 2026-03-02
 
@@ -85,6 +85,8 @@ a7351c5 chore: log Story 2.4.1 CI/CD pipeline in DEVLOG (#17)
 ```
 
 **Use Squash and merge** when opening the PR. Do not let these land individually on `main`.
+
+> **Audit #31 note:** Branch now has 8 commits (1 implementation + 7 meta-audit docs). This trend is itself a smell — each new audit adds a commit that must be squashed away. Squash merge is non-negotiable.
 
 ---
 
