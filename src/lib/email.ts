@@ -1,8 +1,9 @@
+import { STATUS_LABELS as BASE_STATUS_LABELS } from './reportStatus';
+
+// Email context uses a longer pending label for clarity in notification body.
 const STATUS_LABELS: Record<string, string> = {
+  ...BASE_STATUS_LABELS,
   pending: 'Čeká na zpracování',
-  in_review: 'V řešení',
-  resolved: 'Vyřešeno',
-  rejected: 'Zamítnuto',
 };
 
 export function buildStatusChangeEmail(
