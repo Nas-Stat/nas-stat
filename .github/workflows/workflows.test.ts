@@ -174,8 +174,8 @@ describe('deploy-production.yml', () => {
     expect(content).toContain('PROD_APP_URL')
   })
 
-  it('references PROD_SENTRY_DSN for monitoring', () => {
-    expect(content).toContain('PROD_SENTRY_DSN')
+  it('references PROD_APP_URL for public domain', () => {
+    expect(content).toContain('PROD_APP_URL')
   })
 
   it('references VERCEL_TOKEN secret', () => {

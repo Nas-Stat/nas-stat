@@ -115,7 +115,7 @@ Produkční deployment je řízen workflowem `.github/workflows/deploy-productio
    vercel link
    ```
 4. **MapTiler produkční klíč** — Vytvořte samostatný API klíč omezený na produkční doménu na [maptiler.com](https://maptiler.com).
-5. **Monitoring** — Vytvořte Sentry projekt na [sentry.io](https://sentry.io) a zkopírujte DSN do GitHub secrets.
+5. **Monitoring** — Vercel Analytics je integrována automaticky (viditelná na [vercel.com/analytics](https://vercel.com/analytics) po propojení projektu).
 
 #### GitHub Actions secrets pro produkci
 
@@ -129,7 +129,6 @@ V repozitáři přejděte na **Settings → Secrets and variables → Actions** 
 | `PROD_MAPTILER_KEY` | MapTiler API klíč omezený na produkční doménu |
 | `PROD_RESEND_API_KEY` | Resend API klíč pro odesílání e-mailů |
 | `PROD_APP_URL` | Veřejná URL produkce (např. `https://nasstat.cz`) |
-| `PROD_SENTRY_DSN` | Sentry DSN pro monitoring chyb |
 
 Secrets `VERCEL_TOKEN`, `VERCEL_ORG_ID` a `VERCEL_PROJECT_ID` jsou sdílené se staging workflowem.
 
