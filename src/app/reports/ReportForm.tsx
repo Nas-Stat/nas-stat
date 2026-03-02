@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Star, X, AlertCircle } from 'lucide-react';
+import { Star, X, AlertCircle, MapPin } from 'lucide-react';
 
 interface ReportFormProps {
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
@@ -10,6 +10,7 @@ interface ReportFormProps {
   categories: string[];
   error?: string | null;
   onErrorClose?: () => void;
+  hasLocation?: boolean;
 }
 
 export default function ReportForm({
@@ -19,6 +20,7 @@ export default function ReportForm({
   categories,
   error,
   onErrorClose,
+  hasLocation,
 }: ReportFormProps) {
   return (
     <div className="absolute inset-y-0 right-0 w-full max-w-md bg-white p-6 shadow-2xl dark:bg-zinc-900 sm:m-4 sm:rounded-2xl sm:inset-y-auto sm:top-4 sm:bottom-4">
@@ -33,6 +35,14 @@ export default function ReportForm({
         >
           <X className="h-6 w-6 text-zinc-500" />
         </button>
+      </div>
+
+      <div
+        data-testid="location-info-bar"
+        className={`mb-4 flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${hasLocation ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400' : 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400'}`}
+      >
+        <MapPin className="h-4 w-4 shrink-0" />
+        {hasLocation ? 'Poloha vybrána' : 'Bez polohy — klikněte na mapu (volitelné)'}
       </div>
 
       {error && (

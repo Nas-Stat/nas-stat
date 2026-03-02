@@ -35,9 +35,9 @@ test('shows logout button when logged in', async () => {
   expect(screen.getByRole('button', { name: /odhlásit se/i })).toBeInTheDocument();
 });
 
-test('enables report button when logged in', async () => {
+test('shows report link pointing to /reports?new=1 when logged in', async () => {
   const ResolvedPage = await Page();
   render(ResolvedPage);
-  const reportButton = screen.getByRole('button', { name: /nahlásit podnět/i });
-  expect(reportButton).not.toBeDisabled();
+  const reportLink = screen.getByRole('link', { name: /nahlásit podnět/i });
+  expect(reportLink).toHaveAttribute('href', '/reports?new=1');
 });

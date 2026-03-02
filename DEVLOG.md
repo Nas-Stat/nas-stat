@@ -1,5 +1,46 @@
 # Developer Log
 
+## 2026-03-02 - fix: Zod refine + floating button tests (Issue #36, round 2) — Oompa Loompa
+
+### Changes
+
+- **`src/app/reports/actions.ts`**: Added `.refine()` to `reportSchema` — `lng` and `lat` must both be present or both absent (validation error: "Musíte zadat obě souřadnice, nebo žádnou.").
+- **`src/app/page.tsx`**: Replaced disabled `<button>` with `<a>` link; logged-in → `/reports`, logged-out → `/login`.
+- **`.dockerignore`**: Exclude `.env*` but keep `.env.example`.
+
+### Tests
+
+- **`src/app/reports/actions.test.ts`**: 2 new tests for partial coordinate rejection (lng-only, lat-only).
+- **`src/app/reports/ReportsClient.test.tsx`**: 6 new tests covering floating button visibility, `hasLocation` info bar, and FormData without coordinates.
+
+### Verification
+
+- `npm run test` — 216/216 passed.
+
+---
+
+## 2026-03-02 - feat: optional location for reports (Issue #36) — Oompa Loompa
+
+### Changes
+
+- **`supabase/migrations/20260302000000_make_location_optional.sql`**: `ALTER TABLE reports ALTER COLUMN location DROP NOT NULL`.
+- **`src/app/reports/actions.ts`**: `lng` / `lat` made `z.coerce.number().optional()` in Zod schema. Insert `location` is `POINT(lng lat)` when both are present, `null` otherwise.
+- **`src/app/reports/ReportsClient.tsx`**: Added `openFormWithoutLocation` handler (opens form without setting a location). Added floating "Nahlásit podnět" button for logged-in users when the form is closed. `handleSubmit` no longer requires `selectedLocation` — appends `lng`/`lat` to `FormData` only when location was picked.
+- **`src/app/reports/ReportForm.tsx`**: Added `hasLocation?: boolean` prop and an info bar showing "Poloha vybrána" (green) or "Bez polohy — klikněte na mapu (volitelné)" (grey).
+- **`src/app/reports/page.tsx`**: Null-safe transform — reports without location are filtered out before being passed to `<Map>`.
+- **`src/app/dashboard/page.tsx`**: Same null-safe filter before `mapReports` is built.
+
+### Tests
+
+- **`src/app/reports/actions.test.ts`**: Added test for successful creation without location (`location: null`) and failure without location.
+- **`src/app/reports/ReportsClient.test.tsx`**: Added `MapPin` to lucide-react mock.
+- **`src/app/page.test.tsx`** / **`src/app/page_auth.test.tsx`**: Updated stale tests that expected a `<button>` for "Nahlásit podnět"; now correctly assert the `<a>` link destination.
+
+### Verification
+
+- `npm run test` — 208/208 passed.
+- `npm run build` — compiled successfully.
+
 ## 2026-03-02 - chore: remove @vercel/analytics (Issue #34) — Oompa Loompa
 
 ### Changes

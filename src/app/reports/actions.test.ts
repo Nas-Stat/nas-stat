@@ -47,7 +47,7 @@ describe('Report Actions', () => {
       );
     });
 
-    it('successfully creates a report and revalidates', async () => {
+    it('successfully creates a report with location and revalidates', async () => {
       mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: { id: 'user-123' } },
       });
@@ -77,6 +77,61 @@ describe('Report Actions', () => {
       expect(revalidatePath).toHaveBeenCalledWith('/reports');
     });
 
+    it('successfully creates a report without location', async () => {
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-123' } },
+      });
+      mockSupabase.insert.mockResolvedValue({ error: null });
+
+      const formData = new FormData();
+      formData.append('title', 'Celostátní téma');
+      formData.append('rating', '3');
+      formData.append('category', 'Jiné');
+      // No lng/lat appended
+
+      const result = await createReport(formData);
+
+      expect(result).toEqual({ success: true });
+      expect(mockSupabase.insert).toHaveBeenCalledWith(
+        expect.objectContaining({ location: null })
+      );
+      expect(revalidatePath).toHaveBeenCalledWith('/reports');
+    });
+
+    it('throws validation error when only lng is provided without lat', async () => {
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-123' } },
+      });
+
+      const formData = new FormData();
+      formData.append('title', 'Díra v silnici');
+      formData.append('rating', '1');
+      formData.append('category', 'Doprava');
+      formData.append('lng', '14.4378');
+      // lat intentionally omitted
+
+      await expect(createReport(formData)).rejects.toThrow(
+        'Musíte zadat obě souřadnice, nebo žádnou.'
+      );
+    });
+
+    it('throws validation error when only lat is provided without lng', async () => {
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-123' } },
+      });
+
+      const formData = new FormData();
+      formData.append('title', 'Díra v silnici');
+      formData.append('rating', '1');
+      formData.append('category', 'Doprava');
+      formData.append('lat', '50.0755');
+      // lng intentionally omitted
+
+      await expect(createReport(formData)).rejects.toThrow(
+        'Musíte zadat obě souřadnice, nebo žádnou.'
+      );
+    });
+
     it('throws error if Supabase insert fails', async () => {
       mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: { id: 'user-123' } },
@@ -91,6 +146,24 @@ describe('Report Actions', () => {
       formData.append('category', 'Doprava');
       formData.append('lng', '14.4378');
       formData.append('lat', '50.0755');
+
+      await expect(createReport(formData)).rejects.toThrow(
+        'Nepodařilo se uložit hlášení.'
+      );
+    });
+
+    it('throws error if Supabase insert fails for report without location', async () => {
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-123' } },
+      });
+      mockSupabase.insert.mockResolvedValue({
+        error: { message: 'Database error' },
+      });
+
+      const formData = new FormData();
+      formData.append('title', 'Celostátní podnět');
+      formData.append('rating', '2');
+      formData.append('category', 'Úřad');
 
       await expect(createReport(formData)).rejects.toThrow(
         'Nepodařilo se uložit hlášení.'
