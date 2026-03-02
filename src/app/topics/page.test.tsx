@@ -28,12 +28,7 @@ vi.mock('./TopicsClient', () => ({
   ),
 }));
 
-// Mock Lucide-react
-vi.mock('lucide-react', () => ({
-  ArrowLeft: () => <div data-testid="arrow-left-icon">ArrowLeft</div>,
-}));
-
-test('renders Topics page with header and topics client', async () => {
+test('renders Topics page with topics client', async () => {
   const { createClient } = await import('@/utils/supabase/server');
   vi.mocked(createClient).mockResolvedValue({
     auth: {
@@ -62,14 +57,8 @@ test('renders Topics page with header and topics client', async () => {
   const PageComponent = await Page();
   render(PageComponent);
 
-  const header = screen.getByText(/Tématický Feed/i);
-  expect(header).toBeInTheDocument();
-
   const topicsClient = screen.getByTestId('mocked-topics-client');
   expect(topicsClient).toBeInTheDocument();
   expect(screen.getByText(/Mocked TopicsClient \(1 topics\)/i)).toBeInTheDocument();
   expect(screen.getByTestId('first-topic-title')).toHaveTextContent('Nová reforma školství');
-
-  const backButton = screen.getByRole('link', { name: /zpět/i });
-  expect(backButton).toHaveAttribute('href', '/');
 });

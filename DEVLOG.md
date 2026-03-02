@@ -1,5 +1,34 @@
 # Developer Log
 
+## 2026-03-02 - feat: civic color system + shared Header (Issue #37) — Oompa Loompa
+
+### Changes
+
+- **`src/app/globals.css`**: Civic-platform CSS variables — `--primary` blue-600/blue-500, `--surface` slate-50/zinc-900, `--border` slate-200/zinc-800, `--background` white/zinc-950. Exposed via `@theme inline`.
+- **`src/components/HeaderClient.tsx`** *(new)*: Client component — logo "Náš stát", desktop nav (Mapa / Témata / Dashboard) with active state via `usePathname`, auth buttons (Přihlásit / Odhlásit), mobile hamburger menu with `aria-expanded`.
+- **`src/components/Header.tsx`** *(new)*: Async server component — reads Supabase user session, renders `HeaderClient`.
+- **`src/app/layout.tsx`**: Added `<Header />` to root layout so it appears on every page.
+- **`src/app/page.tsx`**: Removed duplicate auth header (now in global Header); simplified hero layout using new slate/blue color tokens; "Nahlásit podnět" href changed from `/reports?new=1` → `/reports`.
+- **`src/app/reports/page.tsx`**: Removed local `<header>`; outer div height changed from `h-screen` → `h-[calc(100vh-4rem)]` to account for 64px global Header.
+- **`src/app/topics/page.tsx`**: Removed local `<header>`; outer div uses `min-h-[calc(100vh-4rem)]`.
+- **`src/app/dashboard/page.tsx`**: Removed sticky local header; page title moved inline below `<main>`.
+- **`src/app/admin/page.tsx`**: Replaced full-height local header with a compact 48px title bar.
+
+### Tests
+
+- **`src/components/Header.test.tsx`** *(new — 9 tests)*: logo link, nav links, login/logout display, hamburger toggle, mobile nav visibility, active nav class.
+- **`src/app/page.test.tsx`**: Removed stale "shows login button" test (now covered by Header tests).
+- **`src/app/page_auth.test.tsx`**: Removed stale email/logout tests; updated report link assertion (`/reports` instead of `/reports?new=1`).
+- **`src/app/reports/page.test.tsx`**: Removed assertions for removed header element.
+- **`src/app/topics/page.test.tsx`**: Removed assertions for removed header element.
+
+### Verification
+
+- `npm run test` — 222/222 passed.
+- `npm run build` — compiled successfully, 10 routes.
+
+---
+
 ## 2026-03-02 - fix: Zod refine + floating button tests (Issue #36, round 2) — Oompa Loompa
 
 ### Changes
