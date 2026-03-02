@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ArrowLeft, LayoutDashboard, Star, MapPin, MessageSquare, TrendingUp, Info } from 'lucide-react';
 import { createClient } from '@/utils/supabase/server';
 import Map, { Report } from '@/components/Map';
+import { STATUS_LABELS, STATUS_COLORS } from '@/lib/reportStatus';
 
 interface GeoJsonPoint {
   type: string;
@@ -170,15 +171,8 @@ export default async function DashboardPage() {
                       </div>
                       <div className="mt-1 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
                         <span>{report.category}</span>
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wider ${
-                          report.status === 'resolved' ? 'bg-green-100 text-green-700' : 
-                          report.status === 'in_review' ? 'bg-blue-100 text-blue-700' : 
-                          report.status === 'rejected' ? 'bg-red-100 text-red-700' :
-                          'bg-zinc-100 text-zinc-700'
-                        }`}>
-                          {report.status === 'resolved' ? 'Vyřešeno' : 
-                           report.status === 'in_review' ? 'V řešení' : 
-                           report.status === 'rejected' ? 'Zamítnuto' : 'Čeká'}
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wider ${STATUS_COLORS[report.status] ?? STATUS_COLORS.pending}`}>
+                          {STATUS_LABELS[report.status] ?? STATUS_LABELS.pending}
                         </span>
                       </div>
                     </div>
