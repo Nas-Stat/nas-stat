@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { STATUS_COLORS, STATUS_LABELS } from '@/lib/reportStatus';
 
 export interface Report {
   id: string;
@@ -211,18 +212,8 @@ const Map: React.FC<MapProps> = ({
       // Add new markers for reports
       reports.forEach((report) => {
         const color = report.rating && report.rating <= 2 ? '#ef4444' : '#3b82f6';
-        const statusColors: Record<string, string> = {
-          pending: 'bg-zinc-100 text-zinc-700',
-          in_review: 'bg-blue-100 text-blue-700',
-          resolved: 'bg-green-100 text-green-700',
-          rejected: 'bg-red-100 text-red-700',
-        };
-        const statusLabels: Record<string, string> = {
-          pending: 'Čeká',
-          in_review: 'V řešení',
-          resolved: 'Vyřešeno',
-          rejected: 'Zamítnuto',
-        };
+        const statusColors = STATUS_COLORS;
+        const statusLabels = STATUS_LABELS;
 
         const marker = new maplibregl.Marker({ color })
           .setLngLat([report.location.lng, report.location.lat])
