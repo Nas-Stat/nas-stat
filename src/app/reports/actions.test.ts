@@ -98,6 +98,40 @@ describe('Report Actions', () => {
       expect(revalidatePath).toHaveBeenCalledWith('/reports');
     });
 
+    it('throws validation error when only lng is provided without lat', async () => {
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-123' } },
+      });
+
+      const formData = new FormData();
+      formData.append('title', 'Díra v silnici');
+      formData.append('rating', '1');
+      formData.append('category', 'Doprava');
+      formData.append('lng', '14.4378');
+      // lat intentionally omitted
+
+      await expect(createReport(formData)).rejects.toThrow(
+        'Musíte zadat obě souřadnice, nebo žádnou.'
+      );
+    });
+
+    it('throws validation error when only lat is provided without lng', async () => {
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-123' } },
+      });
+
+      const formData = new FormData();
+      formData.append('title', 'Díra v silnici');
+      formData.append('rating', '1');
+      formData.append('category', 'Doprava');
+      formData.append('lat', '50.0755');
+      // lng intentionally omitted
+
+      await expect(createReport(formData)).rejects.toThrow(
+        'Musíte zadat obě souřadnice, nebo žádnou.'
+      );
+    });
+
     it('throws error if Supabase insert fails', async () => {
       mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: { id: 'user-123' } },

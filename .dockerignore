@@ -10,5 +10,6 @@ yarn-error.log*
 README.md
 Dockerfile
 docker-compose.yml
-.env.local
-.env*.local
+.env
+.env*
+!.env.example

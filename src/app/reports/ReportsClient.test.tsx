@@ -131,6 +131,52 @@ describe('ReportsClient', () => {
     });
   });
 
+  // --- Optional location tests ---
+
+  test('shows floating "Nahlásit podnět" button for logged-in user when form is closed', () => {
+    render(<ReportsClient {...DEFAULT_PROPS} user={mockUser} />);
+    expect(screen.getByTestId('report-without-location-btn')).toBeInTheDocument();
+  });
+
+  test('floating button opens form without setting a location', () => {
+    render(<ReportsClient {...DEFAULT_PROPS} user={mockUser} />);
+    fireEvent.click(screen.getByTestId('report-without-location-btn'));
+    expect(screen.getByText(/Nový podnět/i)).toBeInTheDocument();
+    // hasLocation=false — info bar shows "Bez polohy" text
+    expect(screen.getByTestId('location-info-bar')).toHaveTextContent('Bez polohy');
+  });
+
+  test('clicking map shows form with location info bar set to "Poloha vybrána"', () => {
+    render(<ReportsClient {...DEFAULT_PROPS} user={mockUser} />);
+    fireEvent.click(screen.getByTestId('mocked-map'));
+    expect(screen.getByTestId('location-info-bar')).toHaveTextContent('Poloha vybrána');
+  });
+
+  test('form opened without location does not append lng/lat to FormData', async () => {
+    const { createReport } = await import('./actions');
+    render(<ReportsClient {...DEFAULT_PROPS} user={mockUser} />);
+    fireEvent.click(screen.getByTestId('report-without-location-btn'));
+
+    const form = screen.getByText(/Odeslat hlášení/i).closest('form')!;
+    fireEvent.submit(form);
+
+    await waitFor(() => expect(createReport).toHaveBeenCalled());
+    const formData = vi.mocked(createReport).mock.calls[0][0];
+    expect(formData.get('lng')).toBeNull();
+    expect(formData.get('lat')).toBeNull();
+  });
+
+  test('floating button is hidden when form is open', () => {
+    render(<ReportsClient {...DEFAULT_PROPS} user={mockUser} />);
+    fireEvent.click(screen.getByTestId('report-without-location-btn'));
+    expect(screen.queryByTestId('report-without-location-btn')).not.toBeInTheDocument();
+  });
+
+  test('does not show floating button for logged-out user', () => {
+    render(<ReportsClient {...DEFAULT_PROPS} user={null} />);
+    expect(screen.queryByTestId('report-without-location-btn')).not.toBeInTheDocument();
+  });
+
   // --- Filter tests ---
 
   test('renders filter bar with status and category selects', () => {
