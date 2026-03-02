@@ -45,13 +45,60 @@ Tento projekt využívá Supabase pro databázi a autentizaci. Pro nastavení lo
    ```
 4. Schéma databáze je definováno v `supabase/migrations/`.
 
+## CI/CD Pipeline
+
+Projekt používá GitHub Actions pro automatizované kontroly kvality a nasazení.
+
+### Continuous Integration (`.github/workflows/ci.yml`)
+
+Spouští se při každém Pull Requestu na větev `main`:
+
+1. **Lint** — `npm run lint` (ESLint)
+2. **Test** — `npm run test` (Vitest)
+3. **Build** — `npm run build` (ověření produkčního buildu)
+
+PR nelze sloučit, dokud všechny kroky neprojdou.
+
+### Continuous Deployment (`.github/workflows/deploy.yml`)
+
+Spouští se automaticky při merge (push) do větve `main` a nasadí aplikaci na staging přes Vercel CLI.
+
+#### Nastavení GitHub Actions secrets
+
+V repozitáři přejděte na **Settings → Secrets and variables → Actions** a přidejte:
+
+| Secret | Popis |
+|--------|-------|
+| `VERCEL_TOKEN` | API token z [vercel.com/account/tokens](https://vercel.com/account/tokens) |
+| `VERCEL_ORG_ID` | Nalezne se v `.vercel/project.json` po spuštění `vercel link` |
+| `VERCEL_PROJECT_ID` | Nalezne se v `.vercel/project.json` po spuštění `vercel link` |
+| `STAGING_SUPABASE_URL` | URL staging Supabase projektu |
+| `STAGING_SUPABASE_ANON_KEY` | Anon klíč staging Supabase projektu |
+| `STAGING_SUPABASE_SERVICE_ROLE_KEY` | Service role klíč staging Supabase projektu |
+| `STAGING_MAPTILER_KEY` | MapTiler API klíč pro staging |
+| `STAGING_RESEND_API_KEY` | Resend API klíč pro odesílání e-mailů |
+| `STAGING_APP_URL` | Veřejná URL staging prostředí (např. `https://nas-stat-staging.vercel.app`) |
+
+#### První nastavení Vercel projektu
+
+```bash
+npm i -g vercel
+vercel login
+vercel link          # propojí lokální repo s Vercel projektem, vytvoří .vercel/project.json
+```
+
+Hodnoty `VERCEL_ORG_ID` a `VERCEL_PROJECT_ID` zkopírujte z `.vercel/project.json` do GitHub secrets.
+
 ## Deployment
 
 ### Testovací nasazení (Staging)
-*Dokumentace pro testovací nasazení bude doplněna v rámci Fáze 2.*
+
+Automaticky spouštěno při každém merge do `main` přes GitHub Actions workflow `.github/workflows/deploy.yml`.
+Viz sekce CI/CD Pipeline výše pro nastavení secrets.
 
 ### Produkční nasazení
-*Dokumentace pro produkční nasazení bude doplněna v rámci Fáze 2.*
+
+Pro oddělené produkční prostředí vytvořte separátní Vercel projekt a příslušné GitHub secrets s prefixem `PROD_` místo `STAGING_`. Workflow `.github/workflows/deploy.yml` lze rozšířit o druhý job `deploy-production` spouštěný na tagu nebo manuálně.
 
 ## Další informace
 

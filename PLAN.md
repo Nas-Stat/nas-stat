@@ -104,6 +104,14 @@ Tento dokument slouží jako detailní architektonický plán pro vývojový tý
   - [x] RLS: smazání povoleno pouze pro admin roli (migrace `20260301000001_admin_delete_policies.sql`)
   - [x] Napsat testy pro delete actions (12 nových testů)
 
+### Epic 2.4: CI/CD Pipeline a Staging
+
+- [x] **Story 2.4.1: CI/CD pipeline a staging nasazení (Issue #17)**
+  - [x] Vytvořit `.github/workflows/ci.yml` — lint + test + build při každém PR
+  - [x] Vytvořit `.github/workflows/deploy.yml` — deploy na staging při merge do `main`
+  - [x] Napsat testy pro validaci struktury workflow souborů
+  - [x] Zdokumentovat postup nasazení v README
+
 ## Phase 3: "The Omnipresent Pulse" (Rozšíření)
 
 _(Detailní plánování bude následovat po dokončení Fáze 2)_
