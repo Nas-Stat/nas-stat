@@ -1,5 +1,17 @@
 # Developer Log
 
+## 2026-03-02 - chore: remove @vercel/analytics (Issue #34) — Oompa Loompa
+
+### Changes
+
+- **`src/app/layout.tsx`**: Removed `import { Analytics } from '@vercel/analytics/next'` and `<Analytics />` component from `RootLayout`.
+- **`package.json` / `package-lock.json`**: Ran `npm uninstall @vercel/analytics` — package removed entirely.
+
+### Verification
+
+- `npm run build` — compiled successfully, no errors.
+- No tests were affected (2 pre-existing failures in `page.test.tsx` / `page_auth.test.tsx` are unrelated — they test for a `<button>` that doesn't exist in the current page).
+
 ## 2026-03-02 - perf: consolidate double reports fetch in dashboard page (Issue #22) — Oompa Loompa
 
 ### Changes
