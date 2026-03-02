@@ -12,16 +12,11 @@ interface GeoJsonPoint {
 export default async function DashboardPage() {
   const supabase = await createClient();
 
-  // Fetch stats and latest data
-  const [reportsResponse, latestReportsResponse, topicsResponse] = await Promise.all([
+  // Fetch stats and latest data — single query to reports, derive latest 5 in JS
+  const [reportsResponse, topicsResponse] = await Promise.all([
     supabase
       .from('reports')
-      .select('id, title, description, location, rating, category, status'),
-    supabase
-      .from('reports')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(5),
+      .select('id, title, description, location, rating, category, status, created_at'),
     supabase
       .from('topics')
       .select('*, comments(id)')
@@ -29,7 +24,9 @@ export default async function DashboardPage() {
   ]);
 
   const allReportsData = reportsResponse.data || [];
-  const latestReports = latestReportsResponse.data || [];
+  const latestReports = [...allReportsData]
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 5);
   
   // Sort topics by popularity (comment count)
   const popularTopics = (topicsResponse.data || [])

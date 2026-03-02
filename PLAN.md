@@ -122,3 +122,11 @@ Tento dokument slouží jako detailní architektonický plán pro vývojový tý
 ## Phase 3: "The Omnipresent Pulse" (Rozšíření)
 
 _(Detailní plánování bude následovat po dokončení Fáze 2)_
+
+## Hotfixes / Perf Issues
+
+- [x] **Issue #22: Consolidate double reports fetch in dashboard page**
+  - [x] Add `created_at` to single `reportsResponse` select columns
+  - [x] Remove `latestReportsResponse` query entirely
+  - [x] Derive `latestReports` from `allReportsData` in JS (sort + slice)
+  - [x] Update and extend tests (single-query mock, 2 new tests)

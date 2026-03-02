@@ -1,5 +1,17 @@
 # Developer Log
 
+## 2026-03-02 - perf: consolidate double reports fetch in dashboard page (Issue #22) — Oompa Loompa
+
+### Changes
+
+- **`src/app/dashboard/page.tsx`**: Removed the second `latestReportsResponse` query (`select('*')` with `.order().limit(5)`). Added `created_at` to the single `reportsResponse` select columns. Derived `latestReports` from `allReportsData` in JS via `[...allReportsData].sort(by created_at desc).slice(0, 5)`. Dashboard now issues one round-trip to `reports` per page load instead of two.
+- **`src/app/dashboard/page.test.tsx`**: Rewrote all mocks to use the simpler single-query shape (`select → resolves`). Added two new tests: one asserting that only the top 5 newest reports (by `created_at`) are shown, and one asserting `from('reports')` is called exactly once.
+
+### Tests
+
+- 7 dashboard tests pass (2 new).
+- Full suite: 206/206 pass.
+
 ## 2026-03-02 - refactor: resolve remaining DRY gaps — Squirrel audit fixes (Issue #21) — Oompa Loompa
 
 ### Changes
