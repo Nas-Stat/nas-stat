@@ -619,3 +619,31 @@ As part of Issue #9 finalization, I have improved test coverage and addressed mi
 
 - Closes Issue #13
 - PR #24 (`issue-13-pagination-filters` → `main`)
+
+## 2026-03-02 - Story 2.4.1: CI/CD Pipeline & Staging (Issue #17)
+
+### Changes
+
+- **`.github/workflows/ci.yml`**: GitHub Actions workflow — runs `npm run lint`, `npm run test`, `npm run build` on every PR targeting `main`. Node 20, `npm ci` with cache, fallback env vars for build.
+- **`.github/workflows/deploy.yml`**: Deploy workflow — triggers on push to `main`, deploys to Vercel staging with full env var passthrough. Comprehensive inline docs for secrets setup.
+- **`.github/workflows/workflows.test.ts`**: 20 Vitest tests validating both workflow files structure (triggers, runner, Node version, cache, required steps, secrets).
+- **`README.md`**: Full CI/CD section — CI pipeline docs, secrets table, Vercel setup guide (5-step instructions).
+- **`QUALITY_REPORT.md`**: Updated quality report — SUSPICIOUS NUT due to missing `workflow` OAuth scope on deploy token (user action required).
+
+### Verification
+
+- Ran `npx vitest run .github/workflows/workflows.test.ts`: 20/20 PASS
+- All 174 tests pass, lint clean
+- Push blocked: GitHub token missing `workflow` scope
+
+### Blocker (User Action Required)
+
+```bash
+gh auth refresh -s workflow --hostname github.com
+git push -u origin issue-17-cicd-pipeline
+```
+
+### Related
+
+- Closes Issue #17
+- Branch: `issue-17-cicd-pipeline` → `main`
