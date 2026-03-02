@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
+import * as maptilersdk from '@maptiler/sdk';
+import '@maptiler/sdk/dist/maptiler-sdk.css';
 import { STATUS_COLORS, STATUS_LABELS } from '@/lib/reportStatus';
 
 export interface Report {
@@ -50,9 +50,9 @@ const Map: React.FC<MapProps> = ({
   showHeatmap = false,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<maplibregl.Map | null>(null);
-  const markersRef = useRef<maplibregl.Marker[]>([]);
-  const selectionMarkerRef = useRef<maplibregl.Marker | null>(null);
+  const mapRef = useRef<maptilersdk.Map | null>(null);
+  const markersRef = useRef<maptilersdk.Marker[]>([]);
+  const selectionMarkerRef = useRef<maptilersdk.Marker | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Store callbacks in refs to avoid re-initializing the map when they change
@@ -66,21 +66,19 @@ const Map: React.FC<MapProps> = ({
     if (!mapContainerRef.current) return;
 
     const apiKey = process.env.NEXT_PUBLIC_MAPTILER_KEY;
-    const style =
-      apiKey && apiKey !== 'your-maptiler-key-here'
-        ? `https://api.maptiler.com/maps/streets-v2/style.json?key=${apiKey}`
-        : 'https://demotiles.maplibre.org/style.json';
+    maptilersdk.config.apiKey =
+      apiKey && apiKey !== 'your-maptiler-key-here' ? apiKey : '';
 
-    const map = new maplibregl.Map({
+    const map = new maptilersdk.Map({
       container: mapContainerRef.current,
-      style: style,
+      style: maptilersdk.MapStyle.STREETS,
       center: center,
       zoom: zoom,
     });
 
     mapRef.current = map;
 
-    map.addControl(new maplibregl.NavigationControl(), 'top-right');
+    map.addControl(new maptilersdk.NavigationControl(), 'top-right');
 
     map.on('load', () => {
       setIsLoaded(true);
@@ -102,11 +100,11 @@ const Map: React.FC<MapProps> = ({
   // Update map view when center or zoom changes
   useEffect(() => {
     if (!mapRef.current || !isLoaded) return;
-    
+
     // Simple check to avoid unnecessary jumping
     const currentCenter = mapRef.current.getCenter();
     const currentZoom = mapRef.current.getZoom();
-    
+
     if (
       Math.abs(currentCenter.lng - center[0]) > 0.0001 ||
       Math.abs(currentCenter.lat - center[1]) > 0.0001 ||
@@ -213,11 +211,11 @@ const Map: React.FC<MapProps> = ({
       reports.forEach((report) => {
         const color = report.rating && report.rating <= 2 ? '#ef4444' : '#3b82f6';
 
-        const marker = new maplibregl.Marker({ color })
+        const marker = new maptilersdk.Marker({ color })
           .setLngLat([report.location.lng, report.location.lat])
           .addTo(map);
 
-        const popup = new maplibregl.Popup({ offset: 25 }).setHTML(`
+        const popup = new maptilersdk.Popup({ offset: 25 }).setHTML(`
           <div class="p-2 min-w-[200px]">
             <div class="flex items-center justify-between mb-1">
               <span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${STATUS_COLORS[report.status] ?? STATUS_COLORS.pending}">
@@ -249,7 +247,7 @@ const Map: React.FC<MapProps> = ({
     }
 
     if (selectedLocation) {
-      selectionMarkerRef.current = new maplibregl.Marker({ color: '#10b981', draggable: true })
+      selectionMarkerRef.current = new maptilersdk.Marker({ color: '#10b981', draggable: true })
         .setLngLat(selectedLocation)
         .addTo(mapRef.current!);
 

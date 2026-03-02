@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import Map from './Map';
 
-// Mock maplibregl
+// Mock @maptiler/sdk
 const onMock = vi.fn();
 const removeMock = vi.fn();
 const addControlMock = vi.fn();
@@ -20,7 +20,7 @@ const getSourceMock = vi.fn();
 const setPopupMock = vi.fn().mockReturnThis();
 const setHTMLMock = vi.fn().mockReturnThis();
 
-vi.mock('maplibre-gl', () => {
+vi.mock('@maptiler/sdk', () => {
   class MapMock {
     on = onMock;
     remove = removeMock;
@@ -54,12 +54,8 @@ vi.mock('maplibre-gl', () => {
   }
 
   return {
-    default: {
-      Map: MapMock,
-      NavigationControl: NavigationControlMock,
-      Marker: MarkerMock,
-      Popup: PopupMock,
-    },
+    config: { apiKey: '' },
+    MapStyle: { STREETS: 'streets-v4' },
     Map: MapMock,
     NavigationControl: NavigationControlMock,
     Marker: MarkerMock,
@@ -86,27 +82,27 @@ describe('Map Component', () => {
 
   it('does not re-create map when unrelated props change', () => {
     const { rerender } = render(<Map reports={[]} />);
-    
+
     // Rerender with new reports
-    rerender(<Map reports={[{ 
-      id: '1', 
-      title: 'Test', 
-      location: { lng: 0, lat: 0 }, 
-      status: 'pending', 
-      description: 'Desc', 
-      category: 'Cat', 
-      rating: 5 
+    rerender(<Map reports={[{
+      id: '1',
+      title: 'Test',
+      location: { lng: 0, lat: 0 },
+      status: 'pending',
+      description: 'Desc',
+      category: 'Cat',
+      rating: 5
     }]} />);
-    
+
     // Should NOT call remove (which happens on cleanup of initialization effect)
     expect(removeMock).not.toHaveBeenCalled();
   });
 
   it('updates selection marker without re-creating map', () => {
     const { rerender } = render(<Map selectedLocation={null} />);
-    
+
     rerender(<Map selectedLocation={[14.4, 50.1]} />);
-    
+
     expect(removeMock).not.toHaveBeenCalled();
   });
 
@@ -117,18 +113,18 @@ describe('Map Component', () => {
       if (event === 'load') onMapLoad = callback;
     });
 
-    const reports = [{ 
-      id: '1', 
-      title: 'Test', 
-      location: { lng: 14.4, lat: 50.1 }, 
-      status: 'pending' as const, 
-      description: 'Desc', 
-      category: 'Cat', 
-      rating: 5 
+    const reports = [{
+      id: '1',
+      title: 'Test',
+      location: { lng: 14.4, lat: 50.1 },
+      status: 'pending' as const,
+      description: 'Desc',
+      category: 'Cat',
+      rating: 5
     }];
 
     const { rerender } = render(<Map reports={reports} showHeatmap={false} />);
-    
+
     // Trigger map load
     await import('react').then((React) => {
       React.act(() => {
@@ -139,7 +135,7 @@ describe('Map Component', () => {
     // Rerender with showHeatmap=true
     rerender(<Map reports={reports} showHeatmap={true} />);
 
-    
+
     expect(addSourceMock).toHaveBeenCalledWith('reports-source', expect.any(Object));
     expect(addLayerMock).toHaveBeenCalledWith(expect.objectContaining({ id: 'reports-heatmap' }));
 
@@ -147,7 +143,7 @@ describe('Map Component', () => {
     getLayerMock.mockReturnValue({});
     getSourceMock.mockReturnValue({});
     rerender(<Map reports={reports} showHeatmap={false} />);
-    
+
     expect(removeLayerMock).toHaveBeenCalledWith('reports-heatmap');
     expect(removeSourceMock).toHaveBeenCalledWith('reports-source');
   });
@@ -159,18 +155,18 @@ describe('Map Component', () => {
       if (event === 'load') onMapLoad = callback;
     });
 
-    const reports = [{ 
-      id: '1', 
-      title: 'Díra v silnici', 
-      location: { lng: 14.4, lat: 50.1 }, 
-      status: 'pending' as const, 
-      description: 'Velká díra', 
-      category: 'Doprava', 
-      rating: 5 
+    const reports = [{
+      id: '1',
+      title: 'Díra v silnici',
+      location: { lng: 14.4, lat: 50.1 },
+      status: 'pending' as const,
+      description: 'Velká díra',
+      category: 'Doprava',
+      rating: 5
     }];
 
     render(<Map reports={reports} />);
-    
+
     // Trigger map load
     await import('react').then((React) => {
       React.act(() => {
@@ -191,18 +187,18 @@ describe('Map Component', () => {
       if (event === 'load') onMapLoad = callback;
     });
 
-    const reports = [{ 
-      id: '1', 
-      title: 'Test Report', 
-      location: { lng: 14.4, lat: 50.1 }, 
-      status: 'resolved' as const, 
-      description: 'Desc', 
-      category: 'Cat', 
-      rating: 5 
+    const reports = [{
+      id: '1',
+      title: 'Test Report',
+      location: { lng: 14.4, lat: 50.1 },
+      status: 'resolved' as const,
+      description: 'Desc',
+      category: 'Cat',
+      rating: 5
     }];
 
     render(<Map reports={reports} />);
-    
+
     // Trigger map load
     await import('react').then((React) => {
       React.act(() => {
@@ -247,4 +243,3 @@ describe('Map Component', () => {
     expect(html).toContain('&lt;b&gt;');
   });
 });
-
