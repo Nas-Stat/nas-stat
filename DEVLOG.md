@@ -1,5 +1,38 @@
 # Developer Log
 
+## 2026-03-02 - Story 2.4.1: Branch squash (Issue #17) — Oompa Loompa
+
+### Changes
+
+- Squashed 24 commits (1 implementation + 23 Squirrel audit commits) into a single clean commit `fca7dea`.
+- All 174 tests pass. Lint clean.
+- Push blocked: GitHub token missing `workflow` scope. User must run: `gh auth refresh -s workflow --hostname github.com` then `git push --force-with-lease -u origin issue-17-cicd-pipeline`.
+
+---
+
+## 2026-03-02 - Story 2.4.1: CI/CD pipeline a staging nasazení (Issue #17) — Oompa Loompa
+
+### Changes
+
+- **`.github/workflows/ci.yml`**: GitHub Actions workflow spouštěný při každém PR na `main`. Kroky: checkout → setup Node.js 20 (s npm cache) → `npm ci` → `npm run lint` → `npm run test` → `npm run build`. Build krok předává staging secrets jako env proměnné s fallback placeholder hodnotami, takže CI projde i bez nakonfigurovaných secrets.
+- **`.github/workflows/deploy.yml`**: Deployment workflow spouštěný při každém push do `main`. Nasazuje na Vercel přes Vercel CLI (`npx vercel --prod`). Vyžaduje secrets: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` a staging env vars. Workflow obsahuje detailní komentáře s návodem na první nastavení.
+- **`.github/workflows/workflows.test.ts`**: 20 unit testů validujících strukturu obou workflow souborů — triggers, runs-on, Node.js verze, npm cache, přítomnost všech povinných kroků (lint, test, build), referenci na secrets a fallback hodnoty.
+- **`README.md`**: Přidána sekce „CI/CD Pipeline" s popisem obou workflow, tabulkou povinných GitHub Actions secrets a návodem na první nastavení Vercel projektu. Sekce „Deployment" doplněna o konkrétní instrukce pro staging a produkci.
+- **`PLAN.md`**: Přidán a odškrtnut Epic 2.4 / Story 2.4.1.
+
+### Verification
+
+- Ran `npm run test`: 174/174 PASS (18 test files, +20 nových testů)
+- Ran `npm run lint`: PASS (0 errors, 0 warnings)
+
+### Related
+
+- Closes Issue #17
+
+---
+
+
+
 ## 2026-03-02 - Fix: Squirrel showstopper — silent HTTP failure in `sendStatusChangeEmail` (Issue #16 / PR #27)
 
 ### Changes

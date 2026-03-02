@@ -1,0 +1,57 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Deploy to Vercel (staging)
+        # Requires the following GitHub Actions secrets:
+        #   VERCEL_TOKEN          – API token from vercel.com/account/tokens
+        #   VERCEL_ORG_ID         – found in .vercel/project.json after `vercel link`
+        #   VERCEL_PROJECT_ID     – found in .vercel/project.json after `vercel link`
+        #
+        # Requires the following secrets for the staging environment:
+        #   STAGING_SUPABASE_URL
+        #   STAGING_SUPABASE_ANON_KEY
+        #   STAGING_SUPABASE_SERVICE_ROLE_KEY
+        #   STAGING_MAPTILER_KEY
+        #   STAGING_RESEND_API_KEY
+        #   STAGING_APP_URL
+        #
+        # Setup instructions:
+        #   1. npm i -g vercel
+        #   2. vercel link  (connect local repo to Vercel project)
+        #   3. Add all secrets above in GitHub → Settings → Secrets → Actions
+        #   4. Configure staging env vars in Vercel dashboard → Settings → Environment Variables
+        run: |
+          npx vercel --token "${{ secrets.VERCEL_TOKEN }}" \
+            --prod \
+            --yes \
+            --env NEXT_PUBLIC_SUPABASE_URL="${{ secrets.STAGING_SUPABASE_URL }}" \
+            --env NEXT_PUBLIC_SUPABASE_ANON_KEY="${{ secrets.STAGING_SUPABASE_ANON_KEY }}" \
+            --env SUPABASE_SERVICE_ROLE_KEY="${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}" \
+            --env NEXT_PUBLIC_MAPTILER_KEY="${{ secrets.STAGING_MAPTILER_KEY }}" \
+            --env RESEND_API_KEY="${{ secrets.STAGING_RESEND_API_KEY }}" \
+            --env NEXT_PUBLIC_APP_URL="${{ secrets.STAGING_APP_URL }}" \
+            --env EMAIL_FROM="Náš stát <noreply@nasstat.cz>"
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
