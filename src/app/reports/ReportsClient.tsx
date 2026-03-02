@@ -58,6 +58,11 @@ export default function ReportsClient({
     [user]
   );
 
+  const openFormWithoutLocation = useCallback(() => {
+    setShowForm(true);
+    setError(null);
+  }, []);
+
   const closeForm = useCallback(() => {
     setShowForm(false);
     setSelectedLocation(null);
@@ -66,13 +71,15 @@ export default function ReportsClient({
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!selectedLocation || !user) return;
+    if (!user) return;
 
     setIsSubmitting(true);
     setError(null);
     const formData = new FormData(e.currentTarget);
-    formData.append('lng', selectedLocation[0].toString());
-    formData.append('lat', selectedLocation[1].toString());
+    if (selectedLocation) {
+      formData.append('lng', selectedLocation[0].toString());
+      formData.append('lat', selectedLocation[1].toString());
+    }
 
     try {
       await createReport(formData);
@@ -208,6 +215,17 @@ export default function ReportsClient({
         </div>
       )}
 
+      {/* Floating button for logged-in users when form is closed */}
+      {user && !showForm && (
+        <button
+          data-testid="report-without-location-btn"
+          onClick={openFormWithoutLocation}
+          className={`absolute left-1/2 -translate-x-1/2 rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-bold text-white shadow-lg transition-colors hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300 ${totalPages > 1 ? 'bottom-20' : 'bottom-6'}`}
+        >
+          Nahlásit podnět
+        </button>
+      )}
+
       {/* Report Form Drawer/Sidebar */}
       {showForm && (
         <ReportForm
@@ -217,6 +235,7 @@ export default function ReportsClient({
           categories={CATEGORIES}
           error={error}
           onErrorClose={() => setError(null)}
+          hasLocation={selectedLocation !== null}
         />
       )}
     </div>

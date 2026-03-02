@@ -48,23 +48,25 @@ export default async function ReportsPage({
     console.error('Error fetching reports:', error);
   }
 
-  // Transform reports to match our Report interface
-  const reports: Report[] = (reportsData || []).map((report) => {
-    // PostgREST returns location as a GeoJSON object for GEOGRAPHY types
-    const location = report.location as unknown as GeoJsonPoint;
-    return {
-      id: report.id,
-      title: report.title,
-      description: report.description,
-      location: {
-        lng: location.coordinates[0],
-        lat: location.coordinates[1],
-      },
-      rating: report.rating,
-      category: report.category,
-      status: report.status,
-    };
-  });
+  // Transform reports to match our Report interface; skip reports without location
+  const reports: Report[] = (reportsData || [])
+    .filter((report) => report.location != null)
+    .map((report) => {
+      // PostgREST returns location as a GeoJSON object for GEOGRAPHY types
+      const location = report.location as unknown as GeoJsonPoint;
+      return {
+        id: report.id,
+        title: report.title,
+        description: report.description,
+        location: {
+          lng: location.coordinates[0],
+          lat: location.coordinates[1],
+        },
+        rating: report.rating,
+        category: report.category,
+        status: report.status,
+      };
+    });
 
   const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
 

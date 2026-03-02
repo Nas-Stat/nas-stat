@@ -40,22 +40,24 @@ export default async function DashboardPage() {
   
   const resolvedCount = allReportsData.filter(r => r.status === 'resolved').length;
 
-  // Format reports for the map
-  const mapReports: Report[] = allReportsData.map(r => {
-    const geoJson = r.location as unknown as GeoJsonPoint;
-    return {
-      id: r.id,
-      title: r.title,
-      description: r.description,
-      rating: r.rating,
-      category: r.category,
-      status: r.status,
-      location: {
-        lng: geoJson.coordinates[0],
-        lat: geoJson.coordinates[1]
-      }
-    };
-  });
+  // Format reports for the map; skip reports without location
+  const mapReports: Report[] = allReportsData
+    .filter((r) => r.location != null)
+    .map(r => {
+      const geoJson = r.location as unknown as GeoJsonPoint;
+      return {
+        id: r.id,
+        title: r.title,
+        description: r.description,
+        rating: r.rating,
+        category: r.category,
+        status: r.status,
+        location: {
+          lng: geoJson.coordinates[0],
+          lat: geoJson.coordinates[1]
+        }
+      };
+    });
 
   return (
     <div className="flex min-h-screen flex-col bg-zinc-50 dark:bg-black">

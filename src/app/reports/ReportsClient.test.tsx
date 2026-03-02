@@ -22,6 +22,7 @@ vi.mock('lucide-react', () => ({
   Star: () => <div data-testid="star-icon">Star</div>,
   X: () => <div data-testid="x-icon">X</div>,
   AlertCircle: () => <div data-testid="alert-icon">Alert</div>,
+  MapPin: () => <div data-testid="map-pin-icon">MapPin</div>,
   ChevronLeft: () => <span data-testid="chevron-left-icon">Prev</span>,
   ChevronRight: () => <span data-testid="chevron-right-icon">Next</span>,
 }));

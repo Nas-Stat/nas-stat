@@ -1,5 +1,27 @@
 # Developer Log
 
+## 2026-03-02 - feat: optional location for reports (Issue #36) — Oompa Loompa
+
+### Changes
+
+- **`supabase/migrations/20260302000000_make_location_optional.sql`**: `ALTER TABLE reports ALTER COLUMN location DROP NOT NULL`.
+- **`src/app/reports/actions.ts`**: `lng` / `lat` made `z.coerce.number().optional()` in Zod schema. Insert `location` is `POINT(lng lat)` when both are present, `null` otherwise.
+- **`src/app/reports/ReportsClient.tsx`**: Added `openFormWithoutLocation` handler (opens form without setting a location). Added floating "Nahlásit podnět" button for logged-in users when the form is closed. `handleSubmit` no longer requires `selectedLocation` — appends `lng`/`lat` to `FormData` only when location was picked.
+- **`src/app/reports/ReportForm.tsx`**: Added `hasLocation?: boolean` prop and an info bar showing "Poloha vybrána" (green) or "Bez polohy — klikněte na mapu (volitelné)" (grey).
+- **`src/app/reports/page.tsx`**: Null-safe transform — reports without location are filtered out before being passed to `<Map>`.
+- **`src/app/dashboard/page.tsx`**: Same null-safe filter before `mapReports` is built.
+
+### Tests
+
+- **`src/app/reports/actions.test.ts`**: Added test for successful creation without location (`location: null`) and failure without location.
+- **`src/app/reports/ReportsClient.test.tsx`**: Added `MapPin` to lucide-react mock.
+- **`src/app/page.test.tsx`** / **`src/app/page_auth.test.tsx`**: Updated stale tests that expected a `<button>` for "Nahlásit podnět"; now correctly assert the `<a>` link destination.
+
+### Verification
+
+- `npm run test` — 208/208 passed.
+- `npm run build` — compiled successfully.
+
 ## 2026-03-02 - chore: remove @vercel/analytics (Issue #34) — Oompa Loompa
 
 ### Changes

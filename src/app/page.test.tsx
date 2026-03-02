@@ -34,9 +34,9 @@ test('shows login button when user is not logged in', async () => {
   expect(loginLink).toHaveAttribute('href', '/login');
 });
 
-test('shows report button disabled when not logged in', async () => {
+test('shows report link pointing to /login when not logged in', async () => {
   const ResolvedPage = await Page();
   render(ResolvedPage);
-  const reportButton = screen.getByRole('button', { name: /nahlásit podnět/i });
-  expect(reportButton).toBeDisabled();
+  const reportLink = screen.getByRole('link', { name: /nahlásit podnět/i });
+  expect(reportLink).toHaveAttribute('href', '/login');
 });

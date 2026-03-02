@@ -9,8 +9,8 @@ const reportSchema = z.object({
   description: z.string().optional(),
   rating: z.coerce.number().int().min(1).max(5),
   category: z.string(),
-  lng: z.coerce.number(),
-  lat: z.coerce.number(),
+  lng: z.coerce.number().optional(),
+  lat: z.coerce.number().optional(),
 });
 
 export async function createReport(formData: FormData) {
@@ -33,8 +33,8 @@ export async function createReport(formData: FormData) {
 
   const { title, description, rating, category, lng, lat } = validated.data;
 
-  // Convert to PostGIS POINT format: POINT(lng lat)
-  const location = `POINT(${lng} ${lat})`;
+  // Convert to PostGIS POINT format: POINT(lng lat); null when no location provided
+  const location = lng != null && lat != null ? `POINT(${lng} ${lat})` : null;
 
   const { error } = await supabase.from('reports').insert({
     profile_id: user.id,
