@@ -1,5 +1,28 @@
 # Developer Log
 
+## 2026-03-02 - Story 2.4.2: Produkční nasazení (Issue #18) — Oompa Loompa
+
+### Changes
+
+- **`.github/workflows/deploy-production.yml`**: Nový workflow spouštěný při git tagu `v*` nebo manuálně přes `workflow_dispatch`. Zahrnuje plnou pipeline (lint → test → build → deploy) s produkčními secrets s prefixem `PROD_`. Build krok předává všechny produkční env vars včetně `NEXT_PUBLIC_SENTRY_DSN`. Workflow obsahuje komentáře s kroky prvního nasazení (Supabase migrace, DNS nastavení, Vercel link).
+- **`src/app/layout.tsx`**: Přidán `<Analytics />` z `@vercel/analytics/next`. Vercel Analytics automaticky sleduje page views na produkci (noop lokálně a ve staging bez Vercel prostředí).
+- **`package.json`**: Přidána závislost `@vercel/analytics@^1.5.0`.
+- **`.env.example`**: Přidána proměnná `NEXT_PUBLIC_SENTRY_DSN` (prázdná pro lokální dev, povinná pro produkci).
+- **`README.md`**: Sekce „Produkční nasazení" rozšířena o kompletní postup: Supabase migrace (`supabase db push`), DNS nastavení (CNAME → Vercel), MapTiler produkční klíč, Sentry monitoring, tabulka všech `PROD_*` secrets, instrukce pro nasazení nové verze tagem.
+- **`.github/workflows/workflows.test.ts`**: Přidáno 17 nových testů pro `deploy-production.yml` — triggery (tag, workflow_dispatch), kroky pipeline (lint, test, build, deploy), reference na všechny `PROD_*` secrets, přítomnost dokumentačních komentářů (DNS, supabase db push).
+- **`PLAN.md`**: Přidán a odškrtnut Story 2.4.2.
+
+### Verification
+
+- Ran `npm run test`: 191/191 PASS (18 test files, +17 nových testů)
+- Ran `npm run lint`: PASS (0 errors, 0 warnings)
+
+### Related
+
+- Closes Issue #18
+
+---
+
 ## 2026-03-02 - Story 2.4.1: Branch squash (Issue #17) — Oompa Loompa
 
 ### Changes
