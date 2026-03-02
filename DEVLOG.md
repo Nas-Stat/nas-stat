@@ -647,3 +647,21 @@ git push -u origin issue-17-cicd-pipeline
 
 - Closes Issue #17
 - Branch: `issue-17-cicd-pipeline` → `main`
+
+---
+
+## 2026-03-02 — Audit #38 Follow-up (Oompa Loompa re-run)
+
+### Status
+- 174/174 tests pass (confirmed)
+- QUALITY_REPORT.md committed (audit #38 delta)
+- Push still blocked: GitHub OAuth token lacks `workflow` scope
+
+### Blocker (User Action Required — same as audit #37)
+```bash
+gh auth refresh -s workflow --hostname github.com
+# Approve in browser
+git push -u origin issue-17-cicd-pipeline
+gh pr create --title "feat(ci): add CI/CD pipeline and staging deploy (closes #17)" \
+  --body "Closes #17" --base main
+```
