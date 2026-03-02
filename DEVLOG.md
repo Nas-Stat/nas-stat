@@ -1,5 +1,28 @@
 # Developer Log
 
+## 2026-03-02 - Story 2.4.2: Final Squirrel audit fixes — clean branch (Issue #18) — Oompa Loompa
+
+### Changes
+
+- **`src/app/layout.tsx`**: Fixed metadata: title `'Náš stát'`, proper Czech description, `lang="cs"`. Was left as Next.js scaffold defaults.
+- **`.env.example`**: Removed `NEXT_PUBLIC_SENTRY_DSN` — Sentry SDK not installed, honest documentation.
+- **`README.md`**: Replaced Sentry setup step and `PROD_SENTRY_DSN` secret with Vercel Analytics note — monitoring is Vercel Analytics (already integrated).
+- **`.github/workflows/deploy-production.yml`**: Removed `NEXT_PUBLIC_SENTRY_DSN` from build env and Vercel deploy command. Removed `PROD_SENTRY_DSN` from comments.
+- **`.github/workflows/workflows.test.ts`**: Updated test to assert `PROD_APP_URL` instead of absent `PROD_SENTRY_DSN`.
+- **Branch**: Created `issue-18-clean` from `origin/main`, cherry-picked only 3 relevant commits (eliminating 22 leftover #17 commits). PR is now mergeable.
+
+### Verification
+
+- Ran `npm run test`: 195/195 PASS (18 test files)
+- Ran `npm run lint`: PASS
+
+### Related
+
+- Resolves SUSPICIOUS NUT → GOOD NUT for Issue #18
+- Addresses Squirrel audit issues A (merge conflicts), B (Sentry stubs), C (scaffold metadata)
+
+---
+
 ## 2026-03-02 - Story 2.4.2: Squirrel audit fixes (Issue #18) — Oompa Loompa
 
 ### Changes
