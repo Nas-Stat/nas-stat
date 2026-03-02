@@ -1,21 +1,36 @@
 @import 'tailwindcss';
 
+/* Civic-platform color system
+   Light: bg white, surface slate-50, border slate-200, primary blue-600
+   Dark:  bg zinc-950, surface zinc-900, border zinc-800, primary blue-500
+*/
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #0f172a;
+  --surface: #f8fafc;
+  --border: #e2e8f0;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #09090b;
+    --foreground: #f4f4f5;
+    --surface: #18181b;
+    --border: #27272a;
+    --primary: #3b82f6;
+    --primary-hover: #60a5fa;
   }
 }
 

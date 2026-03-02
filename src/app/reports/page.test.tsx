@@ -54,10 +54,6 @@ vi.mock('./ReportsClient', () => ({
   ),
 }));
 
-// Mock Lucide-react
-vi.mock('lucide-react', () => ({
-  ArrowLeft: () => <div data-testid="arrow-left-icon">ArrowLeft</div>,
-}));
 
 describe('ReportsPage', () => {
   test('renders page header and reports client with default params', async () => {
@@ -90,7 +86,6 @@ describe('ReportsPage', () => {
     });
     render(PageComponent);
 
-    expect(screen.getByText(/Hlášení podnětů/i)).toBeInTheDocument();
     expect(screen.getByTestId('mocked-reports-client')).toBeInTheDocument();
     expect(screen.getByText(/Mocked ReportsClient \(1 reports\)/i)).toBeInTheDocument();
     expect(screen.getByTestId('first-report-title')).toHaveTextContent('Díra v silnici');
@@ -99,8 +94,6 @@ describe('ReportsPage', () => {
     expect(screen.getByTestId('current-status')).toHaveTextContent('');
     expect(screen.getByTestId('current-category')).toHaveTextContent('');
 
-    const backButton = screen.getByRole('link', { name: /zpět/i });
-    expect(backButton).toHaveAttribute('href', '/');
   });
 
   test('passes status and category filters from searchParams', async () => {

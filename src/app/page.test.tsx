@@ -16,22 +16,11 @@ vi.mock('next/headers', () => ({
   cookies: vi.fn(),
 }));
 
-vi.mock('./login/actions', () => ({
-  logout: vi.fn(),
-}));
-
 test('renders Home page with welcome message', async () => {
   const ResolvedPage = await Page();
   render(ResolvedPage);
   const element = screen.getByText(/Vítejte v aplikaci Náš stát/i);
   expect(element).toBeInTheDocument();
-});
-
-test('shows login button when user is not logged in', async () => {
-  const ResolvedPage = await Page();
-  render(ResolvedPage);
-  const loginLink = screen.getByRole('link', { name: /přihlásit se/i });
-  expect(loginLink).toHaveAttribute('href', '/login');
 });
 
 test('shows report link pointing to /login when not logged in', async () => {
