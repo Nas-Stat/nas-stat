@@ -1,5 +1,19 @@
 # Developer Log
 
+## 2026-03-02 - refactor: resolve remaining DRY gaps — Squirrel audit fixes (Issue #21) — Oompa Loompa
+
+### Changes
+
+- **`src/lib/reportStatus.ts`**: Added `ADMIN_STATUS_COLORS` export — dark-mode variants + yellow for `pending` (admin panel convention).
+- **`src/app/admin/AdminClient.tsx`**: Removed local `STATUS_LABELS` and `STATUS_COLORS` copies; now imports `STATUS_LABELS` and `ADMIN_STATUS_COLORS` from `reportStatus.ts`. `<select>` options derived from `STATUS_LABELS` entries.
+- **`src/app/reports/ReportsClient.tsx`**: `STATUS_OPTIONS` array now derived from `STATUS_LABELS` (spread + map); removed hardcoded Czech label strings.
+- **`src/lib/email.ts`**: Imports `STATUS_LABELS` from `reportStatus.ts`, spreads it, and overrides only `pending` with its email-context long form (`'Čeká na zpracování'`).
+- **`src/components/Map.tsx`**: Removed pointless local aliases `statusColors`/`statusLabels`; now uses `STATUS_COLORS`/`STATUS_LABELS` imports directly with `??` fallback operator (consistent with dashboard).
+- **`src/lib/reportStatus.test.ts`**: 4 additional tests for `ADMIN_STATUS_COLORS` (exhaustiveness, dark-mode classes, key-set parity, yellow for pending). Total: 9 tests.
+
+### Test results
+- 204/204 tests passing, lint clean.
+
 ## 2026-03-02 - refactor: extract shared status constants (Issue #21) — Oompa Loompa
 
 ### Changes

@@ -212,8 +212,6 @@ const Map: React.FC<MapProps> = ({
       // Add new markers for reports
       reports.forEach((report) => {
         const color = report.rating && report.rating <= 2 ? '#ef4444' : '#3b82f6';
-        const statusColors = STATUS_COLORS;
-        const statusLabels = STATUS_LABELS;
 
         const marker = new maplibregl.Marker({ color })
           .setLngLat([report.location.lng, report.location.lat])
@@ -222,8 +220,8 @@ const Map: React.FC<MapProps> = ({
         const popup = new maplibregl.Popup({ offset: 25 }).setHTML(`
           <div class="p-2 min-w-[200px]">
             <div class="flex items-center justify-between mb-1">
-              <span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${statusColors[report.status] || statusColors.pending}">
-                ${statusLabels[report.status] || report.status}
+              <span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${STATUS_COLORS[report.status] ?? STATUS_COLORS.pending}">
+                ${STATUS_LABELS[report.status] ?? report.status}
               </span>
               <span class="text-xs text-zinc-500">${'★'.repeat(report.rating || 0)}</span>
             </div>
