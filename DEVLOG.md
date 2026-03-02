@@ -1,5 +1,24 @@
 # Developer Log
 
+## 2026-03-02 - fix: Zod refine + floating button tests (Issue #36, round 2) — Oompa Loompa
+
+### Changes
+
+- **`src/app/reports/actions.ts`**: Added `.refine()` to `reportSchema` — `lng` and `lat` must both be present or both absent (validation error: "Musíte zadat obě souřadnice, nebo žádnou.").
+- **`src/app/page.tsx`**: Replaced disabled `<button>` with `<a>` link; logged-in → `/reports`, logged-out → `/login`.
+- **`.dockerignore`**: Exclude `.env*` but keep `.env.example`.
+
+### Tests
+
+- **`src/app/reports/actions.test.ts`**: 2 new tests for partial coordinate rejection (lng-only, lat-only).
+- **`src/app/reports/ReportsClient.test.tsx`**: 6 new tests covering floating button visibility, `hasLocation` info bar, and FormData without coordinates.
+
+### Verification
+
+- `npm run test` — 216/216 passed.
+
+---
+
 ## 2026-03-02 - feat: optional location for reports (Issue #36) — Oompa Loompa
 
 ### Changes
