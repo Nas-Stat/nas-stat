@@ -98,7 +98,47 @@ Viz sekce CI/CD Pipeline výše pro nastavení secrets.
 
 ### Produkční nasazení
 
-Pro oddělené produkční prostředí vytvořte separátní Vercel projekt a příslušné GitHub secrets s prefixem `PROD_` místo `STAGING_`. Workflow `.github/workflows/deploy.yml` lze rozšířit o druhý job `deploy-production` spouštěný na tagu nebo manuálně.
+Produkční deployment je řízen workflowem `.github/workflows/deploy-production.yml`. Spouští se automaticky při vytvoření git tagu `v*` (např. `git tag v1.0.0 && git push --tags`) nebo manuálně přes GitHub Actions UI.
+
+#### Postup prvního produkčního nasazení
+
+1. **Supabase produkční projekt** — Vytvořte nový Supabase projekt na [supabase.com](https://supabase.com) oddělený od staging prostředí. Spusťte migrace:
+   ```bash
+   supabase link --project-ref <prod-project-ref>
+   supabase db push
+   ```
+2. **Doména a DNS** — V DNS registrátoru přidejte záznam CNAME `nasstat.cz → cname.vercel-dns.com` (nebo A záznam dle Vercel instrukcí). HTTPS certifikát Vercel zajistí automaticky přes Let's Encrypt.
+3. **Vercel projekt** — Propojte repozitář s Vercel projektem pro produkci:
+   ```bash
+   npm i -g vercel
+   vercel login
+   vercel link
+   ```
+4. **MapTiler produkční klíč** — Vytvořte samostatný API klíč omezený na produkční doménu na [maptiler.com](https://maptiler.com).
+5. **Monitoring** — Vytvořte Sentry projekt na [sentry.io](https://sentry.io) a zkopírujte DSN do GitHub secrets.
+
+#### GitHub Actions secrets pro produkci
+
+V repozitáři přejděte na **Settings → Secrets and variables → Actions** a přidejte:
+
+| Secret | Popis |
+|--------|-------|
+| `PROD_SUPABASE_URL` | URL produkčního Supabase projektu |
+| `PROD_SUPABASE_ANON_KEY` | Anon klíč produkčního Supabase projektu |
+| `PROD_SUPABASE_SERVICE_ROLE_KEY` | Service role klíč produkčního Supabase projektu |
+| `PROD_MAPTILER_KEY` | MapTiler API klíč omezený na produkční doménu |
+| `PROD_RESEND_API_KEY` | Resend API klíč pro odesílání e-mailů |
+| `PROD_APP_URL` | Veřejná URL produkce (např. `https://nasstat.cz`) |
+| `PROD_SENTRY_DSN` | Sentry DSN pro monitoring chyb |
+
+Secrets `VERCEL_TOKEN`, `VERCEL_ORG_ID` a `VERCEL_PROJECT_ID` jsou sdílené se staging workflowem.
+
+#### Nasazení nové verze
+
+```bash
+git tag v1.2.0
+git push --tags   # automaticky spustí deploy-production.yml
+```
 
 ## Další informace
 
