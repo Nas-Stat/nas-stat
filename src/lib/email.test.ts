@@ -102,6 +102,18 @@ describe('sendStatusChangeEmail', () => {
     expect(body.html).toContain('http://localhost:3000/reports/some-id');
   });
 
+  it('throws when Resend API returns a non-ok HTTP status', async () => {
+    process.env.RESEND_API_KEY = 'bad-key';
+    process.env.NEXT_PUBLIC_APP_URL = 'http://localhost:3000';
+
+    const mockFetch = vi.fn().mockResolvedValue({ ok: false, status: 401 });
+    vi.stubGlobal('fetch', mockFetch);
+
+    await expect(
+      sendStatusChangeEmail('user@example.com', 'Test', 'resolved', 'report-id')
+    ).rejects.toThrow('Resend error: 401');
+  });
+
   it.each([
     ['pending', 'Čeká na zpracování'],
     ['in_review', 'V řešení'],

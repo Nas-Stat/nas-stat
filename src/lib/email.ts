@@ -45,7 +45,7 @@ export async function sendStatusChangeEmail(
 
   const { subject, html } = buildStatusChangeEmail(reportTitle, newStatus, reportUrl);
 
-  await fetch('https://api.resend.com/emails', {
+  const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -53,4 +53,7 @@ export async function sendStatusChangeEmail(
     },
     body: JSON.stringify({ from, to, subject, html }),
   });
+  if (!response.ok) {
+    throw new Error(`Resend error: ${response.status}`);
+  }
 }

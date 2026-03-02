@@ -6,45 +6,38 @@
 
 ---
 
-## Status: 🟡 SUSPICIOUS NUT
+## Status: 🟢 GOOD NUT
+
+*(Initial review 2026-03-01: 🟡 SUSPICIOUS NUT — silent HTTP failure showstopper fixed 2026-03-02)*
 
 ---
 
 ## Executive Summary
 
-Story 2.3.1 is functionally correct: Czech email templates for all four statuses, Resend integration without a new npm dependency, non-blocking send (failures never break the status update), 20 new tests across two files, all 153 tests passing, `.env.example` documented. The implementation is lean and the structure is clean.
-
-However, one real observability bug is present: `sendStatusChangeEmail` silently swallows Resend HTTP errors (`4xx`/`5xx`). In a production environment where the `RESEND_API_KEY` is misconfigured or the `from` domain is unverified, the action returns `{ success: true }`, the admin sees no error, and the user never receives a notification — with zero log evidence. The `try/catch` in `actions.ts` only fires on thrown exceptions, not on HTTP-level failures. Additionally, a pre-existing DRY violation (flagged in the prior review) was not addressed and now accumulates more code around it.
+Story 2.3.1 is functionally correct: Czech email templates for all four statuses, Resend integration without a new npm dependency, non-blocking send (failures never break the status update), 21 new tests across two files, all 154 tests passing, `.env.example` documented. The implementation is lean and the structure is clean.
 
 ---
 
-## Critical Issues (Showstoppers)
+## Fixed Issues
 
-None. The feature works correctly when properly configured.
+### ~~A. Silent HTTP failure in `sendStatusChangeEmail`~~ — FIXED
 
----
-
-## Code Smells & Improvements
-
-### A. Silent HTTP failure in `sendStatusChangeEmail` (`email.ts:48-55`) — REAL BUG
-
-```ts
-await fetch('https://api.resend.com/emails', { ... });
-// response is never checked
-```
-
-`sendStatusChangeEmail` awaits the Resend HTTP call but never inspects `response.ok`. The scenarios where this silently fails with no logging:
+`response` is now captured and checked: `if (!response.ok) throw new Error(\`Resend error: ${response.status}\`)`. The surrounding `try/catch` in `actions.ts` catches this and logs the error. All four failure scenarios (401, 422, 429, network) now produce log output.
 
 | Cause | Resend response | Logged? |
 |---|---|---|
-| Wrong `RESEND_API_KEY` | `401 Unauthorized` | ❌ No |
-| Unverified `from` domain | `422 Unprocessable` | ❌ No |
-| Resend rate limit | `429 Too Many Requests` | ❌ No |
-| Network timeout (fetch throws) | — | ✅ Yes (catch fires) |
+| Wrong `RESEND_API_KEY` | `401 Unauthorized` | ✅ Yes |
+| Unverified `from` domain | `422 Unprocessable` | ✅ Yes |
+| Resend rate limit | `429 Too Many Requests` | ✅ Yes |
+| Network timeout (fetch throws) | — | ✅ Yes |
 
-The `try/catch` in `actions.ts:114-116` logs `'Failed to send status change email'` — but only for thrown exceptions, not HTTP error responses. A misconfigured production deployment will appear healthy while silently dropping every notification.
+New test added: `'throws when Resend API returns a non-ok HTTP status'` — mocks `{ ok: false, status: 401 }`, asserts `rejects.toThrow('Resend error: 401')`.
 
-**Fix:** Add `if (!response.ok) throw new Error(\`Resend error: ${response.status}\`)` after the `fetch` call. The surrounding `try/catch` in the caller already handles it correctly — this one-liner makes HTTP failures visible in logs without changing any behaviour.
+---
+
+## Code Smells & Improvements (non-blocking, carried forward)
+
+### B. Pre-existing DRY violation — `updateReportStatus` still does not use `getAdminUser()` (`actions.ts:54-73`)
 
 ### B. Pre-existing DRY violation — `updateReportStatus` still does not use `getAdminUser()` (`actions.ts:54-73`)
 
@@ -79,17 +72,15 @@ Email clients do not execute JavaScript so this is not a practical XSS risk. How
 | `updateReportStatus` email — null email skipped | 1 | ✅ |
 | `updateReportStatus` email — throw returns success | 1 | ✅ |
 | `updateReportStatus` email — no email on failed update | 1 | ✅ |
-| **Gap: Resend HTTP 4xx handling** | 0 | ❌ Not tested — because the code path doesn't exist yet |
+| `sendStatusChangeEmail` — Resend HTTP 4xx throws | 1 | ✅ Added in fix commit |
 
-**153 / 153 tests pass.** Coverage is thorough on the happy path and edge cases that are currently implemented. The gap in the HTTP error test is a consequence of the bug, not an independent omission.
+**154 / 154 tests pass.** All gaps resolved.
 
 ---
 
 ## Verdict
 
-🟡 Fix Smell A (silent HTTP failure) and re-submit. The fix is a single line. Everything else is clean, well-tested, and shippable.
-
-**→ DO NOT MERGE until `response.ok` check is added.**
+🟢 Smell A fixed. All story requirements met, 154/154 tests pass. **→ Merge.**
 
 ---
 

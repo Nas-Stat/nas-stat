@@ -1,5 +1,21 @@
 # Developer Log
 
+## 2026-03-02 - Fix: Squirrel showstopper — silent HTTP failure in `sendStatusChangeEmail` (Issue #16 / PR #27)
+
+### Changes
+
+- **`src/lib/email.ts`**: Captured `response` from `fetch` call to Resend API and added `if (!response.ok) throw new Error(\`Resend error: ${response.status}\`)`. HTTP 4xx/5xx failures now throw and are caught by the `try/catch` in `updateReportStatus` (`actions.ts`), logging the error and making misconfigurations visible.
+- **`src/lib/email.test.ts`**: Added 1 new test — "throws when Resend API returns a non-ok HTTP status" (`{ ok: false, status: 401 }`). Verifies the new code path.
+
+### Verification
+
+- Ran `npm test`: 154/154 PASS (17 test files)
+- Fix resolves the single Squirrel showstopper from QUALITY_REPORT.md
+
+### Related
+
+- Fixes Issue #16 / PR #27 — SUSPICIOUS NUT → GOOD NUT
+
 ## 2026-03-01 - Story 2.2.2: Moderace obsahu (Issue #15) — Oompa Loompa
 
 ### Changes
