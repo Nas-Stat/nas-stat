@@ -1,6 +1,6 @@
 # Quality Report — Story 2.4.1: CI/CD Pipeline (#17)
 
-**Reviewed by:** The Squirrel (Tabula Rasa — twenty-ninth independent audit)
+**Reviewed by:** The Squirrel (Tabula Rasa — thirtieth independent audit)
 **Branch:** `issue-17-cicd-pipeline`
 **Date:** 2026-03-02
 
@@ -12,74 +12,79 @@
 
 ## Executive Summary
 
-The implementation delivers all six issue requirements: CI workflow (lint + test + build on every PR), staging deploy workflow (push to `main` → Vercel), 20 dedicated workflow tests, and full README documentation. All 174 tests pass, lint is clean.
+The implementation satisfies all six acceptance criteria from the issue: `ci.yml` (lint + test + build on every PR), `deploy.yml` (Vercel staging on push to `main`), 20 dedicated workflow tests, and README documentation. 174/174 tests pass. Lint is clean.
 
-**The branch cannot be pushed without a `workflow` OAuth scope on the GitHub token.** This is a user action, not a code fix. Beyond that external blocker, three non-critical design concerns and one new finding (branch commit noise) justify 🟡 over 🟢.
+**The branch is unpushed. No PR exists.** The GitHub token is missing the `workflow` OAuth scope, which GitHub requires for any push that adds or modifies files under `.github/workflows/`. This is not a code defect — it is a user action.
+
+Beyond the external blocker, three genuine design concerns in `deploy.yml` prevent a 🟢 rating.
 
 ---
 
 ## Critical Issues (Showstoppers)
 
-### 1. Push blocked — GitHub token missing `workflow` scope
+### 1. Branch cannot be pushed — GitHub token missing `workflow` scope
 
-GitHub refuses any push that adds or modifies files under `.github/workflows/` without the `workflow` OAuth scope.
+Current token scopes: `gist`, `read:org`, `repo` — **`workflow` is absent.**
 
-Current scopes: `gist`, `read:org`, `repo` — **`workflow` is absent.**
-
-**Required action (user only — cannot be automated):**
+**User action required (30 seconds):**
 
 ```bash
-gh auth refresh -s workflow --hostname github.com
-# Follow browser prompt → authorize
+gh auth refresh -h github.com -s workflow
+# Follow the browser prompt and authorize
 git push -u origin issue-17-cicd-pipeline
 ```
+
+Then open a PR with **Squash and merge** to collapse the 6 meta-commits into one.
 
 ---
 
 ## Code Smells & Improvements (Non-Blocking)
 
-### A. Branch has 6 commits — 5 are meta-noise with one duplicate
-
-```
-b666939 docs(quality): finalize quality report for Story 2.4.1 (#17)
-71e10ef docs(quality): update reviewer label in quality report (#17)  ← DUPLICATE
-8339432 docs(quality): update reviewer label in quality report (#17)
-a7351c5 chore: log Story 2.4.1 CI/CD pipeline in DEVLOG (#17)
-358fb44 docs(quality): update quality report for Story 2.4.1 (#17)
-4b828cc feat(ci): Story 2.4.1 — CI/CD pipeline a staging nasazení (closes #17)  ← implementation
-```
-
-The implementation is in one clean commit. The five above it (one a duplicate) are audit artifacts. Use **Squash and merge** to collapse them. Do not let these land individually on `main`.
-
-### B. `--prod` flag in `deploy.yml:46` — implicit production risk
+### A. `--prod` flag in `deploy.yml` — staging/production naming confusion
 
 ```yaml
 npx vercel --token "${{ secrets.VERCEL_TOKEN }}" \
-  --prod \          # promotes deployment to the Vercel project's production URL
+  --prod \   # ← promotes to the Vercel project's *production* URL
 ```
 
-The workflow is named "Deploy to Staging" and uses `STAGING_*` secrets, implying a dedicated staging Vercel project. If that project is correctly linked, `--prod` is needed to get a stable URL rather than a random preview hash — fine. **The risk:** one misconfigured `VERCEL_PROJECT_ID` pointing at the production project and every `main` merge deploys to production. The README should explicitly warn that `VERCEL_PROJECT_ID` must reference the staging project. Renaming the secret to `STAGING_VERCEL_PROJECT_ID` would make the intent self-documenting.
+The workflow is named "Deploy to Staging" and uses `STAGING_*` secrets. If `VERCEL_PROJECT_ID` ever points at the production Vercel project (misconfiguration, copy-paste error), `--prod` makes every `main` merge a production deploy.
 
-### C. No CI gate before staging deploy
+The README section on Production deployment says "create a separate Vercel project and use `PROD_` prefixed secrets" — correct intent, but `VERCEL_PROJECT_ID` is currently unprefixed and shared. Renaming it to `STAGING_VERCEL_PROJECT_ID` would make the guard self-documenting.
 
-The two workflows are independent. A direct `git push` to `main` (bypassing a PR) triggers `deploy.yml` immediately without running lint/test/build. Unless branch protection rules requiring CI passage are configured in repo settings, broken code can reach staging. Should be documented as a hard prerequisite.
+### B. No CI gate enforced before staging deploy
 
-### D. `--env` CLI flags may not provide runtime env vars for server-side functions
+`ci.yml` and `deploy.yml` are independent workflows. A direct `git push` to `main` (bypassing a PR) triggers the deploy immediately without running lint/test/build. Branch protection rules requiring CI passage are not configured in this repository. A note in the README ("branch protection must be enabled for this guarantee to hold") is missing.
+
+### C. `--env` CLI flags may not persist at serverless runtime
 
 ```yaml
 --env SUPABASE_SERVICE_ROLE_KEY="${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}"
 --env RESEND_API_KEY="${{ secrets.STAGING_RESEND_API_KEY }}"
 ```
 
-Vercel CLI `--env` injects vars at build time for that specific deployment. `NEXT_PUBLIC_*` vars are embedded at build — correct. But `SUPABASE_SERVICE_ROLE_KEY` and `RESEND_API_KEY` are accessed at **runtime** inside Next.js server actions. Whether Vercel carries CLI-injected `--env` vars into serverless function runtime must be validated on the first real deploy. If not, admin Supabase calls and email sending fail silently on staging. Safer: configure these in the Vercel Dashboard under Environment Variables.
+`NEXT_PUBLIC_*` vars are embedded at build time — correct. But `SUPABASE_SERVICE_ROLE_KEY` and `RESEND_API_KEY` are accessed at **runtime** inside Next.js Server Actions. Whether Vercel carries CLI-injected `--env` values into the serverless function runtime depends on the Vercel CLI version and project configuration. If not, admin Supabase operations and email dispatch fail silently on staging. These two secrets should be set in the Vercel Dashboard → Environment Variables as a safer fallback.
 
-### E. Workflow tests use raw string matching
+### D. Workflow tests use string matching, not YAML parsing
 
 ```typescript
 expect(content).toContain('npm run lint')
 ```
 
-A syntactically invalid YAML file with the right strings would still pass all 20 tests. Acceptable pragmatic trade-off at this scale, but worth noting.
+A syntactically broken YAML file with the correct strings would pass all 20 tests. Acceptable pragmatic trade-off at this stage, but the test suite gives false confidence if a workflow file becomes malformed.
+
+### E. Branch carries 6 meta-commits on top of 1 implementation commit
+
+```
+1027fa9 docs(quality): finalize quality report for Story 2.4.1 — audit #29 (#17)
+b666939 docs(quality): finalize quality report for Story 2.4.1 (#17)
+71e10ef docs(quality): update reviewer label in quality report (#17)
+8339432 docs(quality): update reviewer label in quality report (#17)
+a7351c5 chore: log Story 2.4.1 CI/CD pipeline in DEVLOG (#17)
+358fb44 docs(quality): update quality report for Story 2.4.1 (#17)
+4b828cc feat(ci): Story 2.4.1 — CI/CD pipeline a staging nasazení (closes #17)  ← real work
+```
+
+**Use Squash and merge** when opening the PR. Do not let these land individually on `main`.
 
 ---
 
@@ -93,14 +98,15 @@ A syntactically invalid YAML file with the right strings would still pass all 20
 | Workflow-specific tests | 20 (`workflows.test.ts`) |
 | Lint warnings | 0 |
 
-Workflow tests verify all required triggers, tooling, steps, and secret references. Coverage is thorough for what can be unit-tested in-process.
+All 20 workflow tests cover trigger conditions, runner, Node version, caching, step names, and secret references for both `ci.yml` and `deploy.yml`. Coverage is thorough for in-process validation of YAML content.
 
 ---
 
 ## Merge Checklist
 
-- [ ] `gh auth refresh -s workflow --hostname github.com` **(user action — required first)**
+- [ ] **`gh auth refresh -h github.com -s workflow`** — user action, required first
 - [ ] `git push -u origin issue-17-cicd-pipeline`
 - [ ] Open PR → merge with **Squash and merge**
 - [ ] `gh issue close 17`
-- [ ] Configure branch protection rule requiring CI to pass before merge (recommended)
+- [ ] (Recommended) Enable branch protection rule on `main` requiring CI to pass
+- [ ] (Recommended) Rename `VERCEL_PROJECT_ID` secret to `STAGING_VERCEL_PROJECT_ID` after Vercel is configured
