@@ -1,3 +1,90 @@
+# Quality Report — Issue #16 / PR #27
+
+**Reviewed by:** The Squirrel
+**PR:** #27 (`issue-16-email-notifications` → `main`)
+**Date:** 2026-03-01 (initial) / 2026-03-02 (re-review — independent fresh audit, confirmed for merge)
+
+---
+
+## Status: 🟢 GOOD NUT
+
+*(Initial review 2026-03-01: 🟡 SUSPICIOUS NUT — silent HTTP failure showstopper fixed 2026-03-02)*
+*(Re-review 2026-03-02: Independent Tabula Rasa audit — all code paths, tests, lint confirmed. Verdict unchanged.)*
+
+---
+
+## Executive Summary
+
+Story 2.3.1 is functionally correct: Czech email templates for all four statuses, Resend integration without a new npm dependency, non-blocking send (failures never break the status update), 21 new tests across two files, all 154 tests passing, `.env.example` documented. The implementation is lean and the structure is clean.
+
+---
+
+## Fixed Issues
+
+### ~~A. Silent HTTP failure in `sendStatusChangeEmail`~~ — FIXED
+
+`response` is now captured and checked: `if (!response.ok) throw new Error(\`Resend error: ${response.status}\`)`. The surrounding `try/catch` in `actions.ts` catches this and logs the error. All four failure scenarios (401, 422, 429, network) now produce log output.
+
+| Cause | Resend response | Logged? |
+|---|---|---|
+| Wrong `RESEND_API_KEY` | `401 Unauthorized` | ✅ Yes |
+| Unverified `from` domain | `422 Unprocessable` | ✅ Yes |
+| Resend rate limit | `429 Too Many Requests` | ✅ Yes |
+| Network timeout (fetch throws) | — | ✅ Yes |
+
+New test added: `'throws when Resend API returns a non-ok HTTP status'` — mocks `{ ok: false, status: 401 }`, asserts `rejects.toThrow('Resend error: 401')`.
+
+---
+
+## Code Smells & Improvements (non-blocking, carried forward)
+
+### B. Pre-existing DRY violation — `updateReportStatus` still does not use `getAdminUser()` (`actions.ts:54-73`)
+
+### B. Pre-existing DRY violation — `updateReportStatus` still does not use `getAdminUser()` (`actions.ts:54-73`)
+
+This was flagged as "Smell A" in the Issue #15/PR #26 review and remains unaddressed. The `updateReportStatus` function now has more code added to it while still carrying a hand-rolled copy of the auth + admin-role check instead of calling `getAdminUser()`. Noted again for the record; non-blocking but the drift risk grows with each PR that touches this function.
+
+### C. HTML content injection in email template (`email.ts:17-19`)
+
+`reportTitle` is interpolated directly into the HTML body:
+
+```ts
+<h2 ...>Aktualizace hlášení: ${reportTitle}</h2>
+<p>... <strong>&quot;${reportTitle}&quot;</strong> ...
+```
+
+Email clients do not execute JavaScript so this is not a practical XSS risk. However, a title containing `</strong></p><p>` would break the HTML structure of the email. The `&quot;` escaping around the title in the `<p>` is inconsistent — the `<h2>` receives no escaping at all. Low severity for a civic platform MVP; escaping the title with a minimal HTML-escape helper would make this airtight.
+
+---
+
+## Test Coverage Analysis
+
+| Scope | Tests | Quality |
+|---|---|---|
+| `buildStatusChangeEmail` — all 4 statuses | 4 | ✅ Excellent |
+| `buildStatusChangeEmail` — title in body, URL in link, unknown status fallback | 3 | ✅ Excellent |
+| `sendStatusChangeEmail` — missing API key no-op | 1 | ✅ |
+| `sendStatusChangeEmail` — correct headers/method | 1 | ✅ |
+| `sendStatusChangeEmail` — recipient, subject, report link | 1 | ✅ |
+| `sendStatusChangeEmail` — fallback app URL | 1 | ✅ |
+| `sendStatusChangeEmail` — all 4 Czech labels | 4 | ✅ Excellent |
+| `updateReportStatus` email — sent to author | 1 | ✅ |
+| `updateReportStatus` email — null report skipped | 1 | ✅ |
+| `updateReportStatus` email — null email skipped | 1 | ✅ |
+| `updateReportStatus` email — throw returns success | 1 | ✅ |
+| `updateReportStatus` email — no email on failed update | 1 | ✅ |
+| `sendStatusChangeEmail` — Resend HTTP 4xx throws | 1 | ✅ Added in fix commit |
+
+**154 / 154 tests pass.** All gaps resolved.
+
+---
+
+## Verdict
+
+🟢 Smell A fixed. All story requirements met, 154/154 tests pass. **→ Merge.**
+
+---
+
 # Quality Report — Issue #15 / PR #26
 
 **Reviewed by:** The Squirrel
