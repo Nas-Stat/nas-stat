@@ -1,6 +1,6 @@
 # Quality Report — Story 2.4.1: CI/CD Pipeline (#17)
 
-**Reviewed by:** The Squirrel (Tabula Rasa — audit #37)
+**Reviewed by:** The Squirrel (Tabula Rasa — audit #38)
 **Branch:** `issue-17-cicd-pipeline`
 **Date:** 2026-03-02
 
@@ -22,7 +22,7 @@ The branch is **unpushed and no PR exists.** GitHub rejects the push because the
 
 ### 1. Branch cannot be pushed — GitHub token missing `workflow` scope
 
-Confirmed on this audit (audit #37): current token scopes are `gist`, `read:org`, `repo`. GitHub refuses to push any file under `.github/workflows/` without the `workflow` scope.
+Confirmed on this audit (#38): current token scopes are `gist`, `read:org`, `repo`. GitHub refuses to push any file under `.github/workflows/` without the `workflow` scope.
 
 **User action required (one-time):**
 
@@ -69,7 +69,7 @@ A syntactically broken YAML file containing the expected strings would pass all 
 
 ### E. Squash merge is mandatory
 
-The branch has 14 commits: 1 implementation + 13 quality report iterations. Do not let audit doc commits land on `main`. **Squash and merge only.**
+The branch has 15 commits: 1 implementation + 14 quality report iterations. Do not let audit doc commits land on `main`. **Squash and merge only.**
 
 ---
 
@@ -92,7 +92,7 @@ Workflow tests cover: trigger conditions, runner, Node version, npm caching, all
 
 - [ ] **`gh auth refresh -h github.com -s workflow`** — user action required first
 - [ ] `git push -u origin issue-17-cicd-pipeline`
-- [ ] Open PR → merge with **Squash and merge** (14 commits → 1)
+- [ ] Open PR → merge with **Squash and merge** (15 commits → 1)
 - [ ] `gh issue close 17`
 - [ ] (Recommended) Enable branch protection on `main` requiring CI pass before merge
 - [ ] (Recommended) Rename `VERCEL_PROJECT_ID` → `STAGING_VERCEL_PROJECT_ID`
