@@ -1,6 +1,6 @@
 # Quality Report — Story 2.4.1: CI/CD Pipeline (#17)
 
-**Reviewed by:** The Squirrel (Tabula Rasa — twenty-eighth independent audit)
+**Reviewed by:** The Squirrel (Tabula Rasa — twenty-ninth independent audit)
 **Branch:** `issue-17-cicd-pipeline`
 **Date:** 2026-03-02
 
@@ -38,9 +38,10 @@ git push -u origin issue-17-cicd-pipeline
 
 ## Code Smells & Improvements (Non-Blocking)
 
-### A. Branch has 5 commits — 4 are meta-noise with one duplicate
+### A. Branch has 6 commits — 5 are meta-noise with one duplicate
 
 ```
+b666939 docs(quality): finalize quality report for Story 2.4.1 (#17)
 71e10ef docs(quality): update reviewer label in quality report (#17)  ← DUPLICATE
 8339432 docs(quality): update reviewer label in quality report (#17)
 a7351c5 chore: log Story 2.4.1 CI/CD pipeline in DEVLOG (#17)
@@ -48,7 +49,7 @@ a7351c5 chore: log Story 2.4.1 CI/CD pipeline in DEVLOG (#17)
 4b828cc feat(ci): Story 2.4.1 — CI/CD pipeline a staging nasazení (closes #17)  ← implementation
 ```
 
-The implementation is in one clean commit. The four above it (one a duplicate) are audit artifacts. Use **Squash and merge** to collapse them. Do not let these land individually on `main`.
+The implementation is in one clean commit. The five above it (one a duplicate) are audit artifacts. Use **Squash and merge** to collapse them. Do not let these land individually on `main`.
 
 ### B. `--prod` flag in `deploy.yml:46` — implicit production risk
 
