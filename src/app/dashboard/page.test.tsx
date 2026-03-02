@@ -9,11 +9,7 @@ vi.mock('@/utils/supabase/server', () => ({
       getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
     },
     from: vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        order: vi.fn().mockReturnValue({
-          limit: vi.fn().mockResolvedValue({ data: [], error: null }),
-        }),
-      }),
+      select: vi.fn().mockResolvedValue({ data: [], error: null }),
     }),
   }),
 }));
@@ -34,42 +30,36 @@ vi.mock('@/components/Map', () => ({
   default: () => <div data-testid="mock-map">Map</div>,
 }));
 
+function makeReportsSelect(mockReports: unknown[]) {
+  return {
+    select: vi.fn().mockResolvedValue({ data: mockReports, error: null }),
+  };
+}
+
+function makeTopicsSelect(mockTopics: unknown[]) {
+  return {
+    select: vi.fn().mockReturnValue({
+      order: vi.fn().mockResolvedValue({ data: mockTopics, error: null }),
+    }),
+  };
+}
+
 test('renders Dashboard page with header, map and sections', async () => {
   const { createClient } = await import('@/utils/supabase/server');
+  const mockReports = [
+    { id: '1', title: 'Díra v silnici', rating: 2, category: 'Doprava', status: 'pending', created_at: '2026-01-01T10:00:00Z', location: { type: 'Point', coordinates: [14.4, 50.1] } },
+  ];
+  const mockTopics = [
+    { id: '1', title: 'Nová reforma', comments: [{ id: '1' }], created_at: new Date().toISOString() },
+  ];
   vi.mocked(createClient).mockResolvedValue({
     auth: {
       getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
     },
     from: vi.fn().mockImplementation((table: string) => {
-      if (table === 'reports') {
-        const mockReports = [
-          { id: '1', title: 'Díra v silnici', rating: 2, category: 'Doprava', created_at: new Date().toISOString(), location: { type: 'Point', coordinates: [14.4, 50.1] } },
-        ];
-        return {
-          select: vi.fn().mockReturnValue({
-            order: vi.fn().mockReturnValue({
-              limit: vi.fn().mockResolvedValue({ data: mockReports, error: null }),
-            }),
-            // Mock for the allReports fetch (which is awaitable/thenable)
-            then: (resolve: (value: { data: typeof mockReports; error: null }) => void) => resolve({ data: mockReports, error: null }),
-          }),
-        } as unknown;
-      }
-      if (table === 'topics') {
-        return {
-          select: vi.fn().mockReturnValue({
-            order: vi.fn().mockResolvedValue({
-              data: [
-                { id: '1', title: 'Nová reforma', comments: [{ id: '1' }], created_at: new Date().toISOString() },
-              ],
-              error: null,
-            }),
-          }),
-        };
-      }
-      return {
-        select: vi.fn().mockResolvedValue({ data: [], error: null }),
-      };
+      if (table === 'reports') return makeReportsSelect(mockReports);
+      if (table === 'topics') return makeTopicsSelect(mockTopics);
+      return { select: vi.fn().mockResolvedValue({ data: [], error: null }) };
     }),
   } as unknown as ReturnType<typeof createClient>);
 
@@ -91,14 +81,10 @@ test('renders empty state when no data is available', async () => {
     auth: {
       getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
     },
-    from: vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        order: vi.fn().mockReturnValue({
-          limit: vi.fn().mockResolvedValue({ data: [], error: null }),
-        }),
-        // Mock for the allReports fetch
-        then: (resolve: (value: { data: []; error: null }) => void) => resolve({ data: [], error: null }),
-      }),
+    from: vi.fn().mockImplementation((table: string) => {
+      if (table === 'reports') return makeReportsSelect([]);
+      if (table === 'topics') return makeTopicsSelect([]);
+      return { select: vi.fn().mockResolvedValue({ data: [], error: null }) };
     }),
   } as unknown as ReturnType<typeof createClient>);
 
@@ -113,33 +99,20 @@ test('renders empty state when no data is available', async () => {
 
 test('calculates and displays correct statistics', async () => {
   const { createClient } = await import('@/utils/supabase/server');
+  const mockReports = [
+    { id: '1', title: 'R1', rating: 5, category: 'C1', created_at: '2026-01-01', location: { type: 'Point', coordinates: [14.4, 50.1] }, status: 'resolved' },
+    { id: '2', title: 'R2', rating: 1, category: 'C2', created_at: '2026-01-02', location: { type: 'Point', coordinates: [14.4, 50.1] }, status: 'pending' },
+  ];
   vi.mocked(createClient).mockResolvedValue({
     auth: {
       getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
     },
     from: vi.fn().mockImplementation((table: string) => {
-      if (table === 'reports') {
-        const mockReports = [
-          { id: '1', title: 'R1', rating: 5, category: 'C1', created_at: '2026-01-01', location: { type: 'Point', coordinates: [14.4, 50.1] }, status: 'resolved' },
-          { id: '2', title: 'R2', rating: 1, category: 'C2', created_at: '2026-01-02', location: { type: 'Point', coordinates: [14.4, 50.1] }, status: 'pending' },
-        ];
-        return {
-          select: vi.fn().mockReturnValue({
-            order: vi.fn().mockReturnValue({
-              limit: vi.fn().mockResolvedValue({ data: mockReports, error: null }),
-            }),
-            then: (resolve: (value: { data: typeof mockReports; error: null }) => void) => resolve({ data: mockReports, error: null }),
-          }),
-        } as unknown;
-      }
-      return {
-        select: vi.fn().mockReturnValue({
-          order: vi.fn().mockResolvedValue({ data: [], error: null }),
-        }),
-      };
+      if (table === 'reports') return makeReportsSelect(mockReports);
+      if (table === 'topics') return makeTopicsSelect([]);
+      return { select: vi.fn().mockResolvedValue({ data: [], error: null }) };
     }),
   } as unknown as ReturnType<typeof createClient>);
-
 
   const PageComponent = await Page();
   render(PageComponent);
@@ -163,21 +136,9 @@ test('renders Czech status labels for reports in the dashboard', async () => {
   vi.mocked(createClient).mockResolvedValue({
     auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }) },
     from: vi.fn().mockImplementation((table: string) => {
-      if (table === 'reports') {
-        return {
-          select: vi.fn().mockReturnValue({
-            order: vi.fn().mockReturnValue({
-              limit: vi.fn().mockResolvedValue({ data: statuses, error: null }),
-            }),
-            then: (resolve: (value: { data: typeof statuses; error: null }) => void) => resolve({ data: statuses, error: null }),
-          }),
-        } as unknown;
-      }
-      return {
-        select: vi.fn().mockReturnValue({
-          order: vi.fn().mockResolvedValue({ data: [], error: null }),
-        }),
-      };
+      if (table === 'reports') return makeReportsSelect(statuses);
+      if (table === 'topics') return makeTopicsSelect([]);
+      return { select: vi.fn().mockResolvedValue({ data: [], error: null }) };
     }),
   } as unknown as ReturnType<typeof createClient>);
 
@@ -198,26 +159,12 @@ test('sorts popular topics by comment count', async () => {
     },
     from: vi.fn().mockImplementation((table: string) => {
       if (table === 'topics') {
-        return {
-          select: vi.fn().mockReturnValue({
-            order: vi.fn().mockResolvedValue({
-              data: [
-                { id: '1', title: 'Less Popular', comments: [{ id: 'c1' }], created_at: new Date().toISOString() },
-                { id: '2', title: 'More Popular', comments: [{ id: 'c2' }, { id: 'c3' }], created_at: new Date().toISOString() },
-              ],
-              error: null,
-            }),
-          }),
-        };
+        return makeTopicsSelect([
+          { id: '1', title: 'Less Popular', comments: [{ id: 'c1' }], created_at: new Date().toISOString() },
+          { id: '2', title: 'More Popular', comments: [{ id: 'c2' }, { id: 'c3' }], created_at: new Date().toISOString() },
+        ]);
       }
-      return {
-        select: vi.fn().mockReturnValue({
-          order: vi.fn().mockReturnValue({
-            limit: vi.fn().mockResolvedValue({ data: [], error: null }),
-          }),
-          then: (resolve: (value: { data: []; error: null }) => void) => resolve({ data: [], error: null }),
-        }),
-      };
+      return makeReportsSelect([]);
     }),
   } as unknown as ReturnType<typeof createClient>);
 
@@ -227,4 +174,57 @@ test('sorts popular topics by comment count', async () => {
   const topicElements = screen.getAllByText(/Popular/);
   expect(topicElements[0]).toHaveTextContent('More Popular');
   expect(topicElements[1]).toHaveTextContent('Less Popular');
+});
+
+test('derives latest 5 reports sorted by created_at descending from single query', async () => {
+  const { createClient } = await import('@/utils/supabase/server');
+  // 7 reports — only top 5 by created_at should appear in "Nejnovější hlášení"
+  const mockReports = [
+    { id: '1', title: 'Old Report', rating: 3, category: 'C', created_at: '2026-01-01T00:00:00Z', location: { type: 'Point', coordinates: [14.4, 50.1] }, status: 'pending' },
+    { id: '2', title: 'Very Old Report', rating: 3, category: 'C', created_at: '2025-12-01T00:00:00Z', location: { type: 'Point', coordinates: [14.4, 50.1] }, status: 'pending' },
+    { id: '3', title: 'Newest Report', rating: 3, category: 'C', created_at: '2026-03-01T00:00:00Z', location: { type: 'Point', coordinates: [14.4, 50.1] }, status: 'pending' },
+    { id: '4', title: 'Second Report', rating: 3, category: 'C', created_at: '2026-02-20T00:00:00Z', location: { type: 'Point', coordinates: [14.4, 50.1] }, status: 'pending' },
+    { id: '5', title: 'Third Report', rating: 3, category: 'C', created_at: '2026-02-10T00:00:00Z', location: { type: 'Point', coordinates: [14.4, 50.1] }, status: 'pending' },
+    { id: '6', title: 'Fourth Report', rating: 3, category: 'C', created_at: '2026-02-05T00:00:00Z', location: { type: 'Point', coordinates: [14.4, 50.1] }, status: 'pending' },
+    { id: '7', title: 'Fifth Report', rating: 3, category: 'C', created_at: '2026-01-15T00:00:00Z', location: { type: 'Point', coordinates: [14.4, 50.1] }, status: 'pending' },
+  ];
+  vi.mocked(createClient).mockResolvedValue({
+    auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }) },
+    from: vi.fn().mockImplementation((table: string) => {
+      if (table === 'reports') return makeReportsSelect(mockReports);
+      if (table === 'topics') return makeTopicsSelect([]);
+      return { select: vi.fn().mockResolvedValue({ data: [], error: null }) };
+    }),
+  } as unknown as ReturnType<typeof createClient>);
+
+  const PageComponent = await Page();
+  render(PageComponent);
+
+  // Top 5 newest: Newest Report, Second Report, Third Report, Fourth Report, Fifth Report
+  expect(screen.getByText('Newest Report')).toBeInTheDocument();
+  expect(screen.getByText('Second Report')).toBeInTheDocument();
+  expect(screen.getByText('Third Report')).toBeInTheDocument();
+  expect(screen.getByText('Fourth Report')).toBeInTheDocument();
+  expect(screen.getByText('Fifth Report')).toBeInTheDocument();
+  // Old Report and Very Old Report are cut off
+  expect(screen.queryByText('Old Report')).not.toBeInTheDocument();
+  expect(screen.queryByText('Very Old Report')).not.toBeInTheDocument();
+});
+
+test('issues only one query to reports table per page load', async () => {
+  const { createClient } = await import('@/utils/supabase/server');
+  const fromSpy = vi.fn().mockImplementation((table: string) => {
+    if (table === 'reports') return makeReportsSelect([]);
+    if (table === 'topics') return makeTopicsSelect([]);
+    return { select: vi.fn().mockResolvedValue({ data: [], error: null }) };
+  });
+  vi.mocked(createClient).mockResolvedValue({
+    auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }) },
+    from: fromSpy,
+  } as unknown as ReturnType<typeof createClient>);
+
+  await Page();
+
+  const reportsCallCount = fromSpy.mock.calls.filter(([table]: [string]) => table === 'reports').length;
+  expect(reportsCallCount).toBe(1);
 });
