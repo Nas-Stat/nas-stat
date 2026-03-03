@@ -11,11 +11,17 @@ vi.mock('./actions', () => ({
 test('renders LoginPage with form', async () => {
   const ResolvedPage = await LoginPage({ searchParams: Promise.resolve({ message: '', error: '' }) });
   render(ResolvedPage);
-  
+
   expect(screen.getByLabelText(/Emailová adresa/i)).toBeInTheDocument();
   expect(screen.getByLabelText(/Heslo/i)).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /přihlásit se/i })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /zaregistrovat se/i })).toBeInTheDocument();
+});
+
+test('renders app name heading', async () => {
+  const ResolvedPage = await LoginPage({ searchParams: Promise.resolve({ message: '', error: '' }) });
+  render(ResolvedPage);
+  expect(screen.getByRole('heading', { name: /náš stát/i })).toBeInTheDocument();
 });
 
 test('renders Google login button', async () => {
@@ -27,11 +33,40 @@ test('renders Google login button', async () => {
 test('shows error message from searchParams', async () => {
   const ResolvedPage = await LoginPage({ searchParams: Promise.resolve({ message: '', error: 'Chybné údaje' }) });
   render(ResolvedPage);
+  expect(screen.getByTestId('error-message')).toBeInTheDocument();
   expect(screen.getByText(/Chybné údaje/i)).toBeInTheDocument();
 });
 
 test('shows success message from searchParams', async () => {
   const ResolvedPage = await LoginPage({ searchParams: Promise.resolve({ message: 'Zkontrolujte email', error: '' }) });
   render(ResolvedPage);
+  expect(screen.getByTestId('success-message')).toBeInTheDocument();
   expect(screen.getByText(/Zkontrolujte email/i)).toBeInTheDocument();
+});
+
+test('does not show error block when error is empty', async () => {
+  const ResolvedPage = await LoginPage({ searchParams: Promise.resolve({ message: '', error: '' }) });
+  render(ResolvedPage);
+  expect(screen.queryByTestId('error-message')).not.toBeInTheDocument();
+});
+
+test('does not show success block when message is empty', async () => {
+  const ResolvedPage = await LoginPage({ searchParams: Promise.resolve({ message: '', error: '' }) });
+  render(ResolvedPage);
+  expect(screen.queryByTestId('success-message')).not.toBeInTheDocument();
+});
+
+test('email input has correct type and autocomplete', async () => {
+  const ResolvedPage = await LoginPage({ searchParams: Promise.resolve({ message: '', error: '' }) });
+  render(ResolvedPage);
+  const emailInput = screen.getByLabelText(/Emailová adresa/i);
+  expect(emailInput).toHaveAttribute('type', 'email');
+  expect(emailInput).toHaveAttribute('autocomplete', 'email');
+});
+
+test('password input has correct type', async () => {
+  const ResolvedPage = await LoginPage({ searchParams: Promise.resolve({ message: '', error: '' }) });
+  render(ResolvedPage);
+  const passwordInput = screen.getByLabelText(/Heslo/i);
+  expect(passwordInput).toHaveAttribute('type', 'password');
 });

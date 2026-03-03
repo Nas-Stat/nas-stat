@@ -1,5 +1,33 @@
 # Developer Log
 
+## 2026-03-03 — feat: redesign Login page (Issue #42) — Oompa Loompa
+
+### Changes
+
+- **`src/app/login/page.tsx`**:
+  - Replaced `min-h-screen bg-gray-50` with `min-h-[calc(100vh-4rem)] bg-zinc-50 dark:bg-black` to account for Header height and add dark mode page background.
+  - Card: updated to `rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900` — matches dashboard/topics card style.
+  - App name: replaced `<h2>` welcome text with `<h1>Náš stát</h1>` as primary brand heading, consistent with other redesigned pages.
+  - Inputs: updated to `rounded-lg border-zinc-300 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100` with dark focus ring.
+  - Buttons: primary uses `dark:bg-blue-500 dark:hover:bg-blue-400`; secondary uses `dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700`.
+  - Divider: `dark:border-zinc-700`, label span uses `dark:bg-zinc-900 dark:text-zinc-400`.
+  - Error/success boxes: added `data-testid` attributes and dark mode variants (`dark:bg-red-900/20`, `dark:bg-blue-900/20`).
+
+- **`src/app/login/page.test.tsx`**:
+  - Added 5 new tests: `renders app name heading`, `does not show error block when error is empty`, `does not show success block when message is empty`, `email input has correct type and autocomplete`, `password input has correct type`.
+  - Use `data-testid` selectors for error/success boxes.
+
+### Test Results
+- Login page: 9/9 tests pass (was 4, +5 new tests)
+- Full suite: 241/241 tests pass
+
+### Closes
+- Issue #42
+- Branch: `issue-42-redesign-login` → `main`
+
+---
+
+
 ## 2026-03-03 - feat: redesign Dashboard page (Issue #41) — Oompa Loompa
 
 ### Changes
