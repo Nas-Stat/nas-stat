@@ -123,9 +123,14 @@ Tento dokument slouží jako detailní architektonický plán pro vývojový tý
 
 _(Detailní plánování bude následovat po dokončení Fáze 2)_
 
-### Epic 3.1: Reports page redesign
+### Epic 3.1: UI Redesign
 
 - [x] **Story 3.1.1: Redesign Reports page UI (Issue #39)**
+  - [x] Header.tsx already in layout — no inline header to replace
+  - [x] Filter bar: replaced `<select>` elements with pill/chip button groups
+  - [x] FAB (floating action button): 56×56px circle at bottom-right, blue-600, Plus icon
+  - [x] ReportForm sidebar: rounded-lg inputs, blue focus ring, blue submit button
+  - [x] Updated tests: 29 tests in `ReportsClient.test.tsx` (226 total pass)
 - [x] **Story 3.1.2: Redesign Topics page UI (Issue #40)**
   - [x] Header.tsx already in layout — page title moved to `page.tsx` as `<h1>`
   - [x] Cards: `shadow-sm hover:shadow-md transition-shadow` for hover depth
@@ -134,11 +139,12 @@ _(Detailní plánování bude následovat po dokončení Fáze 2)_
   - [x] Login CTA: fixed floating banner for logged-out users (`data-testid="login-cta"`)
   - [x] Comment input: pill-style (`rounded-full`)
   - [x] Updated tests: 19 tests in `TopicsClient.test.tsx` (233 total pass)
-  - [x] Header.tsx already in layout — no inline header to replace
-  - [x] Filter bar: replaced `<select>` elements with pill/chip button groups
-  - [x] FAB (floating action button): 56×56px circle at bottom-right, blue-600, Plus icon
-  - [x] ReportForm sidebar: rounded-lg inputs, blue focus ring, blue submit button
-  - [x] Updated tests: 29 tests in `ReportsClient.test.tsx` (226 total pass)
+- [x] **Story 3.1.3: Redesign Dashboard page UI (Issue #41)**
+  - [x] Removed inline `<header>` — page title moved to `<h1>` consistent with Topics/Reports pages
+  - [x] Stat cards: colored icon backgrounds (`bg-blue-100`, `bg-yellow-100`, `bg-green-100`), `hover:shadow-md transition-shadow`, `data-testid` attributes
+  - [x] Heatmap: card wrapper (`rounded-xl border bg-white p-6 shadow-sm`), `data-testid="heatmap-section"`
+  - [x] Lists: `hover:bg-zinc-50 transition-colors` on each row for consistency with other pages
+  - [x] Updated tests: 10 tests in `page.test.tsx` (219 total pass)
 
 ---
 

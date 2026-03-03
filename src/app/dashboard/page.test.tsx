@@ -16,12 +16,10 @@ vi.mock('@/utils/supabase/server', () => ({
 
 // Mock Lucide-react
 vi.mock('lucide-react', () => ({
-  ArrowLeft: () => <div data-testid="arrow-left-icon">ArrowLeft</div>,
   TrendingUp: () => <div data-testid="trending-up-icon">TrendingUp</div>,
   MessageSquare: () => <div data-testid="message-square-icon">MessageSquare</div>,
   Star: () => <div data-testid="star-icon">Star</div>,
   MapPin: () => <div data-testid="map-pin-icon">MapPin</div>,
-  LayoutDashboard: () => <div data-testid="dashboard-icon">LayoutDashboard</div>,
   Info: () => <div data-testid="info-icon">Info</div>,
 }));
 
@@ -209,6 +207,65 @@ test('derives latest 5 reports sorted by created_at descending from single query
   // Old Report and Very Old Report are cut off
   expect(screen.queryByText('Old Report')).not.toBeInTheDocument();
   expect(screen.queryByText('Very Old Report')).not.toBeInTheDocument();
+});
+
+test('renders h1 heading "Pulse Dashboard" (redesign: no inline header)', async () => {
+  const { createClient } = await import('@/utils/supabase/server');
+  vi.mocked(createClient).mockResolvedValue({
+    auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }) },
+    from: vi.fn().mockImplementation((table: string) => {
+      if (table === 'reports') return makeReportsSelect([]);
+      if (table === 'topics') return makeTopicsSelect([]);
+      return { select: vi.fn().mockResolvedValue({ data: [], error: null }) };
+    }),
+  } as unknown as ReturnType<typeof createClient>);
+
+  const PageComponent = await Page();
+  render(PageComponent);
+
+  const heading = screen.getByRole('heading', { level: 1 });
+  expect(heading).toHaveTextContent('Pulse Dashboard');
+});
+
+test('renders all four stat cards with data-testid attributes (redesign)', async () => {
+  const { createClient } = await import('@/utils/supabase/server');
+  vi.mocked(createClient).mockResolvedValue({
+    auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }) },
+    from: vi.fn().mockImplementation((table: string) => {
+      if (table === 'reports') return makeReportsSelect([]);
+      if (table === 'topics') return makeTopicsSelect([]);
+      return { select: vi.fn().mockResolvedValue({ data: [], error: null }) };
+    }),
+  } as unknown as ReturnType<typeof createClient>);
+
+  const PageComponent = await Page();
+  render(PageComponent);
+
+  expect(screen.getByTestId('stat-card-reports')).toBeInTheDocument();
+  expect(screen.getByTestId('stat-card-rating')).toBeInTheDocument();
+  expect(screen.getByTestId('stat-card-resolved')).toBeInTheDocument();
+  expect(screen.getByTestId('stat-card-status')).toBeInTheDocument();
+});
+
+test('renders heatmap section with card wrapper (redesign)', async () => {
+  const { createClient } = await import('@/utils/supabase/server');
+  vi.mocked(createClient).mockResolvedValue({
+    auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }) },
+    from: vi.fn().mockImplementation((table: string) => {
+      if (table === 'reports') return makeReportsSelect([]);
+      if (table === 'topics') return makeTopicsSelect([]);
+      return { select: vi.fn().mockResolvedValue({ data: [], error: null }) };
+    }),
+  } as unknown as ReturnType<typeof createClient>);
+
+  const PageComponent = await Page();
+  render(PageComponent);
+
+  const heatmapSection = screen.getByTestId('heatmap-section');
+  expect(heatmapSection).toBeInTheDocument();
+  expect(heatmapSection.tagName).toBe('SECTION');
+  // Card wrapper has bg-white class
+  expect(heatmapSection.className).toContain('bg-white');
 });
 
 test('issues only one query to reports table per page load', async () => {

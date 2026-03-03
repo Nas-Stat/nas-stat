@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { LayoutDashboard, Star, MapPin, MessageSquare, TrendingUp, Info } from 'lucide-react';
+import { Star, MapPin, MessageSquare, TrendingUp, Info } from 'lucide-react';
 import { createClient } from '@/utils/supabase/server';
 import Map, { Report } from '@/components/Map';
 import { STATUS_LABELS, STATUS_COLORS } from '@/lib/reportStatus';
@@ -61,66 +61,86 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] flex-col bg-zinc-50 dark:bg-black">
-      {/* Main content */}
       <main className="flex-1 overflow-y-auto px-6 py-8">
-        <div className="mx-auto mb-6 flex max-w-5xl items-center gap-2">
-          <LayoutDashboard className="h-5 w-5 text-blue-600" />
-          <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Pulse Dashboard</h1>
-        </div>
-        <div className="mx-auto max-w-5xl space-y-8">
+        <div className="mx-auto max-w-5xl">
+          <h1 className="mb-6 text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+            Pulse Dashboard
+          </h1>
+          <div className="space-y-8">
           
           {/* Stats Grid */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-              <div className="flex items-center gap-2 text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                <MapPin className="h-4 w-4" />
-                Celkem hlášení
+            <div
+              data-testid="stat-card-reports"
+              className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+            >
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-900/30">
+                  <MapPin className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                </div>
+                <span className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Celkem hlášení</span>
               </div>
-              <div className="mt-2 text-3xl font-bold text-zinc-900 dark:text-zinc-100">
+              <div className="mt-3 text-3xl font-bold text-zinc-900 dark:text-zinc-100">
                 {totalReports}
               </div>
             </div>
 
-            <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-              <div className="flex items-center gap-2 text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                <Star className="h-4 w-4 text-yellow-500" />
-                Průměrná spokojenost
+            <div
+              data-testid="stat-card-rating"
+              className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+            >
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-yellow-100 p-2 dark:bg-yellow-900/30">
+                  <Star className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                </div>
+                <span className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Průměrná spokojenost</span>
               </div>
-              <div className="mt-2 text-3xl font-bold text-zinc-900 dark:text-zinc-100">
+              <div className="mt-3 text-3xl font-bold text-zinc-900 dark:text-zinc-100">
                 {avgRating} / 5
               </div>
             </div>
 
-            <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-              <div className="flex items-center gap-2 text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                <TrendingUp className="h-4 w-4 text-green-500" />
-                Vyřešených podnětů
+            <div
+              data-testid="stat-card-resolved"
+              className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+            >
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-green-100 p-2 dark:bg-green-900/30">
+                  <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
+                </div>
+                <span className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Vyřešených podnětů</span>
               </div>
-              <div className="mt-2 text-3xl font-bold text-zinc-900 dark:text-zinc-100">
+              <div className="mt-3 text-3xl font-bold text-zinc-900 dark:text-zinc-100">
                 {resolvedCount}
               </div>
             </div>
 
-            <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-              <div className="flex items-center gap-2 text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                <Info className="h-4 w-4 text-blue-500" />
-                Status systému
+            <div
+              data-testid="stat-card-status"
+              className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+            >
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-900/30">
+                  <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                </div>
+                <span className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Status systému</span>
               </div>
-              <div className="mt-2 text-lg font-bold text-green-600">
-                Aktivní
-              </div>
+              <div className="mt-3 text-lg font-bold text-green-600">Aktivní</div>
             </div>
           </div>
 
           {/* Map Preview (Pulse) */}
-          <section className="space-y-4">
+          <section
+            data-testid="heatmap-section"
+            className="space-y-4 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
+          >
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
                 Geografický pulz (Heatmapa)
               </h2>
               <span className="text-xs text-zinc-500">Intenzita hlášení podle lokality a hodnocení</span>
             </div>
-            <div className="h-80 overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <div className="h-80 overflow-hidden rounded-xl border border-zinc-100 dark:border-zinc-800">
               <Map reports={mapReports} readOnly zoom={10} showHeatmap />
             </div>
           </section>
@@ -141,7 +161,7 @@ export default async function DashboardPage() {
                   <div className="p-6 text-center text-sm text-zinc-500">Zatím žádná hlášení.</div>
                 ) : (
                   latestReports.map((report) => (
-                    <div key={report.id} className="p-4">
+                    <div key={report.id} className="p-4 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
                       <div className="flex items-center justify-between">
                         <span className="font-medium text-zinc-900 dark:text-zinc-100">
                           {report.title}
@@ -184,7 +204,7 @@ export default async function DashboardPage() {
                   <div className="p-6 text-center text-sm text-zinc-500">Zatím žádná témata.</div>
                 ) : (
                   popularTopics.map((topic) => (
-                    <div key={topic.id} className="p-4">
+                    <div key={topic.id} className="p-4 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
                       <div className="flex items-center justify-between">
                         <span className="font-medium text-zinc-900 dark:text-zinc-100 line-clamp-1">
                           {topic.title}
@@ -203,7 +223,7 @@ export default async function DashboardPage() {
               </div>
             </section>
           </div>
-
+          </div>
         </div>
       </main>
     </div>
