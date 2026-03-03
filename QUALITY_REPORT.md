@@ -1,11 +1,11 @@
-# Quality Report — Issue #38 / PR #49
+# Quality Report — Issue #41 / PR #52
 
-**feat: civic-platform landing page (closes #38)**
+**feat: redesign Dashboard page — colored stat cards, card heatmap, consistent lists**
 
 **Reviewer:** The Squirrel
-**PR:** #49 (`issue-38-redesign-landing` → `main`)
+**PR:** #52 (`issue-41-redesign-dashboard` → `main`)
 **Date:** 2026-03-03
-**Scope:** 3 files changed (+87 / -47) + DEVLOG.md
+**Scope:** 4 files changed (+142 / -48)
 
 ---
 
@@ -15,7 +15,7 @@
 
 ## Executive Summary
 
-Clean, well-scoped PR. Replaces the Next.js boilerplate landing page with a proper civic-platform hero section + feature cards. The page now communicates what the platform does and provides clear CTAs for unauthenticated and authenticated users. Code is well-structured, semantic HTML is correct, dark mode and responsive design are handled. One minor issue found (duplicate test file) — fixed during review. 224/224 tests pass, lint clean, build clean.
+The dashboard redesign delivers exactly what was requested: colored stat card icons, card-wrapped heatmap, consistent hover effects on list rows, and removal of the redundant inline header. Code is clean, tests are solid (10 tests, all pass), lint and build are green. Merge conflict with `main` resolved by rebase — PR is ready to ship.
 
 ---
 
@@ -23,62 +23,62 @@ Clean, well-scoped PR. Replaces the Next.js boilerplate landing page with a prop
 
 | Criterion | Verdict |
 |-----------|---------|
-| Next.js logo and boilerplate removed | PASS |
-| Hero: "Náš stát" heading, platform description, gradient bg | PASS |
-| 3 feature cards (lucide-react): Hlášení, Diskuze, Přehled | PASS |
-| CTA: "Nahlásit podnět" (primary blue) | PASS |
-| CTA: "Prozkoumat mapu" (secondary border) | PASS |
-| CTA auth logic: `/login` (unauth) vs `/reports` (auth) | PASS |
-| Header.tsx as page header (from #37 in layout.tsx) | PASS |
-| Responsive on mobile (`sm:` breakpoints) | PASS |
-| Dark mode support (dark: variants) | PASS |
-| `npm run build` clean | PASS |
-| `npm run test` passes | PASS (224/224) |
+| Removed inline `<header>` (ArrowLeft + LayoutDashboard) | PASS |
+| Stat cards: colored icon backgrounds | PASS |
+| Stat cards: hover shadow transition | PASS |
+| Heatmap: card wrapper (rounded, border, bg-white) | PASS |
+| Lists: consistent hover depth (`hover:bg-zinc-50`) | PASS |
+| Responsive + dark mode classes present | PASS |
+| `npm run test` passes | PASS (10/10 dashboard, 219 total) |
 | `npm run lint` clean | PASS |
+| `npm run build` succeeds | PASS |
 
 ---
 
 ## Critical Issues (Showstoppers)
 
-**None.**
+**None.** Merge conflict resolved via rebase onto `main`.
 
 ---
 
-## Issues Found & Fixed During Review
+## Code Smells & Improvements
 
-### 1. Duplicate test file `page_auth.test.tsx` (Minor — fixed)
+### 1. Indentation inconsistency in `page.tsx` (lines 69–72, 226)
 
-The logged-in CTA test existed in both `page.test.tsx` (lines 33-48, added in this PR) and the older `page_auth.test.tsx`. Same scenario tested twice with different mock strategies. **Deleted `page_auth.test.tsx`** since `page.test.tsx` now covers all cases including authenticated state.
+The `<div className="space-y-8">` wrapper is indented at 10 spaces but its children remain at the same indentation level — they should be indented one level deeper. Purely cosmetic but inconsistent.
 
----
+### 2. Test boilerplate duplication (pre-existing)
 
-## Code Quality
+All 10 tests repeat the same Supabase mock setup. A shared helper or `beforeEach` would reduce ~80 lines of duplication. Not introduced by this PR.
 
-- **`FEATURES` constant array** extracted cleanly — good pattern, avoids inline JSX bloat.
-- **Semantic HTML**: proper `<section>` elements, `aria-label="Funkce platformy"`, correct heading hierarchy (`h1` → `h2`).
-- **Dark mode**: consistent zinc/blue tokens matching the #37 color system.
-- **No over-engineering**: no unnecessary abstractions, no unused code.
+### 3. Fragile className assertion in heatmap test (line 268)
+
+```ts
+expect(heatmapSection.className).toContain('bg-white');
+```
+
+Prefer `toHaveClass('bg-white')` from `@testing-library/jest-dom`. Minor.
 
 ---
 
 ## Security & Performance
 
-- No secrets exposed: session read via server-side `createClient()`.
-- No XSS risk: no raw user content rendering.
-- No performance concern: single `getUser()` call, static feature cards.
+No issues found. No new API calls introduced. The single-query optimization from issue #22 is preserved and tested. No XSS, no injection risks.
 
 ---
 
 ## Test Coverage
 
-**5 tests** in `page.test.tsx`:
-1. Hero `<h1>` renders "Náš stát"
-2. "Nahlásit podnět" → `/login` when not logged in
-3. "Nahlásit podnět" → `/reports` when logged in
-4. "Prozkoumat mapu" → `/reports`
-5. Three feature card `<h2>` headings (Hlášení, Diskuze, Přehled)
+| Metric | Value |
+|--------|-------|
+| Dashboard test count | 10 (up from 7) |
+| Happy path coverage | Yes — data rendering, stats, sorting |
+| Empty state coverage | Yes |
+| Edge case coverage | Yes — 7→5 report limit, single query assertion |
+| Redesign-specific tests | 3 new (h1 heading, stat card testids, heatmap card wrapper) |
+| All project tests | 219 pass |
 
-**224/224 tests pass. Lint clean. Build clean.**
+Tests are well-structured and directly verify the acceptance criteria from the issue.
 
 ---
 
@@ -86,4 +86,4 @@ The logged-in CTA test existed in both `page.test.tsx` (lines 33-48, added in th
 
 **🟢 GOOD NUT — Ready to ship.**
 
-One duplicate test file cleaned up during review. No other issues.
+Conflict resolved, code clean, tests green.
