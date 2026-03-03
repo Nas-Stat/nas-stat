@@ -1,5 +1,26 @@
 # Developer Log
 
+## 2026-03-03 — feat: finalize test suite after redesign (Issue #43) — Oompa Loompa
+
+### Verification
+
+All tasks from issue #43 confirmed complete:
+
+- **`src/components/Map.test.tsx`** — MapTiler SDK mock present (8 tests): renders container, loading state, no-re-init on prop changes, selection marker update, heatmap toggle, popup setup, status label, XSS escaping.
+- **All existing tests pass** — 19 test files, 241 tests, 0 failures.
+- **`npm run build`** — 0 errors, 10 pages compiled successfully.
+- **`npm run test`** — 0 failures.
+
+### Test Results
+- Full suite: 241/241 tests pass (19 test files)
+- Build: clean (0 TypeScript errors, 0 compile errors)
+
+### Closes
+- Issue #43
+- Branch: `issue-43-test-updates` → `main`
+
+---
+
 ## 2026-03-03 — feat: redesign Login page (Issue #42) — Oompa Loompa
 
 ### Changes
