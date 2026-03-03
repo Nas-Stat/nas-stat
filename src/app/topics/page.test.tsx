@@ -57,6 +57,7 @@ test('renders Topics page with topics client', async () => {
   const PageComponent = await Page();
   render(PageComponent);
 
+  expect(screen.getByRole('heading', { level: 1, name: 'Aktuální témata' })).toBeInTheDocument();
   const topicsClient = screen.getByTestId('mocked-topics-client');
   expect(topicsClient).toBeInTheDocument();
   expect(screen.getByText(/Mocked TopicsClient \(1 topics\)/i)).toBeInTheDocument();

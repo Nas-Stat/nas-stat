@@ -54,7 +54,7 @@ export default function TopicsClient({
       if (action.type === 'vote') {
         return state.map((topic) => {
           if (topic.id !== action.topicId) return topic;
-          
+
           const existingVote = topic.votes.find((v) => v.profile_id === user?.id);
           let newVotes = [...topic.votes];
 
@@ -63,7 +63,7 @@ export default function TopicsClient({
             newVotes = newVotes.filter((v) => v.profile_id !== user?.id);
           } else if (existingVote) {
             // Update vote
-            newVotes = newVotes.map((v) => 
+            newVotes = newVotes.map((v) =>
               v.profile_id === user?.id ? { ...v, vote_type: action.voteType } : v
             );
           } else if (user) {
@@ -78,7 +78,7 @@ export default function TopicsClient({
       if (action.type === 'comment') {
         return state.map((topic) => {
           if (topic.id !== action.topicId) return topic;
-          
+
           const newComment = {
             id: 'temp-id-' + Math.random(),
             content: action.content,
@@ -167,7 +167,7 @@ export default function TopicsClient({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Error Message */}
       {error && (
         <div className="flex items-center gap-2 rounded-lg bg-red-50 p-4 text-red-700 dark:bg-red-900/20 dark:text-red-400">
@@ -177,30 +177,7 @@ export default function TopicsClient({
         </div>
       )}
 
-      {/* Action Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-          Aktuální témata
-        </h2>
-        {user ? (
-          <button
-            onClick={() => {
-              setError(null);
-              setShowForm(true);
-            }}
-            className="flex items-center gap-2 rounded-full bg-zinc-900 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-          >
-            <Plus className="h-4 w-4" />
-            Nové téma
-          </button>
-        ) : (
-          <p className="text-sm text-zinc-500">
-            Pro přidání tématu se <a href="/login" className="text-blue-600 underline">přihlaste</a>.
-          </p>
-        )}
-      </div>
-
-      {/* Creation Form Modal/Overlay */}
+      {/* Creation Form Modal */}
       {showForm && (
         <TopicForm
           onSubmit={handleCreateTopic}
@@ -227,7 +204,10 @@ export default function TopicsClient({
             const userVote = topic.votes.find(v => v.profile_id === user?.id)?.vote_type;
 
             return (
-              <div key={topic.id} className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 transition-opacity duration-200">
+              <div
+                key={topic.id}
+                className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+              >
                 <div className="mb-2 flex items-center gap-2">
                   <span className="text-xs font-medium text-zinc-500">
                     {topic.profiles?.username || 'Anonymní uživatel'} • {new Date(topic.created_at).toLocaleDateString('cs-CZ')}
@@ -242,42 +222,49 @@ export default function TopicsClient({
                   </p>
                 )}
 
-                <div className="flex items-center gap-6 border-t border-zinc-100 pt-4 dark:border-zinc-800">
-                  <div className="flex items-center gap-2">
-                    {user ? (
-                      <>
-                        <button
-                          onClick={() => handleVote(topic.id, 'up')}
-                          disabled={isPending}
-                          className={`flex items-center gap-1 rounded-md px-2 py-1 transition-colors ${userVote === 'up' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500'}`}
-                        >
-                          <ThumbsUp className={`h-4 w-4 ${userVote === 'up' ? 'fill-current' : ''}`} />
-                          <span className="text-sm font-bold">{upVotes}</span>
-                        </button>
-                        <button
-                          onClick={() => handleVote(topic.id, 'down')}
-                          disabled={isPending}
-                          className={`flex items-center gap-1 rounded-md px-2 py-1 transition-colors ${userVote === 'down' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500'}`}
-                        >
-                          <ThumbsDown className={`h-4 w-4 ${userVote === 'down' ? 'fill-current' : ''}`} />
-                          <span className="text-sm font-bold">{downVotes}</span>
-                        </button>
-                      </>
-                    ) : (
-                      <span className="flex items-center gap-3 text-sm text-zinc-400">
-                        <span className="flex items-center gap-1"><ThumbsUp className="h-4 w-4" />{upVotes}</span>
-                        <span className="flex items-center gap-1"><ThumbsDown className="h-4 w-4" />{downVotes}</span>
-                        <a href="/login" className="text-blue-600 hover:underline text-xs">Přihlaste se pro hlasování</a>
-                      </span>
-                    )}
-                  </div>
+                <div className="flex items-center gap-3 border-t border-zinc-100 pt-4 dark:border-zinc-800">
+                  {/* Voting — pill-style buttons */}
+                  {user ? (
+                    <>
+                      <button
+                        onClick={() => handleVote(topic.id, 'up')}
+                        disabled={isPending}
+                        className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 ${
+                          userVote === 'up'
+                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                            : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700'
+                        }`}
+                      >
+                        <ThumbsUp className={`h-3.5 w-3.5 ${userVote === 'up' ? 'fill-current' : ''}`} />
+                        <span className="font-bold">{upVotes}</span>
+                      </button>
+                      <button
+                        onClick={() => handleVote(topic.id, 'down')}
+                        disabled={isPending}
+                        className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 ${
+                          userVote === 'down'
+                            ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                            : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700'
+                        }`}
+                      >
+                        <ThumbsDown className={`h-3.5 w-3.5 ${userVote === 'down' ? 'fill-current' : ''}`} />
+                        <span className="font-bold">{downVotes}</span>
+                      </button>
+                    </>
+                  ) : (
+                    <span className="flex items-center gap-3 text-sm text-zinc-400">
+                      <span className="flex items-center gap-1"><ThumbsUp className="h-4 w-4" />{upVotes}</span>
+                      <span className="flex items-center gap-1"><ThumbsDown className="h-4 w-4" />{downVotes}</span>
+                      <a href="/login" className="text-blue-600 hover:underline text-xs">Přihlaste se pro hlasování</a>
+                    </span>
+                  )}
 
                   <button
                     onClick={() => setCommentingOn(commentingOn === topic.id ? null : topic.id)}
-                    className="flex items-center gap-1 text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
+                    className="ml-auto flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
                   >
-                    <MessageSquare className="h-4 w-4" />
-                    <span>{topic.comments.length} komentářů</span>
+                    <MessageSquare className="h-3.5 w-3.5" />
+                    <span>{topic.comments.length}</span>
                   </button>
                 </div>
 
@@ -292,7 +279,7 @@ export default function TopicsClient({
                         <span className="text-zinc-600 dark:text-zinc-400">{comment.content}</span>
                       </div>
                     ))}
-                    
+
                     {user ? (
                       <form onSubmit={(e) => handleAddComment(e, topic.id)} className="flex gap-2">
                         <input
@@ -301,15 +288,15 @@ export default function TopicsClient({
                           placeholder="Napište komentář..."
                           required
                           disabled={isPending}
-                          className="flex-1 rounded-md border border-zinc-300 bg-white px-3 py-1 text-sm focus:border-blue-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 disabled:opacity-50"
+                          className="flex-1 rounded-full border border-zinc-300 bg-white px-4 py-1.5 text-sm focus:border-blue-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 disabled:opacity-50"
                         />
                         <input type="hidden" name="topic_id" value={topic.id} />
                         <button
                           type="submit"
                           disabled={isPending}
-                          className="rounded-md bg-zinc-900 px-3 py-1 text-sm text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 disabled:opacity-50"
+                          className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white transition-colors hover:bg-blue-700 disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-400"
                         >
-                          <Send className="h-4 w-4" />
+                          <Send className="h-3.5 w-3.5" />
                         </button>
                       </form>
                     ) : (
@@ -322,7 +309,37 @@ export default function TopicsClient({
           })
         )}
       </div>
+
+      {/* Floating login CTA for logged-out users */}
+      {!user && (
+        <div
+          data-testid="login-cta"
+          className="fixed bottom-6 left-1/2 z-20 -translate-x-1/2 rounded-lg bg-white px-5 py-3 shadow-xl dark:bg-zinc-900"
+        >
+          <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+            Pro přidání tématu se{' '}
+            <a href="/login" className="text-blue-600 hover:underline">
+              přihlaste
+            </a>
+            .
+          </p>
+        </div>
+      )}
+
+      {/* FAB — floating action button for logged-in users */}
+      {user && !showForm && (
+        <button
+          data-testid="new-topic-fab"
+          onClick={() => {
+            setError(null);
+            setShowForm(true);
+          }}
+          aria-label="Nové téma"
+          className="fixed bottom-6 right-6 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-xl transition-all hover:scale-105 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400"
+        >
+          <Plus className="h-6 w-6" />
+        </button>
+      )}
     </div>
   );
 }
-
