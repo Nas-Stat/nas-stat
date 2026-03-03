@@ -30,6 +30,23 @@ test('"Nahlásit podnět" CTA points to /login when not logged in', async () => 
   expect(reportLink).toHaveAttribute('href', '/login');
 });
 
+test('"Nahlásit podnět" CTA points to /reports when logged in', async () => {
+  const { createClient } = await import('@/utils/supabase/server');
+  vi.mocked(createClient).mockResolvedValueOnce({
+    auth: {
+      getUser: vi.fn().mockResolvedValue({
+        data: { user: { id: 'user-1' } },
+        error: null,
+      }),
+    },
+  } as ReturnType<typeof createClient> extends Promise<infer T> ? T : never);
+
+  const ResolvedPage = await Page();
+  render(ResolvedPage);
+  const reportLink = screen.getByRole('link', { name: /nahlásit podnět/i });
+  expect(reportLink).toHaveAttribute('href', '/reports');
+});
+
 test('"Prozkoumat mapu" CTA points to /reports', async () => {
   const ResolvedPage = await Page();
   render(ResolvedPage);

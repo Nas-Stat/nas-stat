@@ -25,6 +25,18 @@
 
 ---
 
+## 2026-03-03 - test: add logged-in CTA coverage (Issue #38) — Oompa Loompa
+
+### Changes
+
+- **`src/app/page.test.tsx`**: Added 5th test — "Nahlásit podnět" → `/reports` when user is authenticated (mocks `createClient` to return a user object). Total: 5 tests.
+
+### Verification
+
+- `npx vitest run` — 225/225 passed.
+
+---
+
 ## 2026-03-02 - feat: civic color system + shared Header (Issue #37) — Oompa Loompa
 
 ### Changes
