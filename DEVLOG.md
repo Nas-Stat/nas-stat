@@ -1,5 +1,37 @@
 # Developer Log
 
+## 2026-03-03 - feat: redesign reports page (Issue #39) — Oompa Loompa
+
+### Changes
+
+- **`src/app/reports/ReportsClient.tsx`**:
+  - Replaced `<select>` filter elements with pill/chip button groups.
+    - Status group: `role="group"` + `aria-label="Filtrovat podle stavu"` + `data-testid="status-filter"`. Each pill has `aria-pressed` reflecting active state.
+    - Category group: `role="group"` + `aria-label="Filtrovat podle kategorie"` + `data-testid="category-filter"`. Includes "Vše" pill for clearing the filter.
+    - Active pill: `bg-blue-600 text-white`; inactive: `bg-zinc-100 text-zinc-700`.
+  - Replaced bottom-center pill "Nahlásit podnět" button with a proper FAB.
+    - Position: `absolute bottom-6 right-6`.
+    - Shape: 56×56px circle (`h-14 w-14 rounded-full`).
+    - Color: blue-600, hover scale-105 + bg-blue-700. `aria-label="Nahlásit podnět"`.
+    - Content: `<Plus>` icon from lucide-react.
+  - Removed unused `handleStatusChange` / `handleCategoryChange` callbacks.
+  - Added `Plus` to lucide-react imports.
+- **`src/app/reports/ReportForm.tsx`**:
+  - Rounded inputs/select/textarea from `rounded-md` to `rounded-lg`.
+  - Added `py-2.5` and `focus:ring-2 focus:ring-blue-500/20` to all form controls.
+  - Submit button color changed from zinc-900 to blue-600 (consistent with civic color system).
+  - Added `overflow-y-auto` to sidebar container.
+
+### Tests
+
+- **`src/app/reports/ReportsClient.test.tsx`** (29 tests, all pass):
+  - Added `within` import from `@testing-library/react`.
+  - Added `Plus` to lucide-react mock.
+  - Updated filter tests: replaced `<select>`/`fireEvent.change` pattern with `data-testid` + `within` + `fireEvent.click` on pill buttons.
+  - New tests: active pill has `aria-pressed="true"`, inactive pill has `aria-pressed="false"`, "Vše" clears category filter.
+  - All existing map/form/pagination tests unchanged and passing.
+- Full suite: **226/226 tests pass**.
+
 ## 2026-03-02 - feat: redesign landing page (Issue #38) — Oompa Loompa
 
 ### Changes

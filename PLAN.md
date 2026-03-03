@@ -123,6 +123,17 @@ Tento dokument slouží jako detailní architektonický plán pro vývojový tý
 
 _(Detailní plánování bude následovat po dokončení Fáze 2)_
 
+### Epic 3.1: Reports page redesign
+
+- [x] **Story 3.1.1: Redesign Reports page UI (Issue #39)**
+  - [x] Header.tsx already in layout — no inline header to replace
+  - [x] Filter bar: replaced `<select>` elements with pill/chip button groups
+  - [x] FAB (floating action button): 56×56px circle at bottom-right, blue-600, Plus icon
+  - [x] ReportForm sidebar: rounded-lg inputs, blue focus ring, blue submit button
+  - [x] Updated tests: 29 tests in `ReportsClient.test.tsx` (226 total pass)
+
+---
+
 ## Hotfixes / Perf Issues
 
 - [x] **Issue #22: Consolidate double reports fetch in dashboard page**

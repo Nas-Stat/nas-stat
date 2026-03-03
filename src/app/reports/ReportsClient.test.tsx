@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import ReportsClient from './ReportsClient';
 import { expect, test, vi, beforeEach, describe } from 'vitest';
 import { User } from '@supabase/supabase-js';
@@ -25,6 +25,7 @@ vi.mock('lucide-react', () => ({
   MapPin: () => <div data-testid="map-pin-icon">MapPin</div>,
   ChevronLeft: () => <span data-testid="chevron-left-icon">Prev</span>,
   ChevronRight: () => <span data-testid="chevron-right-icon">Next</span>,
+  Plus: () => <span data-testid="plus-icon">+</span>,
 }));
 
 // Mock next/navigation
@@ -179,26 +180,35 @@ describe('ReportsClient', () => {
 
   // --- Filter tests ---
 
-  test('renders filter bar with status and category selects', () => {
+  test('renders filter bar with status and category pill groups', () => {
     render(<ReportsClient {...DEFAULT_PROPS} />);
     expect(screen.getByTestId('filter-bar')).toBeInTheDocument();
-    expect(screen.getByLabelText(/Filtrovat podle stavu/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Filtrovat podle kategorie/i)).toBeInTheDocument();
+    expect(screen.getByTestId('status-filter')).toBeInTheDocument();
+    expect(screen.getByTestId('category-filter')).toBeInTheDocument();
   });
 
-  test('status select reflects currentStatus prop', () => {
+  test('active status pill has aria-pressed true', () => {
     render(<ReportsClient {...DEFAULT_PROPS} currentStatus="pending" />);
-    const select = screen.getByLabelText(/Filtrovat podle stavu/i) as HTMLSelectElement;
-    expect(select.value).toBe('pending');
+    const statusGroup = screen.getByTestId('status-filter');
+    const pendingBtn = within(statusGroup).getByText('Čeká');
+    expect(pendingBtn).toHaveAttribute('aria-pressed', 'true');
   });
 
-  test('category select reflects currentCategory prop', () => {
+  test('inactive status pills have aria-pressed false', () => {
+    render(<ReportsClient {...DEFAULT_PROPS} currentStatus="pending" />);
+    const statusGroup = screen.getByTestId('status-filter');
+    const allBtn = within(statusGroup).getByText('Všechny stavy');
+    expect(allBtn).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  test('active category pill has aria-pressed true', () => {
     render(<ReportsClient {...DEFAULT_PROPS} currentCategory="Doprava" />);
-    const select = screen.getByLabelText(/Filtrovat podle kategorie/i) as HTMLSelectElement;
-    expect(select.value).toBe('Doprava');
+    const categoryGroup = screen.getByTestId('category-filter');
+    const dopravaBtn = within(categoryGroup).getByText('Doprava');
+    expect(dopravaBtn).toHaveAttribute('aria-pressed', 'true');
   });
 
-  test('changing status navigates to filtered URL with page reset', () => {
+  test('clicking status pill navigates to filtered URL with page reset', () => {
     render(
       <ReportsClient
         {...DEFAULT_PROPS}
@@ -207,12 +217,12 @@ describe('ReportsClient', () => {
         currentCategory="Doprava"
       />
     );
-    const select = screen.getByLabelText(/Filtrovat podle stavu/i);
-    fireEvent.change(select, { target: { value: 'resolved' } });
+    const statusGroup = screen.getByTestId('status-filter');
+    fireEvent.click(within(statusGroup).getByText('Vyřešeno'));
     expect(mockPush).toHaveBeenCalledWith('/reports?status=resolved&category=Doprava');
   });
 
-  test('changing category navigates to filtered URL with page reset', () => {
+  test('clicking category pill navigates to filtered URL with page reset', () => {
     render(
       <ReportsClient
         {...DEFAULT_PROPS}
@@ -221,15 +231,22 @@ describe('ReportsClient', () => {
         currentCategory=""
       />
     );
-    const select = screen.getByLabelText(/Filtrovat podle kategorie/i);
-    fireEvent.change(select, { target: { value: 'Zeleň' } });
+    const categoryGroup = screen.getByTestId('category-filter');
+    fireEvent.click(within(categoryGroup).getByText('Zeleň'));
     expect(mockPush).toHaveBeenCalledWith('/reports?status=pending&category=Zele%C5%88');
   });
 
-  test('clearing status filter navigates without status param', () => {
+  test('clicking "Všechny stavy" pill clears status filter', () => {
     render(<ReportsClient {...DEFAULT_PROPS} currentStatus="pending" />);
-    const select = screen.getByLabelText(/Filtrovat podle stavu/i);
-    fireEvent.change(select, { target: { value: '' } });
+    const statusGroup = screen.getByTestId('status-filter');
+    fireEvent.click(within(statusGroup).getByText('Všechny stavy'));
+    expect(mockPush).toHaveBeenCalledWith('/reports');
+  });
+
+  test('clicking "Vše" category pill clears category filter', () => {
+    render(<ReportsClient {...DEFAULT_PROPS} currentCategory="Doprava" />);
+    const categoryGroup = screen.getByTestId('category-filter');
+    fireEvent.click(within(categoryGroup).getByText('Vše'));
     expect(mockPush).toHaveBeenCalledWith('/reports');
   });
 

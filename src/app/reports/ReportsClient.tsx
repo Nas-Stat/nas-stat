@@ -6,7 +6,7 @@ import { createReport } from './actions';
 import { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import ReportForm from './ReportForm';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { STATUS_LABELS } from '@/lib/reportStatus';
 
 interface ReportsClientProps {
@@ -109,20 +109,6 @@ export default function ReportsClient({
     [currentPage, currentStatus, currentCategory]
   );
 
-  const handleStatusChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      router.push(buildUrl({ status: e.target.value, page: 1 }));
-    },
-    [router, buildUrl]
-  );
-
-  const handleCategoryChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      router.push(buildUrl({ category: e.target.value, page: 1 }));
-    },
-    [router, buildUrl]
-  );
-
   const handlePrevPage = useCallback(() => {
     if (currentPage > 1) router.push(buildUrl({ page: currentPage - 1 }));
   }, [router, buildUrl, currentPage]);
@@ -142,34 +128,65 @@ export default function ReportsClient({
       {/* Filter bar */}
       <div
         data-testid="filter-bar"
-        className="absolute left-1/2 top-4 z-10 flex -translate-x-1/2 items-center gap-2 rounded-lg bg-white px-4 py-2 shadow-lg dark:bg-zinc-900"
+        className="absolute left-1/2 top-4 z-10 flex -translate-x-1/2 flex-col gap-2 rounded-xl bg-white p-3 shadow-lg dark:bg-zinc-900"
       >
-        <select
+        <div
+          data-testid="status-filter"
+          role="group"
           aria-label="Filtrovat podle stavu"
-          value={currentStatus}
-          onChange={handleStatusChange}
-          className="rounded border border-zinc-200 bg-white px-2 py-1 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+          className="flex flex-wrap gap-1.5"
         >
           {STATUS_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => router.push(buildUrl({ status: opt.value, page: 1 }))}
+              aria-pressed={currentStatus === opt.value}
+              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                currentStatus === opt.value
+                  ? 'bg-blue-600 text-white dark:bg-blue-500'
+                  : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700'
+              }`}
+            >
               {opt.label}
-            </option>
+            </button>
           ))}
-        </select>
+        </div>
 
-        <select
+        <div
+          data-testid="category-filter"
+          role="group"
           aria-label="Filtrovat podle kategorie"
-          value={currentCategory}
-          onChange={handleCategoryChange}
-          className="rounded border border-zinc-200 bg-white px-2 py-1 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+          className="flex flex-wrap gap-1.5"
         >
-          <option value="">Všechny kategorie</option>
+          <button
+            type="button"
+            onClick={() => router.push(buildUrl({ category: '', page: 1 }))}
+            aria-pressed={currentCategory === ''}
+            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+              currentCategory === ''
+                ? 'bg-blue-600 text-white dark:bg-blue-500'
+                : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700'
+            }`}
+          >
+            Vše
+          </button>
           {CATEGORIES.map((cat) => (
-            <option key={cat} value={cat}>
+            <button
+              key={cat}
+              type="button"
+              onClick={() => router.push(buildUrl({ category: cat, page: 1 }))}
+              aria-pressed={currentCategory === cat}
+              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                currentCategory === cat
+                  ? 'bg-blue-600 text-white dark:bg-blue-500'
+                  : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700'
+              }`}
+            >
               {cat}
-            </option>
+            </button>
           ))}
-        </select>
+        </div>
       </div>
 
       {/* Pagination bar */}
@@ -215,14 +232,15 @@ export default function ReportsClient({
         </div>
       )}
 
-      {/* Floating button for logged-in users when form is closed */}
+      {/* FAB for logged-in users when form is closed */}
       {user && !showForm && (
         <button
           data-testid="report-without-location-btn"
           onClick={openFormWithoutLocation}
-          className={`absolute left-1/2 -translate-x-1/2 rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-bold text-white shadow-lg transition-colors hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300 ${totalPages > 1 ? 'bottom-20' : 'bottom-6'}`}
+          aria-label="Nahlásit podnět"
+          className="absolute bottom-6 right-6 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-xl transition-all hover:scale-105 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400"
         >
-          Nahlásit podnět
+          <Plus className="h-6 w-6" />
         </button>
       )}
 
