@@ -1,5 +1,26 @@
 # Developer Log
 
+## 2026-03-03 - feat: redesign Dashboard page (Issue #41) — Oompa Loompa
+
+### Changes
+
+- **`src/app/dashboard/page.tsx`**:
+  - Removed inline `<header>` (ArrowLeft + LayoutDashboard icon + `<h1>`) — replaced with plain `<h1 class="mb-6 text-2xl font-bold ...">Pulse Dashboard</h1>`, consistent with Topics/Reports pages. Global Header.tsx is already in layout.
+  - Stat cards: added colored icon backgrounds (`rounded-lg bg-{color}-100 p-2`) — blue for MapPin/Info, yellow for Star, green for TrendingUp. Added `transition-shadow hover:shadow-md`. Added `data-testid` for each card.
+  - Heatmap section: wrapped in card (`rounded-xl border bg-white p-6 shadow-sm`), added `data-testid="heatmap-section"`, inner map container uses `rounded-xl border-zinc-100`.
+  - Lists (Latest Reports, Popular Topics): added `transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50` to each item row for consistent hover depth.
+  - Removed unused `ArrowLeft` and `LayoutDashboard` imports.
+
+- **`src/app/dashboard/page.test.tsx`**:
+  - Removed `ArrowLeft` and `LayoutDashboard` from lucide-react mock (no longer imported).
+  - Added 3 new redesign tests:
+    - `renders h1 heading "Pulse Dashboard" (redesign: no inline header)` — asserts `role=heading level=1`.
+    - `renders all four stat cards with data-testid attributes (redesign)` — checks all 4 `data-testid` values.
+    - `renders heatmap section with card wrapper (redesign)` — checks `data-testid="heatmap-section"` exists and has `bg-white` class.
+  - Total: 10 tests (up from 7). All 219 project tests pass.
+
+---
+
 ## 2026-03-03 - feat: redesign topics page (Issue #40) — Oompa Loompa
 
 ### Changes

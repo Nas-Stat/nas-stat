@@ -1,11 +1,11 @@
-# Quality Report — Issue #38 / PR #49
+# Quality Report — Issue #41 / PR #52
 
-**feat: civic-platform landing page (closes #38)**
+**feat: redesign Dashboard page — colored stat cards, card heatmap, consistent lists**
 
-**Reviewer:** The Squirrel
-**PR:** #49 (`issue-38-redesign-landing` → `main`)
+**Reviewer:** The Squirrel (independent audit)
+**PR:** #52 (`issue-41-redesign-dashboard` → `main`)
 **Date:** 2026-03-03
-**Scope:** 3 files changed (+87 / -47) + DEVLOG.md
+**Scope:** 2 source files changed (`page.tsx` +86/-66, `page.test.tsx` +59/-2) + docs (DEVLOG, PLAN)
 
 ---
 
@@ -15,26 +15,18 @@
 
 ## Executive Summary
 
-Clean, well-scoped PR. Replaces the Next.js boilerplate landing page with a proper civic-platform hero section + feature cards. The page now communicates what the platform does and provides clear CTAs for unauthenticated and authenticated users. Code is well-structured, semantic HTML is correct, dark mode and responsive design are handled. One minor issue found (duplicate test file) — fixed during review. 224/224 tests pass, lint clean, build clean.
+Well-scoped UI redesign. Removes redundant inline header, adds colored icon backgrounds to stat cards, wraps heatmap in a proper card, and adds hover effects to list rows — matching the pattern established in Topics (#40) and Reports (#39). All 4 acceptance criteria from the issue are met. 236/236 tests pass (10 dashboard), lint clean. No security or performance regressions. Ship it.
 
 ---
 
-## Acceptance Criteria Checklist
+## Acceptance Criteria vs Issue #41
 
-| Criterion | Verdict |
-|-----------|---------|
-| Next.js logo and boilerplate removed | PASS |
-| Hero: "Náš stát" heading, platform description, gradient bg | PASS |
-| 3 feature cards (lucide-react): Hlášení, Diskuze, Přehled | PASS |
-| CTA: "Nahlásit podnět" (primary blue) | PASS |
-| CTA: "Prozkoumat mapu" (secondary border) | PASS |
-| CTA auth logic: `/login` (unauth) vs `/reports` (auth) | PASS |
-| Header.tsx as page header (from #37 in layout.tsx) | PASS |
-| Responsive on mobile (`sm:` breakpoints) | PASS |
-| Dark mode support (dark: variants) | PASS |
-| `npm run build` clean | PASS |
-| `npm run test` passes | PASS (224/224) |
-| `npm run lint` clean | PASS |
+| Criterion (from issue) | Status |
+|-------------------------|--------|
+| Header.tsx instead of inline header | PASS — inline `<header>` with ArrowLeft + LayoutDashboard removed, replaced with `<h1>` |
+| Stat cards: colored icons, softer shadows | PASS — `bg-{color}-100` icon backgrounds, `hover:shadow-md transition-shadow` |
+| Heatmap: rounded, card wrapper | PASS — `rounded-xl border bg-white p-6 shadow-sm` section wrapper |
+| Lists: consistent with other pages | PASS — `hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors` per row |
 
 ---
 
@@ -44,41 +36,46 @@ Clean, well-scoped PR. Replaces the Next.js boilerplate landing page with a prop
 
 ---
 
-## Issues Found & Fixed During Review
+## Code Smells & Improvements
 
-### 1. Duplicate test file `page_auth.test.tsx` (Minor — fixed)
+### 1. Indentation inconsistency in `page.tsx` (lines 69–72, 226)
 
-The logged-in CTA test existed in both `page.test.tsx` (lines 33-48, added in this PR) and the older `page_auth.test.tsx`. Same scenario tested twice with different mock strategies. **Deleted `page_auth.test.tsx`** since `page.test.tsx` now covers all cases including authenticated state.
+The `<div className="space-y-8">` at line 69 opens with 10-space indentation, but its children (Stats Grid, Heatmap, etc.) continue at the same indentation level instead of being indented one level deeper. The closing `</div>` at line 226 is also misaligned. Cosmetic only — Prettier/ESLint don't flag it, and it doesn't affect rendering. Not a blocker.
 
----
+### 2. Test mock boilerplate duplication (pre-existing)
 
-## Code Quality
+All 10 tests repeat identical Supabase mock setup (~12 lines each). A `beforeEach` or shared `renderPage()` helper would eliminate ~80 lines of duplication. **Not introduced by this PR** — pre-existing pattern.
 
-- **`FEATURES` constant array** extracted cleanly — good pattern, avoids inline JSX bloat.
-- **Semantic HTML**: proper `<section>` elements, `aria-label="Funkce platformy"`, correct heading hierarchy (`h1` → `h2`).
-- **Dark mode**: consistent zinc/blue tokens matching the #37 color system.
-- **No over-engineering**: no unnecessary abstractions, no unused code.
+### 3. Fragile className assertion (line 268)
+
+```ts
+expect(heatmapSection.className).toContain('bg-white');
+```
+
+Would be cleaner as `toHaveClass('bg-white')` from `@testing-library/jest-dom`. Minor — works correctly as-is.
 
 ---
 
 ## Security & Performance
 
-- No secrets exposed: session read via server-side `createClient()`.
-- No XSS risk: no raw user content rendering.
-- No performance concern: single `getUser()` call, static feature cards.
+- No new API calls or data fetching changes
+- Single-query optimization (issue #22) preserved and tested
+- No XSS, injection, or secret exposure risks
+- No N+1 queries — `Promise.all` for parallel fetches
 
 ---
 
 ## Test Coverage
 
-**5 tests** in `page.test.tsx`:
-1. Hero `<h1>` renders "Náš stát"
-2. "Nahlásit podnět" → `/login` when not logged in
-3. "Nahlásit podnět" → `/reports` when logged in
-4. "Prozkoumat mapu" → `/reports`
-5. Three feature card `<h2>` headings (Hlášení, Diskuze, Přehled)
-
-**224/224 tests pass. Lint clean. Build clean.**
+| Metric | Value |
+|--------|-------|
+| Dashboard tests | 10 (up from 7) |
+| Happy path | Yes — data rendering, stats calculation, sorting |
+| Empty state | Yes — zero reports/topics |
+| Edge cases | Yes — 7→5 report limit, single query assertion |
+| Redesign-specific | 3 new: h1 heading role, stat card testids, heatmap card wrapper |
+| All project tests | **236 pass** |
+| Lint | Clean |
 
 ---
 
@@ -86,4 +83,4 @@ The logged-in CTA test existed in both `page.test.tsx` (lines 33-48, added in th
 
 **🟢 GOOD NUT — Ready to ship.**
 
-One duplicate test file cleaned up during review. No other issues.
+Clean, well-tested, consistent with the design system established across Topics and Reports pages. No blockers. Merging.
