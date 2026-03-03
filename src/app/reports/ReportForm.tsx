@@ -23,7 +23,7 @@ export default function ReportForm({
   hasLocation,
 }: ReportFormProps) {
   return (
-    <div className="absolute inset-y-0 right-0 w-full max-w-md bg-white p-6 shadow-2xl dark:bg-zinc-900 sm:m-4 sm:rounded-2xl sm:inset-y-auto sm:top-4 sm:bottom-4">
+    <div className="absolute inset-y-0 right-0 w-full max-w-md bg-white p-6 shadow-2xl dark:bg-zinc-900 sm:m-4 sm:rounded-2xl sm:inset-y-auto sm:top-4 sm:bottom-4 overflow-y-auto">
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
           Nový podnět
@@ -74,7 +74,7 @@ export default function ReportForm({
             id="title"
             name="title"
             required
-            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800"
+            className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-800"
             placeholder="Např. Rozbitý chodník"
           />
         </div>
@@ -89,7 +89,7 @@ export default function ReportForm({
           <select
             id="category"
             name="category"
-            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800"
+            className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-800"
           >
             {categories.map((cat) => (
               <option key={cat} value={cat}>
@@ -132,7 +132,7 @@ export default function ReportForm({
             id="description"
             name="description"
             rows={4}
-            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800"
+            className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-800"
             placeholder="Popište podrobněji, o co jde..."
           />
         </div>
@@ -141,7 +141,7 @@ export default function ReportForm({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-full bg-zinc-900 py-3 font-bold text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            className="w-full rounded-full bg-blue-600 py-3 font-bold text-white transition-colors hover:bg-blue-700 disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-400"
           >
             {isSubmitting ? 'Ukládám...' : 'Odeslat hlášení'}
           </button>
