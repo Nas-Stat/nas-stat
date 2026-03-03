@@ -59,22 +59,44 @@ describe('TopicsClient', () => {
     render(<TopicsClient initialTopics={mockTopics} user={null} />);
     expect(screen.getByText('First Topic')).toBeInTheDocument();
     expect(screen.getByText('First Description')).toBeInTheDocument();
-    expect(screen.getByText(/Pro přidání tématu se/i)).toBeInTheDocument();
   });
 
-  test('shows login message if not logged in', () => {
+  test('shows floating login CTA if not logged in', () => {
     render(<TopicsClient initialTopics={mockTopics} user={null} />);
-    expect(screen.getByText(/Pro přidání tématu se/i)).toBeInTheDocument();
+    const cta = screen.getByTestId('login-cta');
+    expect(cta).toBeInTheDocument();
+    expect(within(cta).getByText(/Pro přidání tématu se/i)).toBeInTheDocument();
+    expect(within(cta).getByRole('link', { name: /přihlaste/i })).toHaveAttribute('href', '/login');
   });
 
-  test('shows creation button if logged in', () => {
+  test('shows FAB for logged-in user', () => {
     render(<TopicsClient initialTopics={mockTopics} user={mockUser} />);
+    const fab = screen.getByTestId('new-topic-fab');
+    expect(fab).toBeInTheDocument();
+    expect(fab).toHaveAttribute('aria-label', 'Nové téma');
+  });
+
+  test('does not show FAB for logged-out user', () => {
+    render(<TopicsClient initialTopics={mockTopics} user={null} />);
+    expect(screen.queryByTestId('new-topic-fab')).not.toBeInTheDocument();
+  });
+
+  test('does not show login CTA for logged-in user', () => {
+    render(<TopicsClient initialTopics={mockTopics} user={mockUser} />);
+    expect(screen.queryByTestId('login-cta')).not.toBeInTheDocument();
+  });
+
+  test('FAB opens topic form modal', () => {
+    render(<TopicsClient initialTopics={[]} user={mockUser} />);
+    fireEvent.click(screen.getByTestId('new-topic-fab'));
     expect(screen.getByText('Nové téma')).toBeInTheDocument();
+    // FAB should hide while form is open
+    expect(screen.queryByTestId('new-topic-fab')).not.toBeInTheDocument();
   });
 
   test('handles voting (logged in)', async () => {
     render(<TopicsClient initialTopics={mockTopics} user={mockUser} />);
-    const upButton = screen.getAllByTestId('thumb-up')[0];
+    const upButton = screen.getAllByTestId('thumb-up')[0].closest('button')!;
     fireEvent.click(upButton);
 
     await waitFor(() => {
@@ -94,11 +116,9 @@ describe('TopicsClient', () => {
 
   test('toggles comments section', () => {
     render(<TopicsClient initialTopics={mockTopics} user={mockUser} />);
-    const commentBtn = screen.getByTestId('message-square');
-    
-    // Comments are initially hidden? Wait, I should check the code.
-    // In my code: {commentingOn === topic.id && (...)}
-    // Initially commentingOn is null.
+    const commentBtn = screen.getByTestId('message-square').closest('button')!;
+
+    // Comments are initially hidden
     expect(screen.queryByText('Comment 1')).not.toBeInTheDocument();
 
     fireEvent.click(commentBtn);
@@ -112,10 +132,10 @@ describe('TopicsClient', () => {
   test('submits a comment and resets form', async () => {
     render(<TopicsClient initialTopics={mockTopics} user={mockUser} />);
     fireEvent.click(screen.getByTestId('message-square'));
-    
+
     const input = screen.getByPlaceholderText('Napište komentář...') as HTMLInputElement;
     fireEvent.change(input, { target: { value: 'New Comment', name: 'content' } });
-    
+
     const form = input.closest('form')!;
     const resetSpy = vi.spyOn(form, 'reset');
     fireEvent.submit(form);
@@ -132,7 +152,7 @@ describe('TopicsClient', () => {
     vi.mocked(voteTopic).mockRejectedValueOnce(new Error('Chyba při hlasování'));
 
     render(<TopicsClient initialTopics={mockTopics} user={mockUser} />);
-    const upButton = screen.getAllByTestId('thumb-up')[0];
+    const upButton = screen.getAllByTestId('thumb-up')[0].closest('button')!;
     fireEvent.click(upButton);
 
     await waitFor(() => {
@@ -140,13 +160,13 @@ describe('TopicsClient', () => {
     });
   });
 
-  test('submits a new topic', async () => {
+  test('submits a new topic via FAB', async () => {
     render(<TopicsClient initialTopics={[]} user={mockUser} />);
-    fireEvent.click(screen.getByText('Nové téma'));
-    
+    fireEvent.click(screen.getByTestId('new-topic-fab'));
+
     fireEvent.change(screen.getByLabelText(/Název tématu/i), { target: { value: 'New Topic Title', name: 'title' } });
     fireEvent.change(screen.getByLabelText(/Popis/i), { target: { value: 'New Topic Description', name: 'description' } });
-    
+
     const form = screen.getByText('Vytvořit téma').closest('form')!;
     fireEvent.submit(form);
 
@@ -159,16 +179,16 @@ describe('TopicsClient', () => {
   test('optimistically updates vote count when voting up', async () => {
     // Start with 1 upvote from user-123
     render(<TopicsClient initialTopics={mockTopics} user={mockUser} />);
-    
+
     // Upvote is currently 1. Clicking it should remove it (toggle).
     const upButton = screen.getAllByTestId('thumb-up')[0].closest('button')!;
     expect(within(upButton).getByText('1')).toBeInTheDocument();
-    
+
     fireEvent.click(upButton);
-    
+
     // Should immediately show 0 (optimistic)
     expect(within(upButton).getByText('0')).toBeInTheDocument();
-    
+
     await waitFor(() => {
       expect(voteTopic).toHaveBeenCalledWith('topic-1', 'up');
     });
@@ -177,15 +197,15 @@ describe('TopicsClient', () => {
   test('optimistically adds a comment to the list', async () => {
     render(<TopicsClient initialTopics={mockTopics} user={mockUser} />);
     fireEvent.click(screen.getByTestId('message-square'));
-    
+
     const input = screen.getByPlaceholderText('Napište komentář...') as HTMLInputElement;
     fireEvent.change(input, { target: { value: 'My Optimistic Comment', name: 'content' } });
-    
+
     fireEvent.submit(input.closest('form')!);
-    
+
     // Should immediately show the comment
     expect(screen.getByText('My Optimistic Comment')).toBeInTheDocument();
-    
+
     await waitFor(() => {
       expect(addComment).toHaveBeenCalled();
     });
@@ -194,22 +214,50 @@ describe('TopicsClient', () => {
   test('optimistically switches vote from up to down', async () => {
     // Start with 1 upvote from user-123
     render(<TopicsClient initialTopics={mockTopics} user={mockUser} />);
-    
+
     const upButton = screen.getAllByTestId('thumb-up')[0].closest('button')!;
     const downButton = screen.getAllByTestId('thumb-down')[0].closest('button')!;
-    
+
     expect(within(upButton).getByText('1')).toBeInTheDocument();
     expect(within(downButton).getByText('1')).toBeInTheDocument(); // user-456 has downvoted
-    
+
     // Switch to downvote
     fireEvent.click(downButton);
-    
+
     // Upvote should become 0, Downvote should become 2
     expect(within(upButton).getByText('0')).toBeInTheDocument();
     expect(within(downButton).getByText('2')).toBeInTheDocument();
-    
+
     await waitFor(() => {
       expect(voteTopic).toHaveBeenCalledWith('topic-1', 'down');
     });
+  });
+
+  test('voting buttons use pill style (rounded-full class)', () => {
+    render(<TopicsClient initialTopics={mockTopics} user={mockUser} />);
+    const upButton = screen.getAllByTestId('thumb-up')[0].closest('button')!;
+    const downButton = screen.getAllByTestId('thumb-down')[0].closest('button')!;
+    expect(upButton.className).toContain('rounded-full');
+    expect(downButton.className).toContain('rounded-full');
+  });
+
+  test('card has shadow and hover transition', () => {
+    render(<TopicsClient initialTopics={mockTopics} user={mockUser} />);
+    const card = screen.getByText('First Topic').closest('.rounded-xl')!;
+    expect(card.className).toContain('shadow-sm');
+    expect(card.className).toContain('transition-shadow');
+    expect(card.className).toContain('hover:shadow-md');
+  });
+
+  test('comment input uses pill style', () => {
+    render(<TopicsClient initialTopics={mockTopics} user={mockUser} />);
+    fireEvent.click(screen.getByTestId('message-square'));
+    const input = screen.getByPlaceholderText('Napište komentář...');
+    expect(input.className).toContain('rounded-full');
+  });
+
+  test('shows empty state when no topics', () => {
+    render(<TopicsClient initialTopics={[]} user={null} />);
+    expect(screen.getByText('Zatím nebyla přidána žádná témata.')).toBeInTheDocument();
   });
 });

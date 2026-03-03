@@ -126,6 +126,14 @@ _(Detailní plánování bude následovat po dokončení Fáze 2)_
 ### Epic 3.1: Reports page redesign
 
 - [x] **Story 3.1.1: Redesign Reports page UI (Issue #39)**
+- [x] **Story 3.1.2: Redesign Topics page UI (Issue #40)**
+  - [x] Header.tsx already in layout — page title moved to `page.tsx` as `<h1>`
+  - [x] Cards: `shadow-sm hover:shadow-md transition-shadow` for hover depth
+  - [x] Voting: pill-style buttons (`rounded-full px-3 py-1.5`)
+  - [x] FAB: 56×56px circle, bottom-right, blue-600, Plus icon (`data-testid="new-topic-fab"`)
+  - [x] Login CTA: fixed floating banner for logged-out users (`data-testid="login-cta"`)
+  - [x] Comment input: pill-style (`rounded-full`)
+  - [x] Updated tests: 19 tests in `TopicsClient.test.tsx` (233 total pass)
   - [x] Header.tsx already in layout — no inline header to replace
   - [x] Filter bar: replaced `<select>` elements with pill/chip button groups
   - [x] FAB (floating action button): 56×56px circle at bottom-right, blue-600, Plus icon

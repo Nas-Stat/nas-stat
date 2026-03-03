@@ -1,5 +1,37 @@
 # Developer Log
 
+## 2026-03-03 - feat: redesign topics page (Issue #40) — Oompa Loompa
+
+### Changes
+
+- **`src/app/topics/page.tsx`**:
+  - Added `<h1 className="mb-6 text-2xl font-bold ...">Aktuální témata</h1>` as page-level heading.
+  - Added `pb-24` to main to give FAB clearance.
+
+- **`src/app/topics/TopicsClient.tsx`**:
+  - Removed inline "Action Header" section (inline `<h2>` + "Nové téma" button). Title moved to `page.tsx`.
+  - Voting buttons: `rounded-md px-2 py-1` → `rounded-full px-3 py-1.5` (pill style).
+  - Comment button: now pill-style (`rounded-full`) with `ml-auto` for right alignment.
+  - Comment input: `rounded-md` → `rounded-full`.
+  - Comment send button: `rounded-md` → blue `rounded-full` (matching FAB style).
+  - Cards: added `transition-shadow hover:shadow-md` for depth on hover.
+  - Added FAB: `fixed bottom-6 right-6 z-20 h-14 w-14 rounded-full bg-blue-600`, `data-testid="new-topic-fab"`, `aria-label="Nové téma"`. Hides when form is open.
+  - Added floating login CTA: `fixed bottom-6 left-1/2 -translate-x-1/2 z-20`, `data-testid="login-cta"`. Only shown for logged-out users.
+
+- **`src/app/topics/TopicsClient.test.tsx`**:
+  - Replaced 2 outdated tests (`shows login message`, `shows creation button`) with 5 new focused tests:
+    - `shows floating login CTA if not logged in`
+    - `shows FAB for logged-in user`
+    - `does not show FAB for logged-out user`
+    - `does not show login CTA for logged-in user`
+    - `FAB opens topic form modal`
+  - Updated `submits a new topic` → `submits a new topic via FAB` (clicks `data-testid="new-topic-fab"`).
+  - Added 3 style assertion tests: pill voting, card shadow/transition, pill comment input.
+  - Total: 19 tests (up from 11). All 233 project tests pass.
+
+- **`src/app/topics/page.test.tsx`**:
+  - Added assertion for `<h1>Aktuální témata</h1>` heading.
+
 ## 2026-03-03 - feat: redesign reports page (Issue #39) — Oompa Loompa
 
 ### Changes
