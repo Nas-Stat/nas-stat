@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createReport } from './actions';
+import { createReport, claimReport, escalateReport, resolveReport, rejectReport } from './actions';
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 
@@ -24,6 +24,13 @@ describe('Report Actions', () => {
     vi.clearAllMocks();
     vi.mocked(createClient).mockResolvedValue(mockSupabase as never);
   });
+
+  const mockSupabaseOfficial = {
+    auth: {
+      getUser: vi.fn(),
+    },
+    from: vi.fn(),
+  };
 
   describe('createReport', () => {
     it('throws error if user is not logged in', async () => {
@@ -168,6 +175,218 @@ describe('Report Actions', () => {
       await expect(createReport(formData)).rejects.toThrow(
         'Nepodařilo se uložit hlášení.'
       );
+    });
+  });
+
+  // Helper: build a chain mock for .from().select().eq().single()
+  function makeChain(result: unknown) {
+    const chain = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      update: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue(result),
+    };
+    return chain;
+  }
+
+  function setupOfficial(userId: string, role: string, roleVerified: boolean) {
+    mockSupabaseOfficial.auth.getUser.mockResolvedValue({
+      data: { user: { id: userId } },
+    });
+    vi.mocked(createClient).mockResolvedValue(mockSupabaseOfficial as never);
+  }
+
+  describe('claimReport', () => {
+    it('throws if user not logged in', async () => {
+      mockSupabaseOfficial.auth.getUser.mockResolvedValue({ data: { user: null } });
+      vi.mocked(createClient).mockResolvedValue(mockSupabaseOfficial as never);
+      await expect(claimReport('r1')).rejects.toThrow('Musíte být přihlášeni.');
+    });
+
+    it('throws if user role is citizen', async () => {
+      setupOfficial('u1', 'citizen', false);
+      const profileChain = makeChain({ data: { id: 'u1', role: 'citizen', role_verified: true }, error: null });
+      mockSupabaseOfficial.from.mockReturnValue(profileChain);
+      await expect(claimReport('r1')).rejects.toThrow('Nemáte oprávnění k této akci.');
+    });
+
+    it('throws if role_verified is false', async () => {
+      setupOfficial('u1', 'obec', false);
+      const profileChain = makeChain({ data: { id: 'u1', role: 'obec', role_verified: false }, error: null });
+      mockSupabaseOfficial.from.mockReturnValue(profileChain);
+      await expect(claimReport('r1')).rejects.toThrow('Nemáte oprávnění k této akci.');
+    });
+
+    it('throws if report status is not pending or escalated', async () => {
+      setupOfficial('u1', 'obec', true);
+      let callCount = 0;
+      mockSupabaseOfficial.from.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return makeChain({ data: { id: 'u1', role: 'obec', role_verified: true }, error: null });
+        }
+        return makeChain({ data: { status: 'in_review', escalated_to_role: null }, error: null });
+      });
+      await expect(claimReport('r1')).rejects.toThrow('Hlášení nelze převzít v tomto stavu.');
+    });
+
+    it('throws if escalated but wrong role', async () => {
+      setupOfficial('u1', 'obec', true);
+      let callCount = 0;
+      mockSupabaseOfficial.from.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return makeChain({ data: { id: 'u1', role: 'obec', role_verified: true }, error: null });
+        }
+        return makeChain({ data: { status: 'escalated', escalated_to_role: 'kraj' }, error: null });
+      });
+      await expect(claimReport('r1')).rejects.toThrow('Toto hlášení není eskalováno na vaši roli.');
+    });
+
+    it('claims a pending report successfully', async () => {
+      setupOfficial('u1', 'obec', true);
+      const updateChain = { ...makeChain(null), update: vi.fn().mockReturnThis(), eq: vi.fn().mockResolvedValue({ error: null }) };
+      let callCount = 0;
+      mockSupabaseOfficial.from.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) return makeChain({ data: { id: 'u1', role: 'obec', role_verified: true }, error: null });
+        if (callCount === 2) return makeChain({ data: { status: 'pending', escalated_to_role: null }, error: null });
+        return updateChain;
+      });
+      const result = await claimReport('r1');
+      expect(result).toEqual({ success: true });
+      expect(revalidatePath).toHaveBeenCalledWith('/reports');
+    });
+
+    it('claims an escalated report if role matches', async () => {
+      setupOfficial('u1', 'kraj', true);
+      const updateChain = { ...makeChain(null), update: vi.fn().mockReturnThis(), eq: vi.fn().mockResolvedValue({ error: null }) };
+      let callCount = 0;
+      mockSupabaseOfficial.from.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) return makeChain({ data: { id: 'u1', role: 'kraj', role_verified: true }, error: null });
+        if (callCount === 2) return makeChain({ data: { status: 'escalated', escalated_to_role: 'kraj' }, error: null });
+        return updateChain;
+      });
+      const result = await claimReport('r1');
+      expect(result).toEqual({ success: true });
+    });
+  });
+
+  describe('escalateReport', () => {
+    it('throws if not assigned to report', async () => {
+      setupOfficial('u1', 'obec', true);
+      let callCount = 0;
+      mockSupabaseOfficial.from.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) return makeChain({ data: { id: 'u1', role: 'obec', role_verified: true }, error: null });
+        return makeChain({ data: { status: 'in_review', assigned_to: 'other-user' }, error: null });
+      });
+      await expect(escalateReport('r1')).rejects.toThrow('Nejste přiřazeni k tomuto hlášení.');
+    });
+
+    it('throws if role cannot escalate (ministerstvo)', async () => {
+      setupOfficial('u1', 'ministerstvo', true);
+      let callCount = 0;
+      mockSupabaseOfficial.from.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) return makeChain({ data: { id: 'u1', role: 'ministerstvo', role_verified: true }, error: null });
+        return makeChain({ data: { status: 'in_review', assigned_to: 'u1' }, error: null });
+      });
+      await expect(escalateReport('r1')).rejects.toThrow('Vaše role nemůže eskalovat dále.');
+    });
+
+    it('escalates report successfully', async () => {
+      setupOfficial('u1', 'obec', true);
+      const updateChain = { ...makeChain(null), update: vi.fn().mockReturnThis(), eq: vi.fn().mockResolvedValue({ error: null }) };
+      let callCount = 0;
+      mockSupabaseOfficial.from.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) return makeChain({ data: { id: 'u1', role: 'obec', role_verified: true }, error: null });
+        if (callCount === 2) return makeChain({ data: { status: 'in_review', assigned_to: 'u1' }, error: null });
+        return updateChain;
+      });
+      const result = await escalateReport('r1');
+      expect(result).toEqual({ success: true });
+      expect(revalidatePath).toHaveBeenCalledWith('/reports');
+    });
+  });
+
+  describe('resolveReport', () => {
+    it('throws if not assigned', async () => {
+      setupOfficial('u1', 'obec', true);
+      let callCount = 0;
+      mockSupabaseOfficial.from.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) return makeChain({ data: { id: 'u1', role: 'obec', role_verified: true }, error: null });
+        return makeChain({ data: { status: 'in_review', assigned_to: 'other' }, error: null });
+      });
+      await expect(resolveReport('r1')).rejects.toThrow('Nejste přiřazeni k tomuto hlášení.');
+    });
+
+    it('throws if not in_review', async () => {
+      setupOfficial('u1', 'obec', true);
+      let callCount = 0;
+      mockSupabaseOfficial.from.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) return makeChain({ data: { id: 'u1', role: 'obec', role_verified: true }, error: null });
+        return makeChain({ data: { status: 'pending', assigned_to: 'u1' }, error: null });
+      });
+      await expect(resolveReport('r1')).rejects.toThrow('Hlášení není ve stavu in_review.');
+    });
+
+    it('resolves report successfully', async () => {
+      setupOfficial('u1', 'obec', true);
+      const updateChain = { ...makeChain(null), update: vi.fn().mockReturnThis(), eq: vi.fn().mockResolvedValue({ error: null }) };
+      let callCount = 0;
+      mockSupabaseOfficial.from.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) return makeChain({ data: { id: 'u1', role: 'obec', role_verified: true }, error: null });
+        if (callCount === 2) return makeChain({ data: { status: 'in_review', assigned_to: 'u1' }, error: null });
+        return updateChain;
+      });
+      const result = await resolveReport('r1');
+      expect(result).toEqual({ success: true });
+      expect(revalidatePath).toHaveBeenCalledWith('/reports');
+    });
+  });
+
+  describe('rejectReport', () => {
+    it('throws if not assigned', async () => {
+      setupOfficial('u1', 'obec', true);
+      let callCount = 0;
+      mockSupabaseOfficial.from.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) return makeChain({ data: { id: 'u1', role: 'obec', role_verified: true }, error: null });
+        return makeChain({ data: { status: 'in_review', assigned_to: 'other' }, error: null });
+      });
+      await expect(rejectReport('r1')).rejects.toThrow('Nejste přiřazeni k tomuto hlášení.');
+    });
+
+    it('throws if not in_review', async () => {
+      setupOfficial('u1', 'kraj', true);
+      let callCount = 0;
+      mockSupabaseOfficial.from.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) return makeChain({ data: { id: 'u1', role: 'kraj', role_verified: true }, error: null });
+        return makeChain({ data: { status: 'resolved', assigned_to: 'u1' }, error: null });
+      });
+      await expect(rejectReport('r1')).rejects.toThrow('Hlášení není ve stavu in_review.');
+    });
+
+    it('rejects report successfully', async () => {
+      setupOfficial('u1', 'kraj', true);
+      const updateChain = { ...makeChain(null), update: vi.fn().mockReturnThis(), eq: vi.fn().mockResolvedValue({ error: null }) };
+      let callCount = 0;
+      mockSupabaseOfficial.from.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) return makeChain({ data: { id: 'u1', role: 'kraj', role_verified: true }, error: null });
+        if (callCount === 2) return makeChain({ data: { status: 'in_review', assigned_to: 'u1' }, error: null });
+        return updateChain;
+      });
+      const result = await rejectReport('r1');
+      expect(result).toEqual({ success: true });
+      expect(revalidatePath).toHaveBeenCalledWith('/reports');
     });
   });
 });
