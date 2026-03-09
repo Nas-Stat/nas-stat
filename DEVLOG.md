@@ -1,5 +1,23 @@
 # Developer Log
 
+## 2026-03-09 — fix: Squirrel review fixes for Issue #55 — Oompa Loompa
+
+### Fixes Applied
+
+- **`src/lib/reportStatus.test.ts`** — Added `'escalated'` to `KNOWN_STATUSES`; added explicit Czech label assertion `expect(STATUS_LABELS.escalated).toBe('Eskalováno')`. Now 9 tests (was 8).
+- **`src/lib/roles.test.ts`** — Removed unused `type Role` import (lint warning eliminated). 10 tests unchanged.
+
+### Test Results
+- Full suite: 258/258 tests pass (20 test files)
+- Lint: 0 errors, 0 warnings
+- Build: clean
+
+### Closes
+- Issue #55 (PR #61)
+- Branch: `issue-55-civic-roles` → `main`
+
+---
+
 ## 2026-03-03 — feat: finalize test suite after redesign (Issue #43) — Oompa Loompa
 
 ### Verification
