@@ -1,11 +1,11 @@
-# Quality Report — Issue #56 / PR #62
+# Quality Report — Issue #57 / PR #63
 
-**feat: role selection at signup (closes #56)**
+**feat: admin panel role verification (closes #57)**
 
 **Reviewer:** The Squirrel (independent audit)
-**PR:** #62 (`issue-56-role-signup` → `main`)
+**PR:** #63 (`issue-57-role-verification` → `main`)
 **Date:** 2026-03-09
-**Scope:** 4 files changed (actions.ts, page.tsx, actions.test.ts, page.test.tsx), ~135 additions
+**Scope:** 6 files changed for #57 (AdminClient.tsx, actions.ts, actions.test.ts, page.tsx + supporting files), ~200 additions
 
 ---
 
@@ -15,20 +15,23 @@
 
 ## Executive Summary
 
-Clean, focused implementation of role selection at signup. Zod schema properly extended with `signupSchema` (enum + default), role passed to Supabase `signUp` via `options.data`, and official roles get a Czech-language pending-verification redirect message. The login action remains untouched and correctly ignores any submitted role value. Tests are thorough — 11 new tests covering invalid role validation, default fallback, role forwarding, and per-role redirect messages. All 267 tests pass, lint is clean, build succeeds. Ready to ship.
+Clean, well-structured implementation of admin role verification. New "Verifikace rolí" tab in admin panel displays pending official-role requests with Approve/Deny actions. Server actions (`approveRole`/`denyRole`) properly gate behind `getAdminUser()`, validate UUIDs with Zod, and use `createAdminClient()` to bypass RLS. Optimistic UI via `resolvedVerificationIds` set. Tests comprehensive — 10 new tests covering auth, admin check, UUID validation, DB errors, and success paths for both actions. All 277 tests pass, lint clean, build succeeds.
 
 ---
 
-## Acceptance Criteria vs Issue #56
+## Acceptance Criteria vs Issue #57
 
 | Criterion (from issue) | Status |
 |-------------------------|--------|
-| Extend signup Zod schema with `role` field (`z.enum` + `.default('citizen')`) | PASS |
-| Pass role to `auth.signUp({ options: { data: { role } } })` | PASS |
-| Official role redirect with pending-verification message | PASS |
-| `<select>` for role on login page | PASS |
-| Import `ROLE_LABELS` from `src/lib/roles.ts` | PASS |
-| Disclaimer note about admin approval for official roles | PASS |
+| Query `profiles WHERE role IN ('obec','kraj','ministerstvo') AND role_verified = false` | PASS |
+| Pass `pendingVerifications` prop to AdminClient | PASS |
+| New "Verifikace rolí" tab in admin panel | PASS |
+| Table: username/full_name, role badge with color, registration date | PASS |
+| Approve/Deny buttons per row | PASS |
+| `approveRole(profileId)` — sets `role_verified = true` via admin client | PASS |
+| `denyRole(profileId)` — resets to `role = 'citizen', role_verified = true` | PASS |
+| Both actions: admin auth check + `revalidatePath('/admin')` | PASS |
+| Tests for approveRole/denyRole in `actions.test.ts` | PASS |
 
 ---
 
@@ -40,17 +43,19 @@ Clean, focused implementation of role selection at signup. Zod schema properly e
 
 ## Code Smells & Improvements
 
-1. **Minor UX nit (non-blocking):** The role `<select>` is always visible, including when a user is logging in (not signing up). The label "Role (při registraci)" hints at signup-only relevance, which is a pragmatic choice given the single-form/two-button layout. The `login` action uses `authSchema` (no role field), so any submitted role is silently ignored — no security concern.
+1. **Minor DRY opportunity (non-blocking):** `handleApproveRole` and `handleDenyRole` in AdminClient are near-identical — differ only in the action called and the set they update. Could be extracted to a shared handler. Not worth blocking the merge.
 
-2. **Minor i18n inconsistency (pre-existing, not a regression):** Citizen success message is English ("Check your email to confirm your account.") while the official role message is Czech. Not introduced by this PR.
+2. **Test gap — update payload not asserted (non-blocking):** The mock structure (`mockAdminClient.from → update → eq`) captures the `.eq('id', profileId)` call but doesn't assert the payload passed to `.update()` (e.g., `{ role_verified: true }` vs `{ role: 'citizen', role_verified: true }`). The actions are correct as written, but a future refactor could silently swap payloads without test failure. Low risk given current simplicity.
 
 ---
 
 ## Security & Performance
 
-- **Server-side validation:** Role is validated via Zod `z.enum()` — arbitrary values are rejected before reaching Supabase. Good.
-- **No privilege escalation:** Role is stored in `raw_user_meta_data` only; the existing `handle_new_user` trigger (from #55) validates it against an allow-list and sets `role_verified = false` for non-citizen roles. Defense in depth.
-- **Login action unaffected:** `authSchema` has no `role` field — login path ignores any role input.
+- **Admin-only access:** Both actions call `getAdminUser()` which checks auth + admins table. Good.
+- **UUID validation:** Zod `z.string().uuid()` prevents injection. Good.
+- **Admin client:** Uses service-role key via `createAdminClient()` — necessary since RLS on profiles wouldn't allow normal users to update other profiles. Correct usage.
+- **Deny logic:** Resetting to `citizen` + `role_verified = true` ensures denied users don't reappear in the queue. Correct.
+- **Parallel fetch:** Pending verifications query runs in `Promise.all` alongside existing queries — no performance regression.
 
 ---
 
@@ -59,9 +64,9 @@ Clean, focused implementation of role selection at signup. Zod schema properly e
 | Metric | Value |
 |--------|-------|
 | Total test files | 20 |
-| Total tests | 267 (all pass) |
-| New: `actions.test.ts` | 8 new tests (invalid role, default role, role forwarding, official redirect × 3) |
-| New: `page.test.tsx` | 3 new tests (role select rendering, default value, disclaimer note) |
+| Total tests | 277 (all pass) |
+| New: `actions.test.ts` | 10 new tests (approveRole: 5, denyRole: 5) |
+| Coverage areas | Auth check, admin check, UUID validation, DB error, success |
 | Lint | 0 errors, 0 warnings |
 | Build | Succeeds |
 
@@ -71,4 +76,4 @@ Clean, focused implementation of role selection at signup. Zod schema properly e
 
 **🟢 GOOD NUT — Ready to ship.**
 
-All acceptance criteria met, server-side validation solid, test coverage comprehensive. Merging.
+All acceptance criteria met, security properly enforced, test coverage solid. Merging.
