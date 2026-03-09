@@ -70,3 +70,27 @@ test('password input has correct type', async () => {
   const passwordInput = screen.getByLabelText(/Heslo/i);
   expect(passwordInput).toHaveAttribute('type', 'password');
 });
+
+test('renders role select with all role options', async () => {
+  const ResolvedPage = await LoginPage({ searchParams: Promise.resolve({ message: '', error: '' }) });
+  render(ResolvedPage);
+  const roleSelect = screen.getByTestId('role-select');
+  expect(roleSelect).toBeInTheDocument();
+  expect(screen.getByRole('option', { name: 'Občan' })).toBeInTheDocument();
+  expect(screen.getByRole('option', { name: 'Obec' })).toBeInTheDocument();
+  expect(screen.getByRole('option', { name: 'Kraj' })).toBeInTheDocument();
+  expect(screen.getByRole('option', { name: 'Ministerstvo' })).toBeInTheDocument();
+});
+
+test('role select defaults to citizen', async () => {
+  const ResolvedPage = await LoginPage({ searchParams: Promise.resolve({ message: '', error: '' }) });
+  render(ResolvedPage);
+  const roleSelect = screen.getByTestId('role-select') as HTMLSelectElement;
+  expect(roleSelect.value).toBe('citizen');
+});
+
+test('renders official role disclaimer note', async () => {
+  const ResolvedPage = await LoginPage({ searchParams: Promise.resolve({ message: '', error: '' }) });
+  render(ResolvedPage);
+  expect(screen.getByText(/Úřednické role.*vyžadují schválení administrátorem/i)).toBeInTheDocument();
+});

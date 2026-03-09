@@ -85,6 +85,17 @@ describe('Auth Actions', () => {
       expect(redirect).toHaveBeenCalledWith(expect.stringContaining('/login?error='))
     })
 
+    it('redirects with error if role is invalid', async () => {
+      const formData = new FormData()
+      formData.append('email', 'test@example.com')
+      formData.append('password', 'password123')
+      formData.append('role', 'invalid-role')
+
+      await expect(signup(formData)).rejects.toThrow('NEXT_REDIRECT')
+
+      expect(redirect).toHaveBeenCalledWith(expect.stringContaining('/login?error='))
+    })
+
     it('redirects with error if Supabase signup fails', async () => {
       const formData = new FormData()
       formData.append('email', 'test@example.com')
@@ -96,7 +107,20 @@ describe('Auth Actions', () => {
       expect(redirect).toHaveBeenCalledWith('/login?error=Signup%20failed')
     })
 
-    it('revalidates and redirects with success message on success', async () => {
+    it('revalidates and redirects with success message for citizen role', async () => {
+      const formData = new FormData()
+      formData.append('email', 'test@example.com')
+      formData.append('password', 'password123')
+      formData.append('role', 'citizen')
+      mockSupabase.auth.signUp.mockResolvedValue({ error: null })
+
+      await expect(signup(formData)).rejects.toThrow('NEXT_REDIRECT')
+
+      expect(revalidatePath).toHaveBeenCalledWith('/', 'layout')
+      expect(redirect).toHaveBeenCalledWith('/login?message=Check your email to confirm your account.')
+    })
+
+    it('defaults to citizen role when role is not provided', async () => {
       const formData = new FormData()
       formData.append('email', 'test@example.com')
       formData.append('password', 'password123')
@@ -104,8 +128,67 @@ describe('Auth Actions', () => {
 
       await expect(signup(formData)).rejects.toThrow('NEXT_REDIRECT')
 
-      expect(revalidatePath).toHaveBeenCalledWith('/', 'layout')
-      expect(redirect).toHaveBeenCalledWith('/login?message=Check your email to confirm your account.')
+      expect(mockSupabase.auth.signUp).toHaveBeenCalledWith(
+        expect.objectContaining({ options: { data: { role: 'citizen' } } }),
+      )
+    })
+
+    it('passes role to signUp options', async () => {
+      const formData = new FormData()
+      formData.append('email', 'test@example.com')
+      formData.append('password', 'password123')
+      formData.append('role', 'obec')
+      mockSupabase.auth.signUp.mockResolvedValue({ error: null })
+
+      await expect(signup(formData)).rejects.toThrow('NEXT_REDIRECT')
+
+      expect(mockSupabase.auth.signUp).toHaveBeenCalledWith({
+        email: 'test@example.com',
+        password: 'password123',
+        options: { data: { role: 'obec' } },
+      })
+    })
+
+    it('redirects with official role pending message for obec', async () => {
+      const formData = new FormData()
+      formData.append('email', 'test@example.com')
+      formData.append('password', 'password123')
+      formData.append('role', 'obec')
+      mockSupabase.auth.signUp.mockResolvedValue({ error: null })
+
+      await expect(signup(formData)).rejects.toThrow('NEXT_REDIRECT')
+
+      expect(redirect).toHaveBeenCalledWith(
+        expect.stringContaining('schv%C3%A1len%C3%AD%20administr%C3%A1torem'),
+      )
+    })
+
+    it('redirects with official role pending message for kraj', async () => {
+      const formData = new FormData()
+      formData.append('email', 'test@example.com')
+      formData.append('password', 'password123')
+      formData.append('role', 'kraj')
+      mockSupabase.auth.signUp.mockResolvedValue({ error: null })
+
+      await expect(signup(formData)).rejects.toThrow('NEXT_REDIRECT')
+
+      expect(redirect).toHaveBeenCalledWith(
+        expect.stringContaining('schv%C3%A1len%C3%AD%20administr%C3%A1torem'),
+      )
+    })
+
+    it('redirects with official role pending message for ministerstvo', async () => {
+      const formData = new FormData()
+      formData.append('email', 'test@example.com')
+      formData.append('password', 'password123')
+      formData.append('role', 'ministerstvo')
+      mockSupabase.auth.signUp.mockResolvedValue({ error: null })
+
+      await expect(signup(formData)).rejects.toThrow('NEXT_REDIRECT')
+
+      expect(redirect).toHaveBeenCalledWith(
+        expect.stringContaining('schv%C3%A1len%C3%AD%20administr%C3%A1torem'),
+      )
     })
   })
 

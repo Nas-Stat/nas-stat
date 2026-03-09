@@ -1,4 +1,5 @@
 import { login, signup, signInWithGoogle } from './actions'
+import { ROLE_LABELS, ROLES } from '@/lib/roles'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -79,6 +80,31 @@ export default async function LoginPage(props: {
                 <p className="text-sm text-blue-700 dark:text-blue-400">{searchParams.message}</p>
               </div>
             )}
+
+            <div>
+              <label
+                htmlFor="role"
+                className="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+              >
+                Role (při registraci)
+              </label>
+              <select
+                id="role"
+                name="role"
+                defaultValue="citizen"
+                className="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:border-blue-400 dark:focus:ring-blue-400"
+                data-testid="role-select"
+              >
+                {ROLES.map((role) => (
+                  <option key={role} value={role}>
+                    {ROLE_LABELS[role]}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                Úřednické role (Obec, Kraj, Ministerstvo) vyžadují schválení administrátorem.
+              </p>
+            </div>
 
             <div className="flex flex-col gap-2 pt-1">
               <button
