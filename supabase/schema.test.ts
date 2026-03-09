@@ -53,3 +53,57 @@ test('Supabase config file exists', () => {
   const configPath = join(process.cwd(), 'supabase/config.toml');
   expect(existsSync(configPath)).toBe(true);
 });
+
+test('Civic roles migration file exists', () => {
+  const migrationPath = join(process.cwd(), 'supabase/migrations/20260309000000_add_civic_roles.sql');
+  expect(existsSync(migrationPath)).toBe(true);
+});
+
+test('Civic roles migration adds role columns to profiles', () => {
+  const migrationPath = join(process.cwd(), 'supabase/migrations/20260309000000_add_civic_roles.sql');
+  const content = readFileSync(migrationPath, 'utf8');
+
+  expect(content).toContain("ADD COLUMN role TEXT DEFAULT 'citizen'");
+  expect(content).toContain("CHECK (role IN ('citizen', 'obec', 'kraj', 'ministerstvo'))");
+  expect(content).toContain('ADD COLUMN role_verified BOOLEAN DEFAULT false');
+});
+
+test('Civic roles migration backfills existing users as verified citizens', () => {
+  const migrationPath = join(process.cwd(), 'supabase/migrations/20260309000000_add_civic_roles.sql');
+  const content = readFileSync(migrationPath, 'utf8');
+
+  expect(content).toContain("UPDATE public.profiles SET role = 'citizen', role_verified = true");
+});
+
+test('Civic roles migration adds assignment and escalation columns to reports', () => {
+  const migrationPath = join(process.cwd(), 'supabase/migrations/20260309000000_add_civic_roles.sql');
+  const content = readFileSync(migrationPath, 'utf8');
+
+  expect(content).toContain('ADD COLUMN assigned_to UUID REFERENCES public.profiles(id)');
+  expect(content).toContain('ADD COLUMN escalated_to_role TEXT');
+  expect(content).toContain("CHECK (escalated_to_role IN ('obec', 'kraj', 'ministerstvo'))");
+});
+
+test('Civic roles migration extends status CHECK to include escalated', () => {
+  const migrationPath = join(process.cwd(), 'supabase/migrations/20260309000000_add_civic_roles.sql');
+  const content = readFileSync(migrationPath, 'utf8');
+
+  expect(content).toContain("'escalated'");
+});
+
+test('Civic roles migration updates handle_new_user trigger', () => {
+  const migrationPath = join(process.cwd(), 'supabase/migrations/20260309000000_add_civic_roles.sql');
+  const content = readFileSync(migrationPath, 'utf8');
+
+  expect(content).toContain("CREATE OR REPLACE FUNCTION public.handle_new_user()");
+  expect(content).toContain("raw_user_meta_data->>'role'");
+});
+
+test('Civic roles migration adds RLS policies for officials and admins', () => {
+  const migrationPath = join(process.cwd(), 'supabase/migrations/20260309000000_add_civic_roles.sql');
+  const content = readFileSync(migrationPath, 'utf8');
+
+  expect(content).toMatch(/Verified officials can update reports/i);
+  expect(content).toMatch(/Admins can update any profile/i);
+  expect(content).toContain('role_verified = true');
+});

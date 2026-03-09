@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { STATUS_LABELS, STATUS_COLORS, ADMIN_STATUS_COLORS } from './reportStatus';
 
-const KNOWN_STATUSES = ['pending', 'in_review', 'resolved', 'rejected'] as const;
+const KNOWN_STATUSES = ['pending', 'in_review', 'resolved', 'rejected', 'escalated'] as const;
 
 describe('reportStatus', () => {
   it('STATUS_LABELS covers all known statuses', () => {
@@ -23,6 +23,7 @@ describe('reportStatus', () => {
     expect(STATUS_LABELS.in_review).toBe('V řešení');
     expect(STATUS_LABELS.resolved).toBe('Vyřešeno');
     expect(STATUS_LABELS.rejected).toBe('Zamítnuto');
+    expect(STATUS_LABELS.escalated).toBe('Eskalováno');
   });
 
   it('STATUS_COLORS maps to Tailwind class strings with both bg and text classes', () => {
