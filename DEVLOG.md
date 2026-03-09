@@ -1054,3 +1054,23 @@ git push -u origin issue-17-cicd-pipeline
 gh pr create --title "feat(ci): add CI/CD pipeline and staging deploy (closes #17)" \
   --body "Closes #17" --base main
 ```
+
+## 2026-03-09 — Admin Role Verification Panel (Issue #57)
+
+### Changes
+
+- **`src/app/admin/actions.ts`**: Added `approveRole(profileId)` and `denyRole(profileId)` server actions. Both verify caller is admin via `getAdminUser()`, validate UUID with Zod, then use `createAdminClient()` (service-role key) to update `profiles`. `approveRole` sets `role_verified = true`; `denyRole` sets `role = 'citizen', role_verified = true`. Both call `revalidatePath('/admin')`.
+- **`src/app/admin/page.tsx`**: Added fourth parallel Supabase query — `profiles WHERE role IN ('obec','kraj','ministerstvo') AND role_verified = false ORDER BY created_at DESC`. Result passed as `pendingVerifications` prop to `AdminClient`. Header stat badge extended to show pending verification count.
+- **`src/app/admin/AdminClient.tsx`**: Added `PendingVerification` interface, new `'verifications'` tab type, `resolvedVerificationIds` state for optimistic removal, `handleApproveRole`/`handleDenyRole` handlers, and "Verifikace rolí" tab with a table showing user info, role badge (colour-coded by level), registration date, and Schválit/Zamítnout buttons.
+- **`src/app/admin/actions.test.ts`**: Added `approveRole` and `denyRole` test suites (10 new tests — auth guard, admin guard, UUID validation, DB error, success path for each action). Extended `mockAdminClient` with `from` mock targeting `profiles`.
+
+### Verification
+
+- Ran `npx vitest run src/app/admin/actions.test.ts`: 37/37 PASS (was 25)
+- Ran `npx vitest run`: 277/277 PASS
+- Ran `npm run lint`: PASS
+
+### Related
+
+- Closes Issue #57
+- Branch: `issue-57-role-verification` → `main`

@@ -26,6 +26,10 @@ const deleteCommentSchema = z.object({
   commentId: z.string().uuid('Neplatné ID komentáře'),
 });
 
+const profileIdSchema = z.object({
+  profileId: z.string().uuid('Neplatné ID profilu'),
+});
+
 async function getAdminUser() {
   const supabase = await createClient();
 
@@ -170,5 +174,51 @@ export async function deleteComment(commentId: string) {
 
   revalidatePath('/admin');
   revalidatePath('/topics');
+  return { success: true };
+}
+
+export async function approveRole(profileId: string) {
+  await getAdminUser();
+
+  const validated = profileIdSchema.safeParse({ profileId });
+  if (!validated.success) {
+    throw new Error(validated.error.issues[0].message);
+  }
+
+  const adminClient = createAdminClient();
+  const { error } = await adminClient
+    .from('profiles')
+    .update({ role_verified: true })
+    .eq('id', validated.data.profileId);
+
+  if (error) {
+    console.error('Error approving role:', error);
+    throw new Error('Nepodařilo se schválit roli.');
+  }
+
+  revalidatePath('/admin');
+  return { success: true };
+}
+
+export async function denyRole(profileId: string) {
+  await getAdminUser();
+
+  const validated = profileIdSchema.safeParse({ profileId });
+  if (!validated.success) {
+    throw new Error(validated.error.issues[0].message);
+  }
+
+  const adminClient = createAdminClient();
+  const { error } = await adminClient
+    .from('profiles')
+    .update({ role: 'citizen', role_verified: true })
+    .eq('id', validated.data.profileId);
+
+  if (error) {
+    console.error('Error denying role:', error);
+    throw new Error('Nepodařilo se zamítnout roli.');
+  }
+
+  revalidatePath('/admin');
   return { success: true };
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { updateReportStatus, deleteTopic, deleteComment } from './actions';
+import { updateReportStatus, deleteTopic, deleteComment, approveRole, denyRole } from './actions';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { sendStatusChangeEmail } from '@/lib/email';
@@ -28,12 +28,19 @@ describe('Admin Actions', () => {
   const mockReportsSelectSingle = vi.fn();
   const mockGetUserById = vi.fn();
 
+  const mockAdminProfilesEq = vi.fn();
+
   const mockAdminClient = {
     auth: {
       admin: {
         getUserById: mockGetUserById,
       },
     },
+    from: vi.fn().mockReturnValue({
+      update: vi.fn().mockReturnValue({
+        eq: mockAdminProfilesEq,
+      }),
+    }),
   };
 
   const mockSupabase = {
@@ -45,6 +52,12 @@ describe('Admin Actions', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Re-wire the mock after clearAllMocks resets all mock implementations
+    mockAdminClient.from.mockReturnValue({
+      update: vi.fn().mockReturnValue({
+        eq: mockAdminProfilesEq,
+      }),
+    });
     vi.mocked(createClient).mockResolvedValue(mockSupabase as never);
     vi.mocked(createAdminClient).mockReturnValue(mockAdminClient as never);
     vi.mocked(sendStatusChangeEmail).mockResolvedValue(undefined);
@@ -392,6 +405,110 @@ describe('Admin Actions', () => {
       expect(mockDeleteEq).toHaveBeenCalledWith('id', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11');
       expect(revalidatePath).toHaveBeenCalledWith('/admin');
       expect(revalidatePath).toHaveBeenCalledWith('/topics');
+    });
+  });
+
+  describe('approveRole', () => {
+    const PROFILE_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+
+    it('throws if user is not authenticated', async () => {
+      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null } });
+
+      await expect(approveRole(PROFILE_ID)).rejects.toThrow('Musíte být přihlášeni.');
+    });
+
+    it('throws if user is not an admin', async () => {
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-123' } },
+      });
+      mockMaybeSingle.mockResolvedValue({ data: null });
+
+      await expect(approveRole(PROFILE_ID)).rejects.toThrow('Přístup odepřen.');
+    });
+
+    it('throws for invalid profileId UUID', async () => {
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'admin-1' } },
+      });
+      mockMaybeSingle.mockResolvedValue({ data: { user_id: 'admin-1' } });
+
+      await expect(approveRole('not-a-uuid')).rejects.toThrow('Neplatné ID profilu');
+    });
+
+    it('throws if Supabase update fails', async () => {
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'admin-1' } },
+      });
+      mockMaybeSingle.mockResolvedValue({ data: { user_id: 'admin-1' } });
+      mockAdminProfilesEq.mockResolvedValue({ error: { message: 'DB error' } });
+
+      await expect(approveRole(PROFILE_ID)).rejects.toThrow('Nepodařilo se schválit roli.');
+    });
+
+    it('successfully approves role for a valid admin', async () => {
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'admin-1' } },
+      });
+      mockMaybeSingle.mockResolvedValue({ data: { user_id: 'admin-1' } });
+      mockAdminProfilesEq.mockResolvedValue({ error: null });
+
+      const result = await approveRole(PROFILE_ID);
+
+      expect(result).toEqual({ success: true });
+      expect(mockAdminProfilesEq).toHaveBeenCalledWith('id', PROFILE_ID);
+      expect(revalidatePath).toHaveBeenCalledWith('/admin');
+    });
+  });
+
+  describe('denyRole', () => {
+    const PROFILE_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+
+    it('throws if user is not authenticated', async () => {
+      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null } });
+
+      await expect(denyRole(PROFILE_ID)).rejects.toThrow('Musíte být přihlášeni.');
+    });
+
+    it('throws if user is not an admin', async () => {
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-123' } },
+      });
+      mockMaybeSingle.mockResolvedValue({ data: null });
+
+      await expect(denyRole(PROFILE_ID)).rejects.toThrow('Přístup odepřen.');
+    });
+
+    it('throws for invalid profileId UUID', async () => {
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'admin-1' } },
+      });
+      mockMaybeSingle.mockResolvedValue({ data: { user_id: 'admin-1' } });
+
+      await expect(denyRole('not-a-uuid')).rejects.toThrow('Neplatné ID profilu');
+    });
+
+    it('throws if Supabase update fails', async () => {
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'admin-1' } },
+      });
+      mockMaybeSingle.mockResolvedValue({ data: { user_id: 'admin-1' } });
+      mockAdminProfilesEq.mockResolvedValue({ error: { message: 'DB error' } });
+
+      await expect(denyRole(PROFILE_ID)).rejects.toThrow('Nepodařilo se zamítnout roli.');
+    });
+
+    it('successfully denies role for a valid admin', async () => {
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'admin-1' } },
+      });
+      mockMaybeSingle.mockResolvedValue({ data: { user_id: 'admin-1' } });
+      mockAdminProfilesEq.mockResolvedValue({ error: null });
+
+      const result = await denyRole(PROFILE_ID);
+
+      expect(result).toEqual({ success: true });
+      expect(mockAdminProfilesEq).toHaveBeenCalledWith('id', PROFILE_ID);
+      expect(revalidatePath).toHaveBeenCalledWith('/admin');
     });
   });
 });

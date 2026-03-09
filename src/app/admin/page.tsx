@@ -24,21 +24,31 @@ export default async function AdminPage() {
     redirect('/');
   }
 
-  const [{ data: reportsData, error: reportsError }, { data: topicsData }, { data: commentsData }] =
-    await Promise.all([
-      supabase
-        .from('reports')
-        .select('id, title, description, category, status, rating, created_at')
-        .order('created_at', { ascending: false }),
-      supabase
-        .from('topics')
-        .select('id, title, description, created_by, created_at')
-        .order('created_at', { ascending: false }),
-      supabase
-        .from('comments')
-        .select('id, content, profile_id, topic_id, report_id, created_at')
-        .order('created_at', { ascending: false }),
-    ]);
+  const [
+    { data: reportsData, error: reportsError },
+    { data: topicsData },
+    { data: commentsData },
+    { data: pendingVerificationsData },
+  ] = await Promise.all([
+    supabase
+      .from('reports')
+      .select('id, title, description, category, status, rating, created_at')
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('topics')
+      .select('id, title, description, created_by, created_at')
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('comments')
+      .select('id, content, profile_id, topic_id, report_id, created_at')
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('profiles')
+      .select('id, username, full_name, role, created_at')
+      .in('role', ['obec', 'kraj', 'ministerstvo'])
+      .eq('role_verified', false)
+      .order('created_at', { ascending: false }),
+  ]);
 
   if (reportsError) {
     console.error('Error fetching reports:', reportsError);
@@ -47,6 +57,7 @@ export default async function AdminPage() {
   const reports = reportsData ?? [];
   const topics = topicsData ?? [];
   const comments = commentsData ?? [];
+  const pendingVerifications = pendingVerificationsData ?? [];
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-zinc-50 dark:bg-black">
@@ -55,11 +66,16 @@ export default async function AdminPage() {
           Admin panel
         </h1>
         <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
-          {reports.length} hlášení · {topics.length} témat · {comments.length} komentářů
+          {reports.length} hlášení · {topics.length} témat · {comments.length} komentářů · {pendingVerifications.length} čekajících verifikací
         </span>
       </div>
       <main>
-        <AdminClient reports={reports} topics={topics} comments={comments} />
+        <AdminClient
+          reports={reports}
+          topics={topics}
+          comments={comments}
+          pendingVerifications={pendingVerifications}
+        />
       </main>
     </div>
   );
