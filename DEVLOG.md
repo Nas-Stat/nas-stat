@@ -1,5 +1,20 @@
 # Developer Log
 
+## 2026-03-09 — feat: Issue #56 — Role selection at signup — Oompa Loompa
+
+### Changes
+
+- **`src/app/login/actions.ts`** — Extended `signup` with `signupSchema` (adds `role` field via `z.enum`). Role passed to `auth.signUp({ options: { data: { role } } })`. Official roles redirect with pending-approval message.
+- **`src/app/login/page.tsx`** — Added `<select id="role">` with all 4 roles from `ROLE_LABELS`, note about official role approval, defaults to `citizen`.
+
+### Tests
+
+- **`src/app/login/actions.test.ts`** — 9 new tests: invalid role, role passed to signUp, citizen/obec/kraj/ministerstvo redirect behaviour, default role.
+- **`src/app/login/page.test.tsx`** — 3 new tests: role select rendered, defaults to citizen, official role disclaimer visible.
+- **Total:** 27 tests pass (was 18).
+
+---
+
 ## 2026-03-09 — fix: Squirrel review fixes for Issue #55 — Oompa Loompa
 
 ### Fixes Applied
