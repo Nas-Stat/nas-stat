@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { updateReportStatus, deleteTopic, deleteComment } from './actions';
+import { updateReportStatus, deleteTopic, deleteComment, approveRole, denyRole } from './actions';
 import { STATUS_LABELS, ADMIN_STATUS_COLORS } from '@/lib/reportStatus';
 
 interface Report {
@@ -31,15 +31,24 @@ interface Comment {
   created_at: string;
 }
 
+interface PendingVerification {
+  id: string;
+  username: string | null;
+  full_name: string | null;
+  role: string;
+  created_at: string;
+}
+
 interface AdminClientProps {
   reports: Report[];
   topics: Topic[];
   comments: Comment[];
+  pendingVerifications: PendingVerification[];
 }
 
-type Tab = 'reports' | 'topics' | 'comments';
+type Tab = 'reports' | 'topics' | 'comments' | 'verifications';
 
-export default function AdminClient({ reports, topics, comments }: AdminClientProps) {
+export default function AdminClient({ reports, topics, comments, pendingVerifications }: AdminClientProps) {
   const [activeTab, setActiveTab] = useState<Tab>('reports');
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -49,6 +58,7 @@ export default function AdminClient({ reports, topics, comments }: AdminClientPr
   );
   const [deletedTopicIds, setDeletedTopicIds] = useState<Set<string>>(new Set());
   const [deletedCommentIds, setDeletedCommentIds] = useState<Set<string>>(new Set());
+  const [resolvedVerificationIds, setResolvedVerificationIds] = useState<Set<string>>(new Set());
 
   function handleStatusChange(reportId: string, newStatus: string) {
     const previousStatus = statuses[reportId];
@@ -105,6 +115,37 @@ export default function AdminClient({ reports, topics, comments }: AdminClientPr
 
   const visibleTopics = topics.filter((t) => !deletedTopicIds.has(t.id));
   const visibleComments = comments.filter((c) => !deletedCommentIds.has(c.id));
+  const visibleVerifications = pendingVerifications.filter((v) => !resolvedVerificationIds.has(v.id));
+
+  function handleApproveRole(profileId: string) {
+    setError(null);
+    setUpdatingId(profileId);
+    startTransition(async () => {
+      try {
+        await approveRole(profileId);
+        setResolvedVerificationIds((prev) => new Set(prev).add(profileId));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Nastala chyba.');
+      } finally {
+        setUpdatingId(null);
+      }
+    });
+  }
+
+  function handleDenyRole(profileId: string) {
+    setError(null);
+    setUpdatingId(profileId);
+    startTransition(async () => {
+      try {
+        await denyRole(profileId);
+        setResolvedVerificationIds((prev) => new Set(prev).add(profileId));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Nastala chyba.');
+      } finally {
+        setUpdatingId(null);
+      }
+    });
+  }
 
   return (
     <div className="p-6">
@@ -116,11 +157,12 @@ export default function AdminClient({ reports, topics, comments }: AdminClientPr
 
       {/* Tabs */}
       <div className="mb-6 flex gap-2 border-b border-zinc-200 dark:border-zinc-700">
-        {(['reports', 'topics', 'comments'] as Tab[]).map((tab) => {
+        {(['reports', 'topics', 'comments', 'verifications'] as Tab[]).map((tab) => {
           const labels: Record<Tab, string> = {
             reports: `Hlášení (${reports.length})`,
             topics: `Témata (${visibleTopics.length})`,
             comments: `Komentáře (${visibleComments.length})`,
+            verifications: `Verifikace rolí (${visibleVerifications.length})`,
           };
           return (
             <button
@@ -287,6 +329,75 @@ export default function AdminClient({ reports, topics, comments }: AdminClientPr
                       >
                         {isPending && updatingId === comment.id ? 'Mažu…' : 'Smazat'}
                       </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
+      )}
+      {/* Verifications tab */}
+      {activeTab === 'verifications' && (
+        visibleVerifications.length === 0 ? (
+          <p className="text-zinc-500 dark:text-zinc-400">Žádné čekající žádosti o verifikaci.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr className="border-b border-zinc-200 text-left dark:border-zinc-700">
+                  <th className="pb-3 pr-4 font-semibold text-zinc-700 dark:text-zinc-300">Uživatel</th>
+                  <th className="pb-3 pr-4 font-semibold text-zinc-700 dark:text-zinc-300">Žádaná role</th>
+                  <th className="pb-3 pr-4 font-semibold text-zinc-700 dark:text-zinc-300">Datum registrace</th>
+                  <th className="pb-3 font-semibold text-zinc-700 dark:text-zinc-300">Akce</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visibleVerifications.map((v) => (
+                  <tr key={v.id} className="border-b border-zinc-100 dark:border-zinc-800">
+                    <td className="py-3 pr-4">
+                      <div className="font-medium text-zinc-900 dark:text-zinc-100">
+                        {v.full_name ?? v.username ?? v.id}
+                      </div>
+                      {v.username && v.full_name && (
+                        <div className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">@{v.username}</div>
+                      )}
+                    </td>
+                    <td className="py-3 pr-4">
+                      <span
+                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                          v.role === 'obec'
+                            ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+                            : v.role === 'kraj'
+                              ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300'
+                              : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
+                        }`}
+                      >
+                        {v.role}
+                      </span>
+                    </td>
+                    <td className="py-3 pr-4 text-zinc-600 dark:text-zinc-400">
+                      {new Date(v.created_at).toLocaleDateString('cs-CZ')}
+                    </td>
+                    <td className="py-3">
+                      <div className="flex gap-2">
+                        <button
+                          aria-label={`Schválit roli pro ${v.full_name ?? v.username ?? v.id}`}
+                          disabled={isPending && updatingId === v.id}
+                          onClick={() => handleApproveRole(v.id)}
+                          className="rounded bg-green-600 px-3 py-1 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                        >
+                          {isPending && updatingId === v.id ? 'Ukládám…' : 'Schválit'}
+                        </button>
+                        <button
+                          aria-label={`Zamítnout roli pro ${v.full_name ?? v.username ?? v.id}`}
+                          disabled={isPending && updatingId === v.id}
+                          onClick={() => handleDenyRole(v.id)}
+                          className="rounded bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                        >
+                          {isPending && updatingId === v.id ? 'Ukládám…' : 'Zamítnout'}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
