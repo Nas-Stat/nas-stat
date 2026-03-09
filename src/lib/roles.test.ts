@@ -6,7 +6,6 @@ import {
   ROLE_HIERARCHY,
   getEscalationTarget,
   isOfficialRole,
-  type Role,
 } from './roles';
 
 test('ROLES contains all four civic roles', () => {
