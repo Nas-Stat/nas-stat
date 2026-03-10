@@ -107,3 +107,110 @@ test('Civic roles migration adds RLS policies for officials and admins', () => {
   expect(content).toMatch(/Admins can update any profile/i);
   expect(content).toContain('role_verified = true');
 });
+
+// ---------------------------------------------------------------------------
+// Seed data tests
+// ---------------------------------------------------------------------------
+
+test('Seed file exists', () => {
+  const seedPath = join(process.cwd(), 'supabase/seed.sql');
+  expect(existsSync(seedPath)).toBe(true);
+});
+
+test('Seed creates 10 test users with fixed UUIDs', () => {
+  const seedPath = join(process.cwd(), 'supabase/seed.sql');
+  const content = readFileSync(seedPath, 'utf8');
+
+  // All 10 fixed UUIDs present
+  for (let i = 1; i <= 10; i++) {
+    const uuid = `a1000000-0000-0000-0000-${String(i).padStart(12, '0')}`;
+    expect(content).toContain(uuid);
+  }
+});
+
+test('Seed creates identities for all test users', () => {
+  const seedPath = join(process.cwd(), 'supabase/seed.sql');
+  const content = readFileSync(seedPath, 'utf8');
+
+  expect(content).toContain('INSERT INTO auth.identities');
+  expect(content).toContain("provider, last_sign_in_at");
+});
+
+test('Seed covers all 5 civic roles', () => {
+  const seedPath = join(process.cwd(), 'supabase/seed.sql');
+  const content = readFileSync(seedPath, 'utf8');
+
+  expect(content).toContain('"role":"citizen"');
+  expect(content).toContain('"role":"obec"');
+  expect(content).toContain('"role":"kraj"');
+  expect(content).toContain('"role":"ministerstvo"');
+});
+
+test('Seed sets role_verified=true for officials', () => {
+  const seedPath = join(process.cwd(), 'supabase/seed.sql');
+  const content = readFileSync(seedPath, 'utf8');
+
+  expect(content).toContain('UPDATE public.profiles SET role_verified = true');
+  // Officials: UUIDs 6–10
+  expect(content).toContain('a1000000-0000-0000-0000-000000000006');
+  expect(content).toContain('a1000000-0000-0000-0000-000000000010');
+});
+
+test('Seed creates 120 reports via PL/pgSQL loop', () => {
+  const seedPath = join(process.cwd(), 'supabase/seed.sql');
+  const content = readFileSync(seedPath, 'utf8');
+
+  expect(content).toContain('FOR i IN 1..120 LOOP');
+  expect(content).toContain('INSERT INTO public.reports');
+  expect(content).toContain('ST_SetSRID(ST_MakePoint');
+});
+
+test('Seed reports use all 6 categories', () => {
+  const seedPath = join(process.cwd(), 'supabase/seed.sql');
+  const content = readFileSync(seedPath, 'utf8');
+
+  const expected = ['Infrastruktura', 'Doprava', 'Zeleň', 'Úřad', 'Bezpečnost', 'Jiné'];
+  for (const cat of expected) {
+    expect(content).toContain(cat);
+  }
+});
+
+test('Seed reports use all 5 statuses including escalated', () => {
+  const seedPath = join(process.cwd(), 'supabase/seed.sql');
+  const content = readFileSync(seedPath, 'utf8');
+
+  const expected = ["'pending'", "'in_review'", "'resolved'", "'rejected'", "'escalated'"];
+  for (const s of expected) {
+    expect(content).toContain(s);
+  }
+});
+
+test('Seed inserts 20 topics', () => {
+  const seedPath = join(process.cwd(), 'supabase/seed.sql');
+  const content = readFileSync(seedPath, 'utf8');
+
+  expect(content).toContain('INSERT INTO public.topics');
+  // Count VALUES rows for topics — 20 titles listed
+  const topicMatches = content.match(/INSERT INTO public\.topics[\s\S]*?(?=--|$)/);
+  expect(topicMatches).not.toBeNull();
+  // At least 20 entries (one per line starting with '(')
+  const lines = topicMatches![0].split('\n').filter(l => l.trim().startsWith("('"));
+  expect(lines.length).toBeGreaterThanOrEqual(20);
+});
+
+test('Seed inserts comments on both topics and reports', () => {
+  const seedPath = join(process.cwd(), 'supabase/seed.sql');
+  const content = readFileSync(seedPath, 'utf8');
+
+  expect(content).toContain('INSERT INTO public.comments (profile_id, topic_id');
+  expect(content).toContain('INSERT INTO public.comments (profile_id, report_id');
+});
+
+test('Seed inserts votes on both reports and topics with ON CONFLICT DO NOTHING', () => {
+  const seedPath = join(process.cwd(), 'supabase/seed.sql');
+  const content = readFileSync(seedPath, 'utf8');
+
+  expect(content).toContain('INSERT INTO public.votes (profile_id, report_id');
+  expect(content).toContain('INSERT INTO public.votes (profile_id, topic_id');
+  expect(content).toContain('ON CONFLICT DO NOTHING');
+});
