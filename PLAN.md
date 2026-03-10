@@ -148,6 +148,17 @@ _(Detailní plánování bude následovat po dokončení Fáze 2)_
 
 ---
 
+## Phase 4: Map Enhancements
+
+### Epic 4.1: Layer Switcher
+
+- [x] **Story 4.1.1: Map layer switcher — streets/hybrid/dataviz (Issue #74)**
+  - [x] Add `MAP_STYLES` record mapping `streets | hybrid | dataviz` to MapTiler style enums with Czech labels.
+  - [x] `getInitialStyle()` reads `localStorage` (key `nasstat-map-style`); defaults to `dataviz` when `showHeatmap=true`, else `streets`.
+  - [x] `handleStyleChange()` calls `map.setStyle()`, persists to `localStorage`, re-triggers reports effect via `styledata` event + `isLoaded` toggle.
+  - [x] Style switcher UI in bottom-left corner, visible after map loads; hidden in heatmap mode.
+  - [x] 5 new tests in `Map.test.tsx` covering UI visibility, style switching, localStorage persistence, heatmap mode hiding.
+
 ## Hotfixes / Perf Issues
 
 - [x] **Issue #22: Consolidate double reports fetch in dashboard page**
