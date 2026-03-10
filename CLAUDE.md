@@ -15,7 +15,7 @@ npm run test         # Run all tests (vitest run)
 npx vitest run src/app/reports/actions.test.ts
 
 # Docker (full local stack)
-docker-compose up --build
+docker compose up --build
 ```
 
 ## Environment Variables

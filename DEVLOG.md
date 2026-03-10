@@ -1,5 +1,19 @@
 # Developer Log
 
+## 2026-03-10 — feat: Issue #73 — MapTiler API key for local development — Oompa Loompa
+
+### Changes
+
+- **`.env.development`** — Replaced `placeholder` with working free-tier key `y9bRvFcitlLGhZuveNzL` (safe to commit, from `.env.local`). Maps now load out of the box with `supabase start`.
+- **`.env.example`** — Updated MapTiler comment to note `.env.development` already has a working key.
+- **`src/components/Map.test.tsx`** — Added 4 tests for API key configuration: valid key applied to `maptilersdk.config`, `placeholder` → empty, `your-maptiler-key-here` → empty, `undefined` → empty.
+
+### Tests
+
+17 tests pass (`Map.test.tsx`).
+
+---
+
 ## 2026-03-10 — feat: Issue #68 — Seed data for local development — Oompa Loompa
 
 ### Changes
