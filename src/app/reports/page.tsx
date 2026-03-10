@@ -1,13 +1,9 @@
 import ReportsClient from './ReportsClient';
 import { createClient } from '@/utils/supabase/server';
 import { Report } from '@/components/Map';
+import { parseLocation } from '@/utils/geo';
 
 const PAGE_SIZE = 20;
-
-interface GeoJsonPoint {
-  type: string;
-  coordinates: [number, number];
-}
 
 export default async function ReportsPage({
   searchParams,
@@ -47,24 +43,19 @@ export default async function ReportsPage({
   }
 
   // Transform reports to match our Report interface; skip reports without location
-  const reports: Report[] = (reportsData || [])
-    .filter((report) => report.location != null)
-    .map((report) => {
-      // PostgREST returns location as a GeoJSON object for GEOGRAPHY types
-      const location = report.location as unknown as GeoJsonPoint;
-      return {
-        id: report.id,
-        title: report.title,
-        description: report.description,
-        location: {
-          lng: location.coordinates[0],
-          lat: location.coordinates[1],
-        },
-        rating: report.rating,
-        category: report.category,
-        status: report.status,
-      };
-    });
+  const reports: Report[] = (reportsData || []).flatMap((report) => {
+    const loc = parseLocation(report.location);
+    if (!loc) return [];
+    return [{
+      id: report.id,
+      title: report.title,
+      description: report.description,
+      location: loc,
+      rating: report.rating,
+      category: report.category,
+      status: report.status,
+    }];
+  });
 
   const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
 

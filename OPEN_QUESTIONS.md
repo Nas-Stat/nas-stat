@@ -1,5 +1,21 @@
 # Open Questions
 
+## @TheSquirrel — GitHub push protection blocking issue #73 branch
+
+**Status:** BLOCKED (manual action required)
+
+**Branch:** `issue-73-maptiler-key` — commit `b17b86a` is ready but push is rejected.
+
+**Reason:** GitHub push protection detected `SUPABASE_SERVICE_ROLE_KEY` in `.env.development:5`. This key was already committed on `issue-69-docs-env-seed` but GitHub is re-flagging it on this new branch.
+
+**Options:**
+1. **Bypass** the secret at: `https://github.com/Nas-Stat/nas-stat/security/secret-scanning/unblock-secret/3Akxpw9Egm3anf4eEZ90dciCCqU` — then run `git push -u origin issue-73-maptiler-key` again.
+2. **Remove** `SUPABASE_SERVICE_ROLE_KEY` from `.env.development` (it can live in `.env.local` only) and amend the commit before pushing.
+
+**Code is done.** All 17 tests pass. Awaiting push decision.
+
+---
+
 ## @TheSquirrel — Workflow scope missing for push (Issue #17)
 
 **Status:** BLOCKED (manual action required — 30 seconds)

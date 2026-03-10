@@ -3,11 +3,7 @@ import { Star, MapPin, MessageSquare, TrendingUp, Info } from 'lucide-react';
 import { createClient } from '@/utils/supabase/server';
 import Map, { Report } from '@/components/Map';
 import { STATUS_LABELS, STATUS_COLORS } from '@/lib/reportStatus';
-
-interface GeoJsonPoint {
-  type: string;
-  coordinates: [number, number];
-}
+import { parseLocation } from '@/utils/geo';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -42,21 +38,18 @@ export default async function DashboardPage() {
 
   // Format reports for the map; skip reports without location
   const mapReports: Report[] = allReportsData
-    .filter((r) => r.location != null)
-    .map(r => {
-      const geoJson = r.location as unknown as GeoJsonPoint;
-      return {
+    .flatMap(r => {
+      const loc = parseLocation(r.location);
+      if (!loc) return [];
+      return [{
         id: r.id,
         title: r.title,
         description: r.description,
         rating: r.rating,
         category: r.category,
         status: r.status,
-        location: {
-          lng: geoJson.coordinates[0],
-          lat: geoJson.coordinates[1]
-        }
-      };
+        location: loc
+      }];
     });
 
   return (

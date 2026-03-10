@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { createClient } from '@/utils/supabase/server';
 import { MapPin, MessageSquare, BarChart2 } from 'lucide-react';
 
@@ -41,18 +42,18 @@ export default async function Home() {
           prostoru. Připojte se a pomozte zlepšit své okolí.
         </p>
         <div className="mt-10 flex flex-col gap-4 sm:flex-row">
-          <a
+          <Link
             href={user ? '/reports' : '/login'}
             className="flex h-12 items-center justify-center rounded-full bg-blue-600 px-8 text-base font-semibold text-white transition-colors hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400"
           >
             Nahlásit podnět
-          </a>
-          <a
+          </Link>
+          <Link
             href="/reports"
             className="flex h-12 items-center justify-center rounded-full border border-slate-200 px-8 text-base font-semibold text-zinc-900 transition-colors hover:bg-slate-100 dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-800"
           >
             Prozkoumat mapu
-          </a>
+          </Link>
         </div>
       </section>
 

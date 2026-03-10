@@ -12,7 +12,14 @@ test('.env.development contains required Supabase keys', () => {
   const content = readFileSync(ENV_DEV_PATH, 'utf8');
   expect(content).toContain('NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321');
   expect(content).toContain('NEXT_PUBLIC_SUPABASE_ANON_KEY=');
-  expect(content).toContain('SUPABASE_SERVICE_ROLE_KEY=');
+  // SUPABASE_SERVICE_ROLE_KEY intentionally NOT in .env.development — it's a secret, set in .env.local
+});
+
+test('.env.development does not contain service role key (security)', () => {
+  const content = readFileSync(ENV_DEV_PATH, 'utf8');
+  // The service role key must not be committed — should only be set via .env.local
+  const lines = content.split('\n').filter((l) => !l.trim().startsWith('#'));
+  expect(lines.join('\n')).not.toMatch(/SUPABASE_SERVICE_ROLE_KEY\s*=/);
 });
 
 test('.env.development contains required app keys', () => {

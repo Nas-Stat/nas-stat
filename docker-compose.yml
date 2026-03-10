@@ -9,8 +9,11 @@ services:
       - /app/.next
     env_file:
       - .env.development
+      - path: .env.local
+        required: false
     environment:
       - NODE_ENV=development
+      - NEXT_PUBLIC_SUPABASE_URL=http://host.docker.internal:54321
     extra_hosts:
       - "host.docker.internal:host-gateway"
     # Ensure Next.js handles SIGINT correctly

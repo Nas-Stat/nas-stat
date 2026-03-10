@@ -1,5 +1,24 @@
 # Developer Log
 
+## 2026-03-10 — feat: Issue #73 — MapTiler API key for local development — Oompa Loompa (v3)
+
+### Changes
+
+- **`.env.development`** — Free-tier MapTiler key set (`y9bRvFcitlLGhZuveNzL`). `SUPABASE_SERVICE_ROLE_KEY` removed — secrets must not be committed; use `.env.local`.
+- **`docker-compose.yml`** — Load `.env.local` optionally so Docker dev can override keys without modifying committed files.
+- **`src/components/Map.tsx`** — Reject `placeholder` as a valid API key; add streets/hybrid/dataviz layer switcher with `localStorage` persistence.
+- **`src/utils/geo.ts`** — New `parseLocation` helper handling both GeoJSON and WKB hex output from PostgREST.
+- **`src/utils/geo.test.ts`** — 10 new tests: null/undefined, GeoJSON, negative coords, empty coords array, valid WKB hex, short WKB, non-hex string, non-object, big-endian WKB.
+- **`src/components/Map.test.tsx`** — 8 new tests: API key validation + style switcher; replaced empty assertion test with DOM check.
+- **`src/app/page.tsx`** — Fixed `<a>` → `<Link>` (fixes ESLint `@next/next/no-html-link-for-pages` CI failure).
+- **`supabase/env.test.ts`** — Updated test to match new env strategy; added security regression test ensuring service role key is never in `.env.development`.
+
+### Tests
+
+363 tests pass (all 23 test files). Lint clean.
+
+---
+
 ## 2026-03-10 — feat: Issue #68 — Seed data for local development — Oompa Loompa
 
 ### Changes

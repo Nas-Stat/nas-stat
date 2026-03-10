@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as maptilersdk from '@maptiler/sdk';
 import '@maptiler/sdk/dist/maptiler-sdk.css';
 import { STATUS_COLORS, STATUS_LABELS } from '@/lib/reportStatus';
@@ -17,6 +17,16 @@ export interface Report {
   category: string | null;
   status: 'pending' | 'in_review' | 'resolved' | 'rejected';
 }
+
+type MapStyleKey = 'streets' | 'hybrid' | 'dataviz';
+
+const MAP_STYLES: Record<MapStyleKey, { style: string; label: string }> = {
+  streets: { style: maptilersdk.MapStyle.STREETS as unknown as string, label: 'Ulice' },
+  hybrid: { style: maptilersdk.MapStyle.HYBRID as unknown as string, label: 'Satelit' },
+  dataviz: { style: maptilersdk.MapStyle.DATAVIZ as unknown as string, label: 'Data' },
+};
+
+const STYLE_STORAGE_KEY = 'nasstat-map-style';
 
 interface MapProps {
   center?: [number, number]; // [lng, lat]
@@ -55,6 +65,18 @@ const Map: React.FC<MapProps> = ({
   const selectionMarkerRef = useRef<maptilersdk.Marker | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // Determine initial style: heatmap defaults to dataviz, otherwise check localStorage
+  const getInitialStyle = (): MapStyleKey => {
+    if (showHeatmap) return 'dataviz';
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(STYLE_STORAGE_KEY);
+      if (saved && saved in MAP_STYLES) return saved as MapStyleKey;
+    }
+    return 'streets';
+  };
+
+  const [activeStyle, setActiveStyle] = useState<MapStyleKey>(getInitialStyle);
+
   // Store callbacks in refs to avoid re-initializing the map when they change
   const onMapClickRef = useRef(onMapClick);
   useEffect(() => {
@@ -67,11 +89,15 @@ const Map: React.FC<MapProps> = ({
 
     const apiKey = process.env.NEXT_PUBLIC_MAPTILER_KEY;
     maptilersdk.config.apiKey =
-      apiKey && apiKey !== 'your-maptiler-key-here' ? apiKey : '';
+      apiKey && apiKey !== 'your-maptiler-key-here' && apiKey !== 'placeholder'
+        ? apiKey
+        : '';
+
+    const initialStyle = showHeatmap ? 'dataviz' : getInitialStyle();
 
     const map = new maptilersdk.Map({
       container: mapContainerRef.current,
-      style: maptilersdk.MapStyle.STREETS,
+      style: MAP_STYLES[initialStyle].style,
       center: center,
       zoom: zoom,
     });
@@ -96,6 +122,29 @@ const Map: React.FC<MapProps> = ({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run on mount
+
+  // Handle style changes after initialization
+  const handleStyleChange = useCallback(
+    (styleKey: MapStyleKey) => {
+      if (!mapRef.current || styleKey === activeStyle) return;
+
+      setActiveStyle(styleKey);
+      localStorage.setItem(STYLE_STORAGE_KEY, styleKey);
+
+      const map = mapRef.current;
+      map.setStyle(MAP_STYLES[styleKey].style);
+
+      // setStyle removes all custom layers — re-add them after the new style loads
+      map.once('styledata', () => {
+        // Re-add heatmap or markers by triggering the reports effect
+        // We force this by temporarily setting isLoaded
+        setIsLoaded(false);
+        // Use microtask to let React flush the false state, then set true to re-trigger
+        queueMicrotask(() => setIsLoaded(true));
+      });
+    },
+    [activeStyle],
+  );
 
   // Update map view when center or zoom changes
   useEffect(() => {
@@ -267,6 +316,26 @@ const Map: React.FC<MapProps> = ({
         className="h-full w-full"
         data-testid="map-container"
       />
+      {isLoaded && (
+        <div
+          className="absolute bottom-4 left-4 z-10 flex gap-1 rounded-lg bg-white/90 p-1 shadow-md backdrop-blur-sm dark:bg-zinc-800/90"
+          data-testid="style-switcher"
+        >
+          {(Object.keys(MAP_STYLES) as MapStyleKey[]).map((key) => (
+            <button
+              key={key}
+              onClick={() => handleStyleChange(key)}
+              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                activeStyle === key
+                  ? 'bg-blue-600 text-white'
+                  : 'text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-700'
+              }`}
+            >
+              {MAP_STYLES[key].label}
+            </button>
+          ))}
+        </div>
+      )}
       {!isLoaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-zinc-100 dark:bg-zinc-900">
           <p className="text-zinc-500">Načítám mapu...</p>
