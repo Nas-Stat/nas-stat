@@ -1,5 +1,27 @@
 # Developer Log
 
+## 2026-03-10 — feat: Issue #68 — Seed data for local development — Oompa Loompa
+
+### Changes
+
+- **`supabase/seed.sql`** (new) — Comprehensive seed data that runs automatically on `supabase db reset`. Creates:
+  - 10 test users (5 citizens, 2 obec, 2 kraj, 1 ministerstvo) with fixed UUIDs, password `password123`, auth.identities, and officials marked `role_verified = true`.
+  - 120 reports across 10 Czech cities via PL/pgSQL loop: 6 categories, 5 statuses (incl. `escalated`), ratings 1–5, spread over 120 days.
+  - 20 civic discussion topics in Czech.
+  - ~100 comments (2–5 per topic, 1–3 per first 20 reports), mix of citizen and official voices.
+  - ~200 votes (reports + topics) using `ON CONFLICT DO NOTHING` to respect unique constraints.
+
+### Tests
+
+- **`supabase/schema.test.ts`** — Added 11 new tests for seed.sql: file existence, 10 UUIDs, identities, all 4 roles, `role_verified` for officials, 120-report loop, 6 categories, 5 statuses, 20 topics, comments on both targets, votes with ON CONFLICT.
+
+### Stats
+
+- Tests: 22 in schema.test.ts (was 11), all passing.
+- Login: `jan.novak@test.cz` / `password123`
+
+---
+
 ## 2026-03-10 — feat: Issue #60 — Role badge in topic comments — Oompa Loompa
 
 ### Changes
@@ -1121,3 +1143,12 @@ gh pr create --title "feat(ci): add CI/CD pipeline and staging deploy (closes #1
 
 - Closes Issue #57
 - Branch: `issue-57-role-verification` → `main`
+
+## 2026-03-10 — Issue #67: Dev/prod env separation
+
+- Added `.env.development` with standard local Supabase keys (safe to commit)
+- Updated `.gitignore` with `!.env.development` exception
+- Updated `docker-compose.yml` env_file → `.env.development`
+- Updated `.env.example` with env priority documentation
+- Added `supabase/env.test.ts` (4 tests, all passing)
+- PR #70 created
