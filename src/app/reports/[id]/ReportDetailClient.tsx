@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useTransition } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Map from '@/components/Map';
 import { STATUS_LABELS, STATUS_COLORS } from '@/lib/reportStatus';
@@ -85,13 +86,13 @@ export default function ReportDetailClient({
   return (
     <div className="mx-auto max-w-2xl px-4 py-8" data-testid="report-detail">
       {/* Back link */}
-      <a
+      <Link
         href="/reports"
         className="mb-6 inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900"
         data-testid="back-link"
       >
         ← Zpět na hlášení
-      </a>
+      </Link>
 
       {/* Map preview */}
       {report.location && (

@@ -1,5 +1,19 @@
 # Developer Log
 
+## 2026-03-10 — fix: Issue #59 — Replace `<a>` with `<Link>` in ReportDetailClient — Oompa Loompa
+
+### Changes
+
+- **`src/app/reports/[id]/ReportDetailClient.tsx`** — Replaced `<a href="/reports">` with Next.js `<Link href="/reports">` (import added). Fixes ESLint `@next/next/no-html-link-for-pages` error; enables client-side navigation instead of full page reload.
+- **`QUALITY_REPORT.md`** — Updated status from SUSPICIOUS NUT → GOOD NUT.
+
+### Tests
+
+- 313 tests passing, no regressions.
+
+---
+
+
 ## 2026-03-10 — feat: Issue #59 — Report detail page /reports/[id] — Oompa Loompa
 
 ### Changes
