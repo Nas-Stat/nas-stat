@@ -1,86 +1,117 @@
-# Quality Report — Issue #60 / PR #66
+# Quality Report — PR #76 (Issue #73)
 
-**Role badge v komentářích u Topics**
+**MapTiler API key for local development**
 
-**Reviewer:** The Squirrel (independent audit)
-**Branch:** `issue-60-role-badge-topic-comments` → `main`
+**Reviewer:** The Squirrel (re-audit #3)
+**Branch:** `issue-73-maptiler-key`
+**PR:** #76
 **Date:** 2026-03-10
-**Scope:** 4 files changed (+184 / −11 lines)
+**Commits reviewed:** 4 (`e17ae58`..`10b1761`)
 
 ---
 
-## Status: 🟢 GOOD NUT
+## Status: 🟡 SUSPICIOUS NUT
 
 ---
 
 ## Executive Summary
 
-Tight, focused implementation. Exactly what was requested in the ticket — nothing more, nothing less. The Supabase query was extended to fetch `role` and `role_verified` from comment author profiles, TypeScript types were updated, and a conditional badge renders next to the commenter's username. Reuses the existing `roles.ts` shared module. 7 new tests cover all display/hide scenarios. All 320 tests green, no regressions.
+Third audit. **No commits since the last two reviews — all three showstoppers remain unfixed.** The core feature is solid: MapTiler key works, maps load, env strategy is clean, security is good. But CI is red, an empty test exists, and `parseLocation` has zero coverage. Cannot merge.
 
 ---
 
-## Acceptance Criteria vs Issue #60
+## Critical Issues (Showstoppers) — STILL OPEN
 
-| Criterion (from issue) | Status |
-|-------------------------|--------|
-| `page.tsx` — extend Supabase query for comments to include `role`, `role_verified` | ✅ |
-| `TopicsClient.tsx` — update TS types for `comment.profiles` | ✅ |
-| Badge renders for verified non-citizen roles | ✅ |
-| Badge hidden for `citizen` role | ✅ |
-| Badge hidden for unverified officials | ✅ |
-| Import `ROLE_LABELS`, `ROLE_BADGE_COLORS` from `src/lib/roles.ts` | ✅ |
+### 1. CI is RED — Lint fails
+
+```
+src/app/page.tsx:50:11 — <a> instead of <Link /> (@next/next/no-html-link-for-pages)
+src/app/reports/actions.test.ts:192 — unused vars (warnings)
+```
+
+Pre-existing, but CI must be green to merge. Fix the `<a>` → `<Link>` in `page.tsx`.
+
+### 2. Empty test — zero assertions (`Map.test.tsx:330-339`)
+
+```ts
+it('defaults to dataviz style when showHeatmap is true', () => {
+  render(<Map showHeatmap={true} />);
+  // 6 lines of comments explaining why it CAN'T assert anything
+  // Zero expect() calls
+});
+```
+
+A test without assertions is worse than no test. Either capture constructor args in the mock to assert dataviz was used, or delete it.
+
+### 3. `parseLocation` — zero test coverage
+
+`src/utils/geo.ts` is a new 36-line utility doing hex buffer parsing with hardcoded byte offsets (`buf.readDoubleLE(9)`, `buf.readDoubleLE(17)`). Imported by 3 pages (`dashboard/page.tsx`, `reports/page.tsx`, `reports/[id]/page.tsx`). No `geo.test.ts` exists.
+
+Needs tests for: valid GeoJSON, valid WKB hex, null input, malformed hex, short buffer.
 
 ---
 
-## Critical Issues (Showstoppers)
+## Code Smells & Improvements (Non-blocking)
 
-**None.**
+### 4. `schema.test.ts:280` — semantically wrong assertion
 
----
+```ts
+expect(content).toContain('SUPABASE_SERVICE_ROLE_KEY');
+```
 
-## Code Smells & Improvements
+This passes only because `.env.development` has a **comment** containing the string. The test was written when the key was present as an actual var. Meanwhile `env.test.ts:18-23` correctly strips comments before checking. The `schema.test.ts:280` assertion should be updated or removed to avoid false confidence.
 
-1. **Badge colours lack dark-mode variants (cosmetic, non-blocking):** `ROLE_BADGE_COLORS` in `roles.ts` defines only light-mode classes (`bg-green-100 text-green-700`). In dark mode the pills may appear too bright. However, this is an existing design decision in `roles.ts` shared across the app — not introduced by this PR and not this PR's concern.
+### 5. `queueMicrotask` hack (`Map.tsx:138-143`)
 
-2. **`data-testid="role-badge"` ships to production (trivial):** Harmless, but could be stripped by a Babel/SWC plugin in future. Consistent with other `data-testid` usage in the codebase.
+```ts
+setIsLoaded(false);
+queueMicrotask(() => setIsLoaded(true));
+```
 
----
+Fragile approach to re-trigger the reports effect after style change. A `styleVersion` counter as a dependency would be more robust.
 
-## Security & Performance
+### 6. `as unknown as string` triple-cast (`Map.tsx:24-26`)
 
-- **Display-only change:** Badge rendering is purely presentational. The `role_verified` flag is server-side data from the database — no client-side trust issue.
-- **Optimistic comment correctly defaults:** New optimistic comments set `role: null, role_verified: null`, so no badge flashes before server confirms. Correct.
-- **No new API surface:** No new server actions, no new mutations. Read-only data extension.
+Acceptable workaround for MapTiler SDK types, but consider `String()` coercion to be more explicit.
+
+### 7. PR bundles 4 issues (#67, #68, #69, #73)
+
+Makes review harder. Future PRs should be 1:1 with issues.
 
 ---
 
 ## Test Coverage
 
-| File | Tests | Verdict |
-|------|-------|---------|
-| `TopicsClient.test.tsx` | 26 (7 new) | ✅ Excellent |
+| File | Tests | Status |
+|------|-------|--------|
+| `Map.test.tsx` | 21 (13 existing + 8 new) | Pass (1 empty — no assertions) |
+| `env.test.ts` | 5 | Pass — well written |
+| `schema.test.ts` | 30 | Pass (1 semantically wrong) |
+| `geo.ts` | 0 | **No tests** |
 
-**New tests cover:**
-- Verified `obec` badge shows with correct label ("Obec") and green CSS classes
-- Verified `kraj` badge shows with correct label ("Kraj") and blue CSS classes
-- Verified `ministerstvo` badge shows with correct label ("Ministerstvo") and purple CSS classes
-- No badge for unverified official
-- No badge for `citizen` role
-- No badge when role is `null`
-
-**Full suite:** 320 tests, all passing. No regressions.
+**353/353 tests pass** locally. CI lint blocks the pipeline.
 
 ---
 
-## Lint & Build
+## What's Good
 
-- **Lint:** 0 new errors/warnings from this PR's files. (1 pre-existing error in `page.tsx:50`, 2 pre-existing warnings in `actions.test.ts` — both from prior PRs.)
-- **Tests:** ✅ 320/320 passing.
+- **Env strategy** is well designed — `.env.development` for safe defaults, `.env.local` for secrets
+- **Security test** in `env.test.ts:18-23` correctly strips comments before checking for service role key
+- **XSS protection** in `Map.tsx:44-51` — `escapeHtml` on all user content in popups
+- **Docker compose** changes are clean — `env_file` with optional `.env.local`, `host.docker.internal`
+- **API key guard** (`Map.tsx:91-93`) correctly rejects `placeholder` and `your-maptiler-key-here`
+- **MapTiler key** is free-tier, public — safe to commit as `NEXT_PUBLIC_`
 
 ---
 
 ## Final Verdict
 
-**🟢 GOOD NUT — Ready to ship.**
+**SUSPICIOUS NUT — Cannot merge yet.**
 
-Minimal, clean diff. Follows established patterns exactly. Proper reuse of `roles.ts`. Full test coverage of all badge display/hide permutations. No security concerns. Merging.
+Three fixes required:
+
+1. **Fix CI** — `<a>` → `<Link>` in `src/app/page.tsx:50`
+2. **Fix or delete empty test** — `Map.test.tsx:330` needs assertions or removal
+3. **Add `parseLocation` tests** — `src/utils/geo.ts` needs a `geo.test.ts`
+
+Once fixed → merge and close #73.

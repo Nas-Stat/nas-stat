@@ -2,11 +2,7 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@/utils/supabase/server';
 import ReportDetailClient from './ReportDetailClient';
 import { type Role } from '@/lib/roles';
-
-interface GeoJsonPoint {
-  type: string;
-  coordinates: [number, number];
-}
+import { parseLocation } from '@/utils/geo';
 
 export default async function ReportDetailPage({
   params,
@@ -60,15 +56,8 @@ export default async function ReportDetailPage({
     }
   }
 
-  // Transform location
-  let location: { lng: number; lat: number } | null = null;
-  if (reportData.location) {
-    const geo = reportData.location as unknown as GeoJsonPoint;
-    location = {
-      lng: geo.coordinates[0],
-      lat: geo.coordinates[1],
-    };
-  }
+  // Transform location (handles both GeoJSON and WKB hex from PostgREST)
+  const location = parseLocation(reportData.location);
 
   return (
     <ReportDetailClient

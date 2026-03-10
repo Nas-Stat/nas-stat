@@ -327,15 +327,11 @@ describe('Map Component', () => {
     expect(localStorageMock.setItem).toHaveBeenCalledWith('nasstat-map-style', 'dataviz');
   });
 
-  it('defaults to dataviz style when showHeatmap is true', () => {
+  it('does not show style switcher when showHeatmap is true', () => {
     render(<Map showHeatmap={true} />);
-
-    // The Map constructor should have been called with dataviz style
-    // We check by verifying the initial activeStyle results in dataviz being active
-    // Since the map hasn't loaded yet, we can't see the switcher,
-    // but we verify that MapStyle.DATAVIZ was used in initialization
-    // by checking that the mock Map constructor received it
-    // (the mock doesn't capture constructor args, but we can verify via the DOM once loaded)
+    expect(screen.queryByText('Ulice')).not.toBeInTheDocument();
+    expect(screen.queryByText('Hybrid')).not.toBeInTheDocument();
+    expect(screen.queryByText('Data')).not.toBeInTheDocument();
   });
 
   it('reads saved style from localStorage on mount', () => {
