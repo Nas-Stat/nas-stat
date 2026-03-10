@@ -1,5 +1,35 @@
 # Developer Log
 
+## 2026-03-10 — fix: Issue #59 — Replace `<a>` with `<Link>` in ReportDetailClient — Oompa Loompa
+
+### Changes
+
+- **`src/app/reports/[id]/ReportDetailClient.tsx`** — Replaced `<a href="/reports">` with Next.js `<Link href="/reports">` (import added). Fixes ESLint `@next/next/no-html-link-for-pages` error; enables client-side navigation instead of full page reload.
+- **`QUALITY_REPORT.md`** — Updated status from SUSPICIOUS NUT → GOOD NUT.
+
+### Tests
+
+- 313 tests passing, no regressions.
+
+---
+
+
+## 2026-03-10 — feat: Issue #59 — Report detail page /reports/[id] — Oompa Loompa
+
+### Changes
+
+- **`src/app/reports/[id]/page.tsx`** — Already existed; server component fetches report, assigned profile, and current user profile, then passes to `ReportDetailClient`.
+- **`src/app/reports/[id]/ReportDetailClient.tsx`** — New client component: map preview (reuses `Map.tsx` with `readOnly`), title + status badge, description, category, rating, date, assigned official with role badge, escalation info, role-based action buttons (Převzít, Vyřešit, Zamítnout, Eskalovat).
+- **`src/components/Map.tsx`** — Popup title now wraps in `<a href="/reports/{id}">` link to report detail page.
+
+### Tests
+
+- **`src/app/reports/[id]/ReportDetailClient.test.tsx`** — 20 new tests covering: rendering, map preview visibility, role-based button logic (citizen/unverified/official/assignee), escalation hierarchy limits, action invocations, error display, back link.
+
+### Stats
+
+- Tests: 313 total (was 293), all passing.
+
 ## 2026-03-09 — feat: Issue #56 — Role selection at signup — Oompa Loompa
 
 ### Changes

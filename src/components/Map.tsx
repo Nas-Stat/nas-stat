@@ -223,7 +223,7 @@ const Map: React.FC<MapProps> = ({
               </span>
               <span class="text-xs text-zinc-500">${'★'.repeat(report.rating || 0)}</span>
             </div>
-            <h3 class="font-bold text-zinc-900">${escapeHtml(report.title)}</h3>
+            <a href="/reports/${report.id}" class="font-bold text-zinc-900 hover:underline">${escapeHtml(report.title)}</a>
             <p class="text-sm text-zinc-600 mt-1">${escapeHtml(report.description || '')}</p>
             <div class="mt-2 pt-2 border-t border-zinc-100">
               <span class="text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-100 text-zinc-600">${escapeHtml(report.category || 'Bez kategorie')}</span>
