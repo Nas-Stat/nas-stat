@@ -214,3 +214,78 @@ test('Seed inserts votes on both reports and topics with ON CONFLICT DO NOTHING'
   expect(content).toContain('INSERT INTO public.votes (profile_id, topic_id');
   expect(content).toContain('ON CONFLICT DO NOTHING');
 });
+
+// ---------------------------------------------------------------------------
+// Documentation tests (issue #69)
+// ---------------------------------------------------------------------------
+
+test('CLAUDE.md exists', () => {
+  const claudePath = join(process.cwd(), 'CLAUDE.md');
+  expect(existsSync(claudePath)).toBe(true);
+});
+
+test('CLAUDE.md documents env file priority', () => {
+  const claudePath = join(process.cwd(), 'CLAUDE.md');
+  const content = readFileSync(claudePath, 'utf8');
+
+  expect(content).toContain('.env.local');
+  expect(content).toContain('.env.development');
+  expect(content).toContain('.env.example');
+  // Priority order must be documented
+  expect(content).toMatch(/\.env\.local.*>.*\.env\.development/);
+});
+
+test('CLAUDE.md explains .env.development works out of the box', () => {
+  const claudePath = join(process.cwd(), 'CLAUDE.md');
+  const content = readFileSync(claudePath, 'utf8');
+
+  expect(content).toContain('supabase start');
+  expect(content).toMatch(/\.env\.development.*out.of.the.box/i);
+});
+
+test('CLAUDE.md has Seed data subsection', () => {
+  const claudePath = join(process.cwd(), 'CLAUDE.md');
+  const content = readFileSync(claudePath, 'utf8');
+
+  expect(content).toContain('### Seed data');
+  expect(content).toContain('supabase db reset');
+  expect(content).toContain('seed.sql');
+});
+
+test('CLAUDE.md seed data section lists test credentials', () => {
+  const claudePath = join(process.cwd(), 'CLAUDE.md');
+  const content = readFileSync(claudePath, 'utf8');
+
+  expect(content).toContain('password123');
+  expect(content).toContain('@test.cz');
+});
+
+test('CLAUDE.md seed data section lists user counts and content', () => {
+  const claudePath = join(process.cwd(), 'CLAUDE.md');
+  const content = readFileSync(claudePath, 'utf8');
+
+  // Users, reports, topics
+  expect(content).toMatch(/10 test users/);
+  expect(content).toMatch(/120 reports/);
+  expect(content).toMatch(/20.*topics/i);
+});
+
+test('.env.development file exists and contains required keys', () => {
+  const envPath = join(process.cwd(), '.env.development');
+  expect(existsSync(envPath)).toBe(true);
+
+  const content = readFileSync(envPath, 'utf8');
+  expect(content).toContain('NEXT_PUBLIC_SUPABASE_URL');
+  expect(content).toContain('NEXT_PUBLIC_SUPABASE_ANON_KEY');
+  expect(content).toContain('SUPABASE_SERVICE_ROLE_KEY');
+});
+
+test('.env.example file exists and documents env strategy', () => {
+  const envPath = join(process.cwd(), '.env.example');
+  expect(existsSync(envPath)).toBe(true);
+
+  const content = readFileSync(envPath, 'utf8');
+  expect(content).toContain('.env.development');
+  expect(content).toContain('.env.local');
+  expect(content).toContain('NEXT_PUBLIC_SUPABASE_URL');
+});
