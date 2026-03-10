@@ -6,6 +6,7 @@ import { User } from '@supabase/supabase-js';
 import { createTopic, voteTopic, addComment } from './actions';
 import { useRouter } from 'next/navigation';
 import TopicForm from './TopicForm';
+import { ROLE_LABELS, ROLE_BADGE_COLORS, Role } from '@/lib/roles';
 
 interface Topic {
   id: string;
@@ -27,6 +28,8 @@ interface Topic {
     created_at: string;
     profiles: {
       username: string | null;
+      role: Role | null;
+      role_verified: boolean | null;
     } | null;
   }[];
 }
@@ -83,7 +86,7 @@ export default function TopicsClient({
             id: 'temp-id-' + Math.random(),
             content: action.content,
             created_at: new Date().toISOString(),
-            profiles: { username: user?.user_metadata?.username || 'Já' }
+            profiles: { username: user?.user_metadata?.username || 'Já', role: null, role_verified: null }
           };
 
           return { ...topic, comments: [...topic.comments, newComment] };
@@ -271,14 +274,27 @@ export default function TopicsClient({
                 {/* Comments Section */}
                 {commentingOn === topic.id && (
                   <div className="mt-4 space-y-4 border-t border-zinc-50 pt-4 dark:border-zinc-800/50">
-                    {topic.comments.map((comment) => (
-                      <div key={comment.id} className="text-sm">
-                        <span className="font-bold text-zinc-900 dark:text-zinc-100">
-                          {comment.profiles?.username || 'Uživatel'}:
-                        </span>{' '}
-                        <span className="text-zinc-600 dark:text-zinc-400">{comment.content}</span>
-                      </div>
-                    ))}
+                    {topic.comments.map((comment) => {
+                      const commentRole = comment.profiles?.role ?? null;
+                      const commentRoleVerified = comment.profiles?.role_verified ?? false;
+                      return (
+                        <div key={comment.id} className="text-sm">
+                          <span className="inline-flex items-center gap-1.5 font-bold text-zinc-900 dark:text-zinc-100">
+                            {comment.profiles?.username || 'Uživatel'}
+                            {commentRole && commentRole !== 'citizen' && commentRoleVerified && (
+                              <span
+                                data-testid="role-badge"
+                                className={`rounded-full px-2 py-0.5 text-xs font-medium ${ROLE_BADGE_COLORS[commentRole]}`}
+                              >
+                                {ROLE_LABELS[commentRole]}
+                              </span>
+                            )}
+                            :
+                          </span>{' '}
+                          <span className="text-zinc-600 dark:text-zinc-400">{comment.content}</span>
+                        </div>
+                      );
+                    })}
 
                     {user ? (
                       <form onSubmit={(e) => handleAddComment(e, topic.id)} className="flex gap-2">
