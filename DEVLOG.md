@@ -1,5 +1,29 @@
 # Developer Log
 
+## 2026-03-10 — feat: Issue #74 — Map layer switcher (streets/hybrid/dataviz) — Oompa Loompa
+
+### Changes
+
+- **`src/components/Map.tsx`**
+  - Added `MAP_STYLES` record mapping `streets | hybrid | dataviz` keys to `MapStyle.STREETS/HYBRID/DATAVIZ` enum values with Czech labels.
+  - `getInitialStyle()` — returns `dataviz` when `showHeatmap=true`; otherwise reads `localStorage` with fallback to `streets`.
+  - `handleStyleChange()` — calls `map.setStyle()`, saves selection to `localStorage`, then re-triggers the reports effect via `styledata` event + `isLoaded` toggle to restore markers/heatmap after layer reset.
+  - Style switcher UI rendered in bottom-left corner after map loads (hidden while loading); active style highlighted in blue.
+  - Style switcher hidden when `showHeatmap=true` (heatmap mode locks to dataviz).
+
+- **`src/components/Map.test.tsx`**
+  - `shows style switcher after map loads` — verifies switcher is absent before load, present after; all 3 labels visible.
+  - `calls setStyle when switching layers` — click "Satelit" → `map.setStyle('hybrid-v4')`.
+  - `persists selected style to localStorage` — click "Data" → `localStorage.setItem('nasstat-map-style', 'dataviz')`.
+  - `does not show style switcher when showHeatmap is true` — switcher absent in heatmap mode.
+  - `reads saved style from localStorage on mount` — verifies localStorage read on initialization.
+
+### Tests
+
+17 tests pass in `Map.test.tsx`. All 363 suite-wide tests pass. Lint clean.
+
+---
+
 ## 2026-03-10 — feat: Issue #73 — MapTiler API key for local development — Oompa Loompa (v3)
 
 ### Changes
