@@ -7,7 +7,11 @@ services:
       - .:/app
       - /app/node_modules
       - /app/.next
+    env_file:
+      - .env.development
     environment:
       - NODE_ENV=development
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     # Ensure Next.js handles SIGINT correctly
     stop_signal: SIGINT

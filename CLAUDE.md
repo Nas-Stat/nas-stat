@@ -20,13 +20,25 @@ docker-compose up --build
 
 ## Environment Variables
 
-Copy `.env.example` to `.env` and set:
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `NEXT_PUBLIC_MAPTILER_KEY` (falls back to MapLibre demo tiles if missing/placeholder)
+Environment files follow Next.js priority: `.env.local` > `.env.development` > `.env`
+
+- **`.env.development`** — Committed. Contains standard local Supabase keys (publicly known, safe to commit). Works out of the box with `supabase start`.
+- **`.env.local`** — Gitignored. Create this to override with production/custom keys.
+- **`.env.example`** — Reference template with all available variables.
+
+For local development, no setup is needed — `.env.development` provides defaults. For production keys, create `.env.local` with your real values.
 
 Local Supabase stack: `supabase start` (requires Supabase CLI).
+
+### Seed data
+
+`supabase/seed.sql` runs automatically on `supabase db reset`. It creates:
+- 10 test users (5 citizens, 2 obec, 2 kraj, 1 ministerstvo) — password: `password123`
+- 120 reports across 10 Czech cities with varied statuses and categories
+- 20 civic discussion topics
+- ~100 comments and ~200 votes
+
+Login example: `jan.novak@test.cz` / `password123`
 
 ## Architecture
 
