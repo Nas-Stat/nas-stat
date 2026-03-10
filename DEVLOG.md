@@ -1,5 +1,22 @@
 # Developer Log
 
+## 2026-03-10 — feat: Issue #60 — Role badge in topic comments — Oompa Loompa
+
+### Changes
+
+- **`src/app/topics/page.tsx`** — Extended Supabase query for comments to include `role` and `role_verified` from profiles.
+- **`src/app/topics/TopicsClient.tsx`** — Updated `Comment.profiles` TypeScript type to include `role: Role | null` and `role_verified: boolean | null`. Added import of `ROLE_LABELS`, `ROLE_BADGE_COLORS`, `Role` from `@/lib/roles`. In comment rendering, conditionally renders a colored `<span data-testid="role-badge">` for verified non-citizen commenters. Optimistic comment creation also includes `role: null, role_verified: null`.
+
+### Tests
+
+- **`src/app/topics/TopicsClient.test.tsx`** — Added 7 new tests in a `role badge in comments` describe block: verified official badge shows (obec), correct CSS classes for obec/kraj/ministerstvo, no badge for unverified official, no badge for citizen role, no badge when role is null.
+
+### Stats
+
+- Tests: 320 total (was 313), all passing.
+
+---
+
 ## 2026-03-10 — fix: Issue #59 — Replace `<a>` with `<Link>` in ReportDetailClient — Oompa Loompa
 
 ### Changes

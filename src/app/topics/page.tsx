@@ -28,7 +28,9 @@ export default async function TopicsPage() {
         content,
         created_at,
         profiles:profile_id (
-          username
+          username,
+          role,
+          role_verified
         )
       )
     `)

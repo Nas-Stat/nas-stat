@@ -46,7 +46,7 @@ describe('TopicsClient', () => {
         { vote_type: 'down', profile_id: 'user-456' },
       ],
       comments: [
-        { id: 'comment-1', content: 'Comment 1', created_at: new Date().toISOString(), profiles: { username: 'user2' } },
+        { id: 'comment-1', content: 'Comment 1', created_at: new Date().toISOString(), profiles: { username: 'user2', role: null, role_verified: null } },
       ],
     },
   ];
@@ -259,5 +259,143 @@ describe('TopicsClient', () => {
   test('shows empty state when no topics', () => {
     render(<TopicsClient initialTopics={[]} user={null} />);
     expect(screen.getByText('Zatím nebyla přidána žádná témata.')).toBeInTheDocument();
+  });
+
+  describe('role badge in comments', () => {
+    const topicWithOfficialComment = [
+      {
+        id: 'topic-1',
+        title: 'First Topic',
+        description: 'First Description',
+        created_at: new Date().toISOString(),
+        profiles: { username: 'user1', full_name: null, avatar_url: null },
+        votes: [],
+        comments: [
+          {
+            id: 'comment-1',
+            content: 'Official Comment',
+            created_at: new Date().toISOString(),
+            profiles: { username: 'official_user', role: 'obec' as const, role_verified: true },
+          },
+        ],
+      },
+    ];
+
+    const topicWithUnverifiedOfficialComment = [
+      {
+        id: 'topic-1',
+        title: 'First Topic',
+        description: null,
+        created_at: new Date().toISOString(),
+        profiles: { username: 'user1', full_name: null, avatar_url: null },
+        votes: [],
+        comments: [
+          {
+            id: 'comment-2',
+            content: 'Unverified Official Comment',
+            created_at: new Date().toISOString(),
+            profiles: { username: 'unverified_official', role: 'kraj' as const, role_verified: false },
+          },
+        ],
+      },
+    ];
+
+    const topicWithCitizenComment = [
+      {
+        id: 'topic-1',
+        title: 'First Topic',
+        description: null,
+        created_at: new Date().toISOString(),
+        profiles: { username: 'user1', full_name: null, avatar_url: null },
+        votes: [],
+        comments: [
+          {
+            id: 'comment-3',
+            content: 'Citizen Comment',
+            created_at: new Date().toISOString(),
+            profiles: { username: 'citizen_user', role: 'citizen' as const, role_verified: true },
+          },
+        ],
+      },
+    ];
+
+    test('shows role badge for verified official commenter', () => {
+      render(<TopicsClient initialTopics={topicWithOfficialComment} user={mockUser} />);
+      fireEvent.click(screen.getByTestId('message-square'));
+
+      const badge = screen.getByTestId('role-badge');
+      expect(badge).toBeInTheDocument();
+      expect(badge).toHaveTextContent('Obec');
+    });
+
+    test('role badge for obec has correct color classes', () => {
+      render(<TopicsClient initialTopics={topicWithOfficialComment} user={mockUser} />);
+      fireEvent.click(screen.getByTestId('message-square'));
+
+      const badge = screen.getByTestId('role-badge');
+      expect(badge.className).toContain('bg-green-100');
+      expect(badge.className).toContain('text-green-700');
+    });
+
+    test('does not show role badge for unverified official', () => {
+      render(<TopicsClient initialTopics={topicWithUnverifiedOfficialComment} user={mockUser} />);
+      fireEvent.click(screen.getByTestId('message-square'));
+
+      expect(screen.queryByTestId('role-badge')).not.toBeInTheDocument();
+    });
+
+    test('does not show role badge for citizen commenter', () => {
+      render(<TopicsClient initialTopics={topicWithCitizenComment} user={mockUser} />);
+      fireEvent.click(screen.getByTestId('message-square'));
+
+      expect(screen.queryByTestId('role-badge')).not.toBeInTheDocument();
+    });
+
+    test('does not show role badge when role is null', () => {
+      render(<TopicsClient initialTopics={mockTopics} user={mockUser} />);
+      fireEvent.click(screen.getByTestId('message-square'));
+
+      expect(screen.queryByTestId('role-badge')).not.toBeInTheDocument();
+    });
+
+    test('shows ministerstvo badge with correct label and colors', () => {
+      const topicWithMinisterstvo = [{
+        ...topicWithOfficialComment[0],
+        comments: [{
+          id: 'comment-m',
+          content: 'Ministry Comment',
+          created_at: new Date().toISOString(),
+          profiles: { username: 'minister', role: 'ministerstvo' as const, role_verified: true },
+        }],
+      }];
+
+      render(<TopicsClient initialTopics={topicWithMinisterstvo} user={mockUser} />);
+      fireEvent.click(screen.getByTestId('message-square'));
+
+      const badge = screen.getByTestId('role-badge');
+      expect(badge).toHaveTextContent('Ministerstvo');
+      expect(badge.className).toContain('bg-purple-100');
+      expect(badge.className).toContain('text-purple-700');
+    });
+
+    test('shows kraj badge with correct label and colors', () => {
+      const topicWithKraj = [{
+        ...topicWithOfficialComment[0],
+        comments: [{
+          id: 'comment-k',
+          content: 'Kraj Comment',
+          created_at: new Date().toISOString(),
+          profiles: { username: 'kraj_user', role: 'kraj' as const, role_verified: true },
+        }],
+      }];
+
+      render(<TopicsClient initialTopics={topicWithKraj} user={mockUser} />);
+      fireEvent.click(screen.getByTestId('message-square'));
+
+      const badge = screen.getByTestId('role-badge');
+      expect(badge).toHaveTextContent('Kraj');
+      expect(badge.className).toContain('bg-blue-100');
+      expect(badge.className).toContain('text-blue-700');
+    });
   });
 });
