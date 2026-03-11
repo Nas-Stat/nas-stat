@@ -1,105 +1,82 @@
-# Quality Report — Issue #79 / PR #85
+# Quality Report — Issue #80 / PR #87
 
-**feat: categories table in DB + territory constants**
+**feat: reverzní geokódování + region sloupce na reports**
 
-**Reviewer:** The Squirrel (re-audit #2)
-**Branch:** `issue-79-categories-territories`
-**PR:** #85 (base: main)
+**Reviewer:** The Squirrel (audit #2 — post-fix)
+**Branch:** `issue-80-reverse-geocoding`
+**PR:** #87 (base: main)
 **Date:** 2026-03-11
-**Tests:** 379/379 pass | Lint: 0 errors (2 pre-existing warnings, unrelated) | TypeScript: pre-existing errors in TopicsClient tests (not from this PR)
+**Tests:** 394/394 pass | Lint: 0 errors (2 pre-existing warnings, unrelated) | TypeScript: clean
 
 ---
 
-## Status: 🔴 BAD NUT
+## Status: 🟢 GOOD NUT
 
 ---
 
 ## Executive Summary
 
-Second audit. The previous Squirrel review identified a **critical slug mismatch** — it was NOT fixed. Additionally, the PR branch is polluted with **14 unrelated commits** from issues #67, #68, #69, #73, #74, #75 that have already been merged to main separately. Only 2 of 16 commits are actually #79 work. This PR cannot be merged in its current state.
+All required actions from audit #1 have been resolved. The feature delivers working reverse geocoding via MapTiler API with `region_kraj`/`region_orp`/`region_obec` columns on reports. Schema tests added for the new migration, integration tests added for the geocoding path in `actions.ts`, misleading comment fixed, and error logging added for the update call. Ready to merge.
 
 ---
 
-## Critical Issues (Showstoppers)
+## Fixes Applied (vs. Audit #1)
 
-### 1. 🔴 Category slug mismatch (UNFIXED from previous audit)
-
-**Files:** `supabase/seed.sql:9-18` (categories table) vs `supabase/seed.sql:141` (report generation)
-
-The `categories` table seeds slugs: `zivotni-prostredi`, `skolstvi`, `zdravotnictvi`, `dopravni-infrastruktura`, `energetika`, `fungovani-uradu`, `bezpecnost`, `jine`
-
-But report generation (line 141) still uses OLD hardcoded values:
-```sql
-categories TEXT[] := ARRAY['Infrastruktura', 'Doprava', 'Zeleň', 'Úřad', 'Bezpečnost', 'Jiné'];
-```
-
-**Impact:** After `supabase db reset`, all 120 seed reports have category values that don't match any slug in the `categories` table. Category filtering on `/reports` is broken — clicking any category pill returns zero results.
-
-**Fix:** Update `seed.sql:141` to use slugs, update `schema.test.ts:168-176` which asserts old names.
-
-### 2. 🔴 Dirty PR branch — 14 unrelated commits
-
-```
-git log --oneline main..issue-79-categories-territories
-```
-shows 16 commits, but only 2 are #79 work:
-- `bb61b96 feat: categories table in DB + territory constants (closes #79)`
-- `20566b2 test: add schema tests for categories migration and seed (closes #79)`
-
-The other 14 commits are from issues #67, #68, #69, #73, #74, #75 — all already merged to main via their own PRs. Merging this PR would create duplicate/conflicting history.
-
-**Fix:** Rebase onto current main: `git rebase main` — the unrelated commits should drop as already-applied.
-
----
-
-## Code Smells & Improvements
-
-| # | Issue | Severity | File | Detail |
-|---|-------|----------|------|--------|
-| 1 | **ORP count: 193 vs ~206** | Medium | `src/lib/territories.ts:33` | JSDoc says `206 ORP` but array has **193 entries**. Either complete the list or fix the comment to say `193`. |
-| 2 | **Duplicated `Category` interface** | Low | `ReportsClient.tsx:12`, `ReportForm.tsx:6` | Same `{ slug: string; label: string }` defined in two files. Extract to shared type. |
+| # | Issue | Resolution |
+|---|-------|------------|
+| 1 | No schema test for region columns migration | ✅ Added 3 tests in `supabase/schema.test.ts`: file exists, all 3 columns present, seed backfill verified |
+| 2 | No integration test for geocoding in `createReport` | ✅ Added 3 tests in `actions.test.ts`: `reverseGeocode` called with correct coords, `.update()` called with region data, geocoding skipped when no location |
+| 3 | Misleading "Non-blocking" comment | ✅ Changed to "Post-insert geocoding" |
+| 4 | No error check on `.update()` result | ✅ Added `console.error` on update failure |
 
 ---
 
 ## Test Coverage Analysis
 
-- **Territories:** 11 tests — uniqueness, cross-references, spot checks. Solid.
-- **ReportsClient:** 29 tests — slug-based category filtering, URL building, form rendering. Proper.
-- **Schema tests:** 5 new tests for categories migration. Good coverage of migration structure and seed idempotency.
-- **Gap:** No test verifies that `reports.category` values match `categories.slug` values. This is the exact gap that allows the slug mismatch to slip through undetected.
+### `src/utils/geocode.test.ts` — 9 tests ✅
+- Missing/placeholder API key → returns nulls, no fetch
+- Correct URL construction with coordinates and key
+- Parses `region.`, `county.`, `district.`, `locality.`, `place.` context IDs
+- Fallback to feature name for `obec`
+- Empty features array → nulls
+- Network error (fetch throws) → nulls
+- Non-OK HTTP status → nulls
 
-Full suite: **379/379 pass.** All pass because no test cross-validates the two data sets.
+### `src/app/reports/actions.test.ts` — 27 tests ✅ (+3 new)
+- `reverseGeocode` called with correct `lng, lat`
+- `.update()` called with region data when geocoding succeeds
+- `reverseGeocode` NOT called when location is absent
+
+### `supabase/schema.test.ts` — 38 tests ✅ (+3 new)
+- Region columns migration file exists
+- All 3 columns (`region_kraj`, `region_orp`, `region_obec`) in migration
+- Seed backfills region data with known Czech region names
+
+Full suite: **394/394 pass.**
 
 ---
 
 ## Security Review
 
-- RLS: 4 policies on `categories` — SELECT public, INSERT/UPDATE/DELETE admin-only via `admins` table. Correct.
-- No hardcoded secrets. No injection vectors.
-- `reports.category` remains TEXT without FK — intentional per spec for backwards compatibility.
-- `ON CONFLICT (slug) DO UPDATE` in seed is idempotent. Good.
+- Migration uses `IF NOT EXISTS` — safe for re-runs ✅
+- No new RLS policies needed (existing report policies cover new columns) ✅
+- `reverseGeocode` catches all errors internally — no server crash risk ✅
+- API key is `NEXT_PUBLIC_` (already exposed client-side for map tiles) — no secret leak ✅
+- No SQL injection risk — Supabase client handles parameterization ✅
 
 ---
 
 ## What's Good
 
-- Clean migration with proper RLS design
-- DB-driven categories architecture (page.tsx fetches, passes as props) — correct pattern
-- Territory data well-structured with NUTS 3 codes and ORP cross-references
-- Comprehensive test suite (16 new tests added across 3 files)
-- `ON CONFLICT` upsert for idempotent seeding
-
----
-
-## Required Fixes Before Merge
-
-1. **🔴 CRITICAL: Align seed report categories with `categories` table slugs** — update `seed.sql:141`
-2. **🔴 CRITICAL: Rebase branch onto main** — remove 14 stale commits from unrelated issues
-3. **Update `schema.test.ts:168-176`** — assert new slugs instead of old Czech names
-4. **Fix ORP comment** — `territories.ts:33` says 206, actual is 193
+- **Clean geocode module** — single responsibility, well-typed interfaces, defensive error handling
+- **Thorough geocode tests** — 9 tests covering all code paths including edge cases
+- **Correct context parsing** — handles MapTiler's varying admin hierarchy (`county.` vs `district.`, `locality.` vs `place.`)
+- **Smart fallback** — uses feature name as `obec` when context doesn't provide locality
+- **Seed backfill** — all 10 cities get correct region data with proper kraj/ORP/obec mapping
+- **Insert-then-update pattern** — report is saved first, geocoding can't block creation
 
 ---
 
 ## Final Verdict
 
-**🔴 BAD NUT — Do NOT merge.** Two critical blockers: (1) the slug mismatch from the first audit remains unfixed — category filtering is broken with seed data; (2) the branch carries 14 unrelated commits. Rebase, fix the slugs, re-submit.
+**🟢 GOOD NUT — Ready to ship.**

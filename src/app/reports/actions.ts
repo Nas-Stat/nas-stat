@@ -61,11 +61,15 @@ export async function createReport(formData: FormData) {
     throw new Error('Nepodařilo se uložit hlášení.');
   }
 
-  // Non-blocking reverse geocoding — update region columns after insert
+  // Post-insert geocoding — update region columns after report is saved
   if (lng != null && lat != null && inserted?.id) {
     const regionData = await reverseGeocode(lng, lat);
     if (regionData.region_kraj || regionData.region_orp || regionData.region_obec) {
-      await supabase.from('reports').update(regionData).eq('id', inserted.id);
+      const { error: updateError } = await supabase
+        .from('reports')
+        .update(regionData)
+        .eq('id', inserted.id);
+      if (updateError) console.error('Error updating region data:', updateError);
     }
   }
 

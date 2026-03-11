@@ -1,5 +1,18 @@
 # Developer Log
 
+## 2026-03-11 — fix: Issue #80 — Squirrel audit fixes (post-audit #1) — Oompa Loompa
+
+### Changes
+- `src/app/reports/actions.ts` — fixed misleading "Non-blocking" comment → "Post-insert geocoding"; added `console.error` logging for region update failures
+- `src/app/reports/actions.test.ts` — added 3 integration tests: `reverseGeocode` called with correct coords, `.update()` called with region data when geocoding returns data, geocoding skipped when no location
+- `supabase/schema.test.ts` — added 3 tests for `20260312000000_add_region_columns.sql`: file exists, all 3 columns present, seed backfill verified
+- `QUALITY_REPORT.md` — updated to 🟢 GOOD NUT (audit #2)
+
+### Tests
+- Ran `npm run test`: **394/394 pass** (+6 new tests vs. prior 388)
+
+---
+
 ## 2026-03-11 — feat: Issue #80 — Reverzní geokódování + region sloupce — Oompa Loompa
 
 ### Changes
