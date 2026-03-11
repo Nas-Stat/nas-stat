@@ -1,5 +1,17 @@
 # Developer Log
 
+## 2026-03-11 — fix: Issue #79 — Squirrel audit blockers resolved — Oompa Loompa
+
+### Changes
+- `supabase/seed.sql:141` — report categories now use slugs matching `categories` table (was using old Czech display names — broken category filtering)
+- `supabase/schema.test.ts:168` — test updated to assert new slugs
+- `src/lib/territories.ts:33` — ORP count comment corrected (193, not 206)
+- Branch rebased onto main via clean cherry-pick (was carrying 14 stale commits from #67–#75)
+- PR #85 closed, new clean PR #86 opened
+
+### Test results
+379/379 pass (unchanged count — all fixes were correctness fixes, not new features)
+
 ## 2026-03-11 — feat: Issue #79 — Categories table + territory constants — Oompa Loompa
 
 ### Changes
