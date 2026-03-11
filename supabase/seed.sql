@@ -4,6 +4,20 @@
 -- =============================================================================
 
 -- ---------------------------------------------------------------------------
+-- 0. Categories
+-- ---------------------------------------------------------------------------
+INSERT INTO categories (slug, label, sort_order) VALUES
+  ('zivotni-prostredi',    'Životní prostředí',    1),
+  ('skolstvi',             'Školství',              2),
+  ('zdravotnictvi',        'Zdravotnictví',         3),
+  ('dopravni-infrastruktura', 'Dopravní infrastruktura', 4),
+  ('energetika',           'Energetika',            5),
+  ('fungovani-uradu',      'Fungování úřadu',       6),
+  ('bezpecnost',           'Bezpečnost',            7),
+  ('jine',                 'Jiné',                  8)
+ON CONFLICT (slug) DO UPDATE SET label = EXCLUDED.label, sort_order = EXCLUDED.sort_order;
+
+-- ---------------------------------------------------------------------------
 -- 1. Test users (10)
 -- ---------------------------------------------------------------------------
 -- Password for all users: password123
