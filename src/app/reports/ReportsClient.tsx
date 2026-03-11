@@ -9,6 +9,11 @@ import ReportForm from './ReportForm';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { STATUS_LABELS } from '@/lib/reportStatus';
 
+interface Category {
+  slug: string;
+  label: string;
+}
+
 interface ReportsClientProps {
   initialReports: Report[];
   user: User | null;
@@ -16,16 +21,8 @@ interface ReportsClientProps {
   totalPages: number;
   currentStatus: string;
   currentCategory: string;
+  categories: Category[];
 }
-
-const CATEGORIES = [
-  'Infrastruktura',
-  'Doprava',
-  'Zeleň',
-  'Úřad',
-  'Bezpečnost',
-  'Jiné',
-];
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Všechny stavy' },
@@ -39,6 +36,7 @@ export default function ReportsClient({
   totalPages,
   currentStatus,
   currentCategory,
+  categories,
 }: ReportsClientProps) {
   const router = useRouter();
   const [selectedLocation, setSelectedLocation] = useState<
@@ -171,19 +169,19 @@ export default function ReportsClient({
           >
             Vše
           </button>
-          {CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <button
-              key={cat}
+              key={cat.slug}
               type="button"
-              onClick={() => router.push(buildUrl({ category: cat, page: 1 }))}
-              aria-pressed={currentCategory === cat}
+              onClick={() => router.push(buildUrl({ category: cat.slug, page: 1 }))}
+              aria-pressed={currentCategory === cat.slug}
               className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                currentCategory === cat
+                currentCategory === cat.slug
                   ? 'bg-blue-600 text-white dark:bg-blue-500'
                   : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700'
               }`}
             >
-              {cat}
+              {cat.label}
             </button>
           ))}
         </div>
@@ -250,7 +248,7 @@ export default function ReportsClient({
           onSubmit={handleSubmit}
           onClose={closeForm}
           isSubmitting={isSubmitting}
-          categories={CATEGORIES}
+          categories={categories}
           error={error}
           onErrorClose={() => setError(null)}
           hasLocation={selectedLocation !== null}

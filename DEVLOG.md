@@ -1,5 +1,20 @@
 # Developer Log
 
+## 2026-03-11 — feat: Issue #79 — Categories table + territory constants — Oompa Loompa
+
+### Changes
+- `supabase/migrations/20260311000000_add_categories_table.sql` — new `categories` table (id, slug, label, sort_order) with RLS: SELECT public, INSERT/UPDATE/DELETE admin only
+- `supabase/seed.sql` — seed 8 categories: životní prostředí, školství, zdravotnictví, dopravní infrastruktura, energetika, fungování úřadu, bezpečnost, jiné
+- `src/lib/territories.ts` — `TerritoryLevel` type, `KRAJE` (14 regions), `ORP_LIST` (193 entries, static administrative boundaries)
+- `src/app/reports/page.tsx` — fetch categories from DB, pass as `{ slug, label }[]` to client
+- `src/app/reports/ReportsClient.tsx` — removed hardcoded `CATEGORIES`, accepts `categories` prop with slug/label shape
+- `src/app/reports/ReportForm.tsx` — updated to accept `Category[]` (slug/label), uses slug as value and label as display text
+- `src/lib/territories.test.ts` — 11 new tests for KRAJE and ORP_LIST
+- `src/app/reports/ReportsClient.test.tsx` — updated to pass `categories` prop and use slug-based category values
+
+### Test results
+374 tests passing (was 363)
+
 ## 2026-03-11 — refactor: Issue #75 — Direct string IDs for map styles — Oompa Loompa
 
 ### Changes
