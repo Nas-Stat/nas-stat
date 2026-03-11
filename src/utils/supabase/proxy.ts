@@ -51,6 +51,25 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // Onboarding redirect — send new users to /onboarding before using the app
+  const ONBOARDING_EXEMPT = ['/onboarding', '/settings', '/login', '/auth', '/logout', '/'];
+  const isExempt = ONBOARDING_EXEMPT.some(
+    (p) => pathname === p || pathname.startsWith(p + '/'),
+  );
+  if (user && !isExempt) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('onboarding_completed')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (profile && !profile.onboarding_completed) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/onboarding';
+      return NextResponse.redirect(url);
+    }
+  }
+
   // Protect /admin — only users with an admin record may access it
   if (user && pathname.startsWith('/admin')) {
     const { data: adminRow } = await supabase

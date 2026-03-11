@@ -17,11 +17,20 @@ function makeRequest(pathname: string): NextRequest {
   return new NextRequest(`http://localhost:3000${pathname}`)
 }
 
-function mockUser(user: object | null, isAdmin = false) {
-  const maybeSingle = vi.fn().mockResolvedValue({ data: isAdmin ? { user_id: (user as { id: string })?.id } : null })
-  const eq = vi.fn().mockReturnValue({ maybeSingle })
-  const select = vi.fn().mockReturnValue({ eq })
-  const from = vi.fn().mockReturnValue({ select })
+function mockUser(user: object | null, isAdmin = false, onboardingCompleted = true) {
+  const from = vi.fn().mockImplementation((table: string) => {
+    const makeChain = (data: object | null) => {
+      const maybeSingle = vi.fn().mockResolvedValue({ data })
+      const eq = vi.fn().mockReturnValue({ maybeSingle })
+      const select = vi.fn().mockReturnValue({ eq })
+      return { select }
+    }
+    if (table === 'admins') {
+      return makeChain(isAdmin ? { user_id: (user as { id: string })?.id } : null)
+    }
+    // profiles — return onboarding_completed flag
+    return makeChain(user ? { onboarding_completed: onboardingCompleted } : null)
+  })
 
   vi.mocked(createServerClient).mockReturnValue({
     auth: {
@@ -119,6 +128,37 @@ describe('updateSession middleware', () => {
 
     it('passes through GET /topics', async () => {
       const res = await updateSession(makeRequest('/topics'))
+      expect(res.status).not.toBe(307)
+    })
+  })
+
+  describe('onboarding redirect — authenticated user with incomplete onboarding', () => {
+    beforeEach(() => mockUser({ id: 'user-new', email: 'new@example.com' }, false, false))
+
+    it('redirects /dashboard to /onboarding', async () => {
+      const res = await updateSession(makeRequest('/dashboard'))
+      expect(res.status).toBe(307)
+      expect(res.headers.get('location')).toContain('/onboarding')
+    })
+
+    it('redirects /reports to /onboarding', async () => {
+      const res = await updateSession(makeRequest('/reports'))
+      expect(res.status).toBe(307)
+      expect(res.headers.get('location')).toContain('/onboarding')
+    })
+
+    it('does NOT redirect /onboarding itself', async () => {
+      const res = await updateSession(makeRequest('/onboarding'))
+      expect(res.status).not.toBe(307)
+    })
+
+    it('does NOT redirect /settings', async () => {
+      const res = await updateSession(makeRequest('/settings'))
+      expect(res.status).not.toBe(307)
+    })
+
+    it('does NOT redirect /', async () => {
+      const res = await updateSession(makeRequest('/'))
       expect(res.status).not.toBe(307)
     })
   })

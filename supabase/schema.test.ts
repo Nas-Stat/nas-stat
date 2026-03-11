@@ -382,3 +382,35 @@ test('Seed backfills region data for all 10 Czech cities', () => {
   // Verify at least one known region is present
   expect(content).toMatch(/Jihomoravský kraj|Hlavní město Praha|Moravskoslezský kraj/);
 });
+
+// ---------------------------------------------------------------------------
+// Preferences migration tests (issue #81)
+// ---------------------------------------------------------------------------
+
+test('Preferences migration file exists', () => {
+  const migrationPath = join(process.cwd(), 'supabase/migrations/20260313000000_add_preferences.sql');
+  expect(existsSync(migrationPath)).toBe(true);
+});
+
+test('Preferences migration adds preferences JSONB column to profiles', () => {
+  const migrationPath = join(process.cwd(), 'supabase/migrations/20260313000000_add_preferences.sql');
+  const content = readFileSync(migrationPath, 'utf8');
+
+  expect(content).toContain('ALTER TABLE public.profiles');
+  expect(content).toContain('preferences JSONB DEFAULT');
+  expect(content).toContain("ADD COLUMN IF NOT EXISTS");
+});
+
+test('Preferences migration adds onboarding_completed BOOLEAN column', () => {
+  const migrationPath = join(process.cwd(), 'supabase/migrations/20260313000000_add_preferences.sql');
+  const content = readFileSync(migrationPath, 'utf8');
+
+  expect(content).toContain('onboarding_completed BOOLEAN DEFAULT false');
+});
+
+test('Preferences migration backfills existing users as onboarding_completed = true', () => {
+  const migrationPath = join(process.cwd(), 'supabase/migrations/20260313000000_add_preferences.sql');
+  const content = readFileSync(migrationPath, 'utf8');
+
+  expect(content).toContain('UPDATE public.profiles SET onboarding_completed = true');
+});

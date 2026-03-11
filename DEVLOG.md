@@ -1,5 +1,16 @@
 # Developer Log
 
+## 2026-03-13 — feat: Issue #81 — preferences na profilu + onboarding flow — Oompa Loompa
+
+### Changes
+- `supabase/migrations/20260313000000_add_preferences.sql` — adds `preferences JSONB DEFAULT '{}'` and `onboarding_completed BOOLEAN DEFAULT false` to `profiles`; backfills existing users as completed
+- `src/components/PreferencesForm.tsx` — shared client component: territory level (kraj/orp) selector, territory multi-select filtered by level, category checkboxes; reused in both settings and onboarding
+- `src/app/settings/page.tsx` + `SettingsClient.tsx` + `actions.ts` — settings page; `updatePreferences()` server action with Zod validation sets `preferences` JSONB + `onboarding_completed = true`
+- `src/app/onboarding/page.tsx` + `OnboardingClient.tsx` — onboarding page with welcome text, PreferencesForm, and "Přeskočit" button; both paths redirect to /dashboard
+- `src/utils/supabase/proxy.ts` — onboarding redirect: users with `onboarding_completed = false` are redirected to `/onboarding`; exempt routes: `/onboarding`, `/settings`, `/login`, `/auth/*`, `/logout`, `/`
+- `src/components/HeaderClient.tsx` — Settings link added for authenticated users in both desktop and mobile nav
+- Tests: `PreferencesForm.test.tsx` (9 tests), `settings/actions.test.ts` (6 tests), `OnboardingClient.test.tsx` (4 tests); `proxy.test.ts` updated with smarter per-table mock + 5 onboarding tests; `schema.test.ts` +4 migration tests. Total: 422 tests pass.
+
 ## 2026-03-11 — fix: Issue #80 — Squirrel audit fixes (post-audit #1) — Oompa Loompa
 
 ### Changes

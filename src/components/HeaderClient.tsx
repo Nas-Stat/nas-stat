@@ -13,6 +13,8 @@ const NAV_LINKS = [
   { href: '/dashboard', label: 'Dashboard' },
 ];
 
+const AUTH_LINKS = [{ href: '/settings', label: 'Nastavení' }];
+
 export default function HeaderClient({ user }: { user: User | null }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -52,6 +54,19 @@ export default function HeaderClient({ user }: { user: User | null }) {
         <div className="hidden items-center gap-3 md:flex">
           {user ? (
             <>
+              {AUTH_LINKS.map(({ href, label }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`text-sm font-medium transition-colors ${
+                    pathname.startsWith(href)
+                      ? 'text-blue-600 dark:text-blue-500'
+                      : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100'
+                  }`}
+                >
+                  {label}
+                </Link>
+              ))}
               <span className="max-w-[200px] truncate text-sm text-slate-600 dark:text-zinc-400">
                 {user.email}
               </span>
@@ -114,18 +129,34 @@ export default function HeaderClient({ user }: { user: User | null }) {
           </nav>
           <div className="mt-4 border-t border-slate-200 pt-4 dark:border-zinc-800">
             {user ? (
-              <div className="flex items-center justify-between gap-4">
-                <span className="min-w-0 truncate text-xs text-slate-500 dark:text-zinc-500">
-                  {user.email}
-                </span>
-                <form action={logout}>
-                  <button
-                    type="submit"
-                    className="flex-shrink-0 rounded-md bg-slate-100 px-3 py-1 text-xs font-medium text-slate-900 hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
+              <div className="flex flex-col gap-3">
+                {AUTH_LINKS.map(({ href, label }) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={() => setOpen(false)}
+                    className={`text-sm font-medium ${
+                      pathname.startsWith(href)
+                        ? 'text-blue-600 dark:text-blue-500'
+                        : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100'
+                    }`}
                   >
-                    Odhlásit se
-                  </button>
-                </form>
+                    {label}
+                  </Link>
+                ))}
+                <div className="flex items-center justify-between gap-4">
+                  <span className="min-w-0 truncate text-xs text-slate-500 dark:text-zinc-500">
+                    {user.email}
+                  </span>
+                  <form action={logout}>
+                    <button
+                      type="submit"
+                      className="flex-shrink-0 rounded-md bg-slate-100 px-3 py-1 text-xs font-medium text-slate-900 hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
+                    >
+                      Odhlásit se
+                    </button>
+                  </form>
+                </div>
               </div>
             ) : (
               <Link
