@@ -161,6 +161,15 @@ _(Detailní plánování bude následovat po dokončení Fáze 2)_
 
 ## Phase 5: Data Model Extensions
 
+### Epic 5.2: Reverzní geokódování (Issue #80)
+
+- [x] **Story 5.2.1: Region columns + reverse geocoding (Issue #80)**
+  - [x] `supabase/migrations/20260312000000_add_region_columns.sql` — `region_kraj`, `region_orp`, `region_obec` TEXT columns on `reports`
+  - [x] `src/utils/geocode.ts` — `reverseGeocode(lng, lat)` using MapTiler Geocoding API; non-blocking, returns nulls on failure
+  - [x] `src/app/reports/actions.ts` — call `reverseGeocode` after `createReport` insert; update region columns when data available
+  - [x] `supabase/seed.sql` — backfill region data for 10 known Czech cities across all 120 seed reports
+  - [x] `src/utils/geocode.test.ts` — 9 tests covering all paths (missing key, API parse, fallback, error handling)
+
 ### Epic 5.1: Categories and Territory Constants
 
 - [x] **Story 5.1.1: Categories table in DB + territory constants (Issue #79)**

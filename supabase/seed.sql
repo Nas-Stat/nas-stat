@@ -145,6 +145,10 @@ DECLARE
   -- 10 Czech cities: [lng, lat]
   city_lngs FLOAT[] := ARRAY[14.4378, 16.6068, 18.2625, 13.3776, 17.2509, 15.0543, 14.4747, 15.8327, 15.7781, 17.6668];
   city_lats FLOAT[] := ARRAY[50.0755, 49.1951, 49.8209, 49.7384, 49.5938, 50.7663, 48.9745, 50.2092, 50.0343, 49.2264];
+  -- Known region mapping for the 10 seed cities (kraj, orp, obec)
+  city_kraj TEXT[] := ARRAY['Hlavní město Praha', 'Jihomoravský kraj', 'Moravskoslezský kraj', 'Plzeňský kraj', 'Olomoucký kraj', 'Liberecký kraj', 'Jihočeský kraj', 'Královéhradecký kraj', 'Pardubický kraj', 'Zlínský kraj'];
+  city_orp  TEXT[] := ARRAY['Praha', 'Brno', 'Ostrava', 'Plzeň', 'Olomouc', 'Liberec', 'České Budějovice', 'Hradec Králové', 'Pardubice', 'Zlín'];
+  city_obec TEXT[] := ARRAY['Praha', 'Brno', 'Ostrava', 'Plzeň', 'Olomouc', 'Liberec', 'České Budějovice', 'Hradec Králové', 'Pardubice', 'Zlín'];
 
   titles TEXT[] := ARRAY[
     'Rozbitý chodník na hlavní ulici',
@@ -228,6 +232,7 @@ BEGIN
     INSERT INTO public.reports (
       profile_id, title, description, location, rating, category, status,
       assigned_to, escalated_to_role,
+      region_kraj, region_orp, region_obec,
       created_at, updated_at
     ) VALUES (
       user_ids[((i - 1) % 5) + 1],
@@ -239,6 +244,9 @@ BEGIN
       report_status,
       CASE WHEN report_status = 'escalated' THEN official_ids[((i - 1) % 5) + 1] ELSE NULL END,
       CASE WHEN report_status = 'escalated' THEN escalation_roles[((i - 1) % 3) + 1] ELSE NULL END,
+      city_kraj[city_idx],
+      city_orp[city_idx],
+      city_obec[city_idx],
       NOW() - ((120 - i) || ' days')::interval,
       NOW() - ((120 - i) || ' days')::interval + interval '2 hours'
     );

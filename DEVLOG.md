@@ -1,5 +1,17 @@
 # Developer Log
 
+## 2026-03-11 — feat: Issue #80 — Reverzní geokódování + region sloupce — Oompa Loompa
+
+### Changes
+- `supabase/migrations/20260312000000_add_region_columns.sql` — `ALTER TABLE reports ADD COLUMN region_kraj/orp/obec TEXT`
+- `src/utils/geocode.ts` — `reverseGeocode(lng, lat)` calls MapTiler Geocoding API, parses region/county/locality from feature context; silently returns nulls on any error
+- `src/app/reports/actions.ts` — `createReport` now does `.insert().select('id').single()`, then calls `reverseGeocode` non-blocking after successful insert; updates region columns when geocoding returns data
+- `supabase/seed.sql` — added `city_kraj/orp/obec` arrays for 10 known cities; region data seeded for all 120 test reports
+- `src/utils/geocode.test.ts` — 9 new tests: missing key, placeholder key, URL construction, context parsing (region/county/locality), district. prefix, feature name fallback, empty features, fetch error, non-OK status
+
+### Test results
+388/388 pass (was 379 before this issue; +9 new tests)
+
 ## 2026-03-11 — fix: Issue #79 — Squirrel audit blockers resolved — Oompa Loompa
 
 ### Changes

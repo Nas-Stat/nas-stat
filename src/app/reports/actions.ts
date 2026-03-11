@@ -4,6 +4,7 @@ import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { isOfficialRole, getEscalationTarget, type Role } from '@/lib/roles';
+import { reverseGeocode } from '@/utils/geocode';
 
 const reportSchema = z
   .object({
@@ -41,19 +42,31 @@ export async function createReport(formData: FormData) {
   // Convert to PostGIS POINT format: POINT(lng lat); null when no location provided
   const location = lng != null && lat != null ? `POINT(${lng} ${lat})` : null;
 
-  const { error } = await supabase.from('reports').insert({
-    profile_id: user.id,
-    title,
-    description,
-    rating,
-    category,
-    location,
-    status: 'pending',
-  });
+  const { data: inserted, error } = await supabase
+    .from('reports')
+    .insert({
+      profile_id: user.id,
+      title,
+      description,
+      rating,
+      category,
+      location,
+      status: 'pending',
+    })
+    .select('id')
+    .single();
 
   if (error) {
     console.error('Error creating report:', error);
     throw new Error('Nepodařilo se uložit hlášení.');
+  }
+
+  // Non-blocking reverse geocoding — update region columns after insert
+  if (lng != null && lat != null && inserted?.id) {
+    const regionData = await reverseGeocode(lng, lat);
+    if (regionData.region_kraj || regionData.region_orp || regionData.region_obec) {
+      await supabase.from('reports').update(regionData).eq('id', inserted.id);
+    }
   }
 
   revalidatePath('/reports');
