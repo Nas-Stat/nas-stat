@@ -1,12 +1,12 @@
-# Quality Report — Issue #74 / PR #78
+# Quality Report — Issue #79 / PR #85
 
-**Map layer switcher (streets/hybrid/dataviz)**
+**feat: categories table in DB + territory constants**
 
-**Reviewer:** The Squirrel (audit #3)
-**Branch:** `issue-74-layer-switcher`
-**PR:** #78 (base: main)
+**Reviewer:** The Squirrel (re-audit #2)
+**Branch:** `issue-79-categories-territories`
+**PR:** #85 (base: main)
 **Date:** 2026-03-11
-**Tests:** 17/17 pass | Lint: 0 errors | CI: GREEN
+**Tests:** 379/379 pass | Lint: 0 errors (2 pre-existing warnings, unrelated) | TypeScript: pre-existing errors in TopicsClient tests (not from this PR)
 
 ---
 
@@ -16,119 +16,90 @@
 
 ## Executive Summary
 
-Third audit. PR #77 (duplicate) was closed — that blocker is resolved. However, the two core blockers from audits #1 and #2 remain unfixed:
-
-1. **PR #78 is still empty** — `gh pr diff 78 --name-only` returns only `DEVLOG.md` and `PLAN.md`. The actual implementation (Map.tsx +75 lines, Map.test.tsx +137 lines) exists on the branch but doesn't appear in the PR diff due to squash-merge history from #73/#76.
-
-2. **Bug persists** — style switcher renders on the heatmap dashboard (`Map.tsx:319` has no `!showHeatmap` guard). The test passes as a false positive because it never fires the load event.
-
-**Cannot merge. Cannot close ticket.**
+Second audit. The previous Squirrel review identified a **critical slug mismatch** — it was NOT fixed. Additionally, the PR branch is polluted with **14 unrelated commits** from issues #67, #68, #69, #73, #74, #75 that have already been merged to main separately. Only 2 of 16 commits are actually #79 work. This PR cannot be merged in its current state.
 
 ---
 
 ## Critical Issues (Showstoppers)
 
-### 1. PR #78 contains no implementation code
+### 1. 🔴 Category slug mismatch (UNFIXED from previous audit)
 
-`gh pr diff 78 --name-only` → `DEVLOG.md`, `PLAN.md` only.
+**Files:** `supabase/seed.sql:9-18` (categories table) vs `supabase/seed.sql:141` (report generation)
 
-The layer switcher implementation was committed under `10b1761` and `016ef1a` (part of #73 scope). When PR #76 squash-merged those to main, the history diverged. The feature code is stranded — merging this PR would add zero functionality.
+The `categories` table seeds slugs: `zivotni-prostredi`, `skolstvi`, `zdravotnictvi`, `dopravni-infrastruktura`, `energetika`, `fungovani-uradu`, `bezpecnost`, `jine`
 
-**Fix:** Re-commit the Map.tsx + Map.test.tsx changes as a new commit on this branch so they appear in the PR diff against main.
-
-### 2. Bug: Style switcher visible in heatmap mode
-
-`Map.tsx:319`:
-```tsx
-{isLoaded && (
-  <div data-testid="style-switcher">
+But report generation (line 141) still uses OLD hardcoded values:
+```sql
+categories TEXT[] := ARRAY['Infrastruktura', 'Doprava', 'Zeleň', 'Úřad', 'Bezpečnost', 'Jiné'];
 ```
 
-The spec says: "Heatmap mode (`showHeatmap=true`) locks to dataviz and hides the switcher." No `!showHeatmap` guard exists. The dashboard map will show all three style buttons.
+**Impact:** After `supabase db reset`, all 120 seed reports have category values that don't match any slug in the `categories` table. Category filtering on `/reports` is broken — clicking any category pill returns zero results.
 
-**Fix:**
-```tsx
-{isLoaded && !showHeatmap && (
+**Fix:** Update `seed.sql:141` to use slugs, update `schema.test.ts:168-176` which asserts old names.
+
+### 2. 🔴 Dirty PR branch — 14 unrelated commits
+
 ```
-
-### 3. False-positive test masking the bug
-
-`Map.test.tsx:330-335` — test "does not show style switcher when showHeatmap is true" never fires the map `load` event. `isLoaded` stays false, so the switcher is hidden for the wrong reason. This test would pass even without any showHeatmap logic.
-
-**Fix:** Fire the load event before asserting, matching the pattern used in all other tests:
-```tsx
-it('does not show style switcher when showHeatmap is true', async () => {
-  let onMapLoad: () => void = () => {};
-  onMock.mockImplementation((event, callback) => {
-    if (event === 'load') onMapLoad = callback;
-  });
-
-  render(<Map showHeatmap={true} />);
-
-  await import('react').then((React) => {
-    React.act(() => { onMapLoad(); });
-  });
-
-  expect(screen.queryByTestId('style-switcher')).toBeNull();
-});
+git log --oneline main..issue-79-categories-territories
 ```
+shows 16 commits, but only 2 are #79 work:
+- `bb61b96 feat: categories table in DB + territory constants (closes #79)`
+- `20566b2 test: add schema tests for categories migration and seed (closes #79)`
+
+The other 14 commits are from issues #67, #68, #69, #73, #74, #75 — all already merged to main via their own PRs. Merging this PR would create duplicate/conflicting history.
+
+**Fix:** Rebase onto current main: `git rebase main` — the unrelated commits should drop as already-applied.
 
 ---
 
-## Code Smells & Improvements (non-blocking)
+## Code Smells & Improvements
 
-| # | Issue | Severity | Location |
-|---|-------|----------|----------|
-| 1 | `queueMicrotask` hack to bounce `isLoaded` false→true for re-triggering effects after style change | Medium | Map.tsx:141-143 |
-| 2 | `as unknown as string` double-cast on MapStyle enums | Low | Map.tsx:24-26 |
-| 3 | Duplicate initial-style derivation (useState initializer + useEffect body both compute initial style) | Low | Map.tsx:78 vs 96 |
-| 4 | No try/catch on `localStorage.setItem` (throws in Safari private browsing) | Low | Map.tsx:132 |
+| # | Issue | Severity | File | Detail |
+|---|-------|----------|------|--------|
+| 1 | **ORP count: 193 vs ~206** | Medium | `src/lib/territories.ts:33` | JSDoc says `206 ORP` but array has **193 entries**. Either complete the list or fix the comment to say `193`. |
+| 2 | **Duplicated `Category` interface** | Low | `ReportsClient.tsx:12`, `ReportForm.tsx:6` | Same `{ slug: string; label: string }` defined in two files. Extract to shared type. |
 
 ---
 
 ## Test Coverage Analysis
 
-| Test | Verdict |
-|------|---------|
-| Shows style switcher after map loads | ✅ Correct |
-| Calls setStyle when switching layers | ✅ Correct |
-| Persists selected style to localStorage | ✅ Correct |
-| Does not show switcher when showHeatmap=true | ❌ **FALSE POSITIVE** — never fires load |
-| Reads saved style from localStorage on mount | ✅ Correct |
-| API key tests (4 tests, #73 scope) | ✅ Correct |
+- **Territories:** 11 tests — uniqueness, cross-references, spot checks. Solid.
+- **ReportsClient:** 29 tests — slug-based category filtering, URL building, form rendering. Proper.
+- **Schema tests:** 5 new tests for categories migration. Good coverage of migration structure and seed idempotency.
+- **Gap:** No test verifies that `reports.category` values match `categories.slug` values. This is the exact gap that allows the slug mismatch to slip through undetected.
 
-**4/5 layer-switcher tests legitimate. 1 false positive masking a real bug.**
-
-Full suite: 17/17 pass (Map.test.tsx). CI: green.
+Full suite: **379/379 pass.** All pass because no test cross-validates the two data sets.
 
 ---
 
-## Checklist vs. Issue #74 Spec
+## Security Review
 
-| Task | Status |
-|---|---|
-| Custom layer switcher UI in Map.tsx | ✅ Code exists, not in PR diff |
-| `map.setStyle()` for 3 styles | ✅ Code exists, not in PR diff |
-| Re-add markers/heatmap after style change | ✅ Code exists, not in PR diff |
-| Dashboard default to DATAVIZ | ✅ Code exists, not in PR diff |
-| Update tests in Map.test.tsx | ⚠️ 4/5 correct, 1 false positive |
-| Persist to localStorage | ✅ Code exists, not in PR diff |
-| **Switcher hidden when showHeatmap=true** | ❌ **BUG — guard missing** |
+- RLS: 4 policies on `categories` — SELECT public, INSERT/UPDATE/DELETE admin-only via `admins` table. Correct.
+- No hardcoded secrets. No injection vectors.
+- `reports.category` remains TEXT without FK — intentional per spec for backwards compatibility.
+- `ON CONFLICT (slug) DO UPDATE` in seed is idempotent. Good.
 
 ---
 
-## Action Items (ordered)
+## What's Good
 
-1. ~~Close PR #77~~ ✅ Done
-2. Fix `Map.tsx:319` — add `!showHeatmap` guard: `{isLoaded && !showHeatmap && (`
-3. Fix `Map.test.tsx:330` — fire load event in "does not show switcher when showHeatmap" test
-4. Re-commit Map.tsx + Map.test.tsx so changes appear in the PR #78 diff
-5. Re-request Squirrel review
+- Clean migration with proper RLS design
+- DB-driven categories architecture (page.tsx fetches, passes as props) — correct pattern
+- Territory data well-structured with NUTS 3 codes and ORP cross-references
+- Comprehensive test suite (16 new tests added across 3 files)
+- `ON CONFLICT` upsert for idempotent seeding
+
+---
+
+## Required Fixes Before Merge
+
+1. **🔴 CRITICAL: Align seed report categories with `categories` table slugs** — update `seed.sql:141`
+2. **🔴 CRITICAL: Rebase branch onto main** — remove 14 stale commits from unrelated issues
+3. **Update `schema.test.ts:168-176`** — assert new slugs instead of old Czech names
+4. **Fix ORP comment** — `territories.ts:33` says 206, actual is 193
 
 ---
 
 ## Final Verdict
 
-**🔴 BAD NUT — Do not merge.**
-
-The underlying implementation is solid — clean types, localStorage persistence, proper style switching with layer re-initialization. Two fixes are needed: one 15-character code fix (`!showHeatmap &&`) and one test correction. Then the PR diff needs to actually contain the code. Fix these and this becomes a Good Nut.
+**🔴 BAD NUT — Do NOT merge.** Two critical blockers: (1) the slug mismatch from the first audit remains unfixed — category filtering is broken with seed data; (2) the branch carries 14 unrelated commits. Rebase, fix the slugs, re-submit.
