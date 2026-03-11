@@ -316,7 +316,7 @@ const Map: React.FC<MapProps> = ({
         className="h-full w-full"
         data-testid="map-container"
       />
-      {isLoaded && (
+      {isLoaded && !showHeatmap && (
         <div
           className="absolute bottom-4 left-4 z-10 flex gap-1 rounded-lg bg-white/90 p-1 shadow-md backdrop-blur-sm dark:bg-zinc-800/90"
           data-testid="style-switcher"

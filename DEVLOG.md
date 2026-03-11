@@ -1195,3 +1195,28 @@ gh pr create --title "feat(ci): add CI/CD pipeline and staging deploy (closes #1
 - Updated `.env.example` with env priority documentation
 - Added `supabase/env.test.ts` (4 tests, all passing)
 - PR #70 created
+
+## 2026-03-11 — Issue #74: Map Layer Switcher (streets/hybrid/dataviz)
+
+### Changes
+
+- **`src/components/Map.tsx`**: Added `MAP_STYLES` record mapping `streets | hybrid | dataviz` keys to MapTiler style enums with Czech labels (Ulice / Satelit / Data). Added `getInitialStyle()` reading `localStorage` key `nasstat-map-style`; defaults to `dataviz` when `showHeatmap=true`, else `streets`. Added `handleStyleChange()` calling `map.setStyle()`, persisting to `localStorage`, re-triggering reports effect via `styledata` event + `isLoaded` toggle. Style switcher UI rendered in bottom-left corner after map loads; hidden in heatmap mode.
+
+### Tests
+
+- **`src/components/Map.test.tsx`**: 5 new layer-switcher tests:
+  - `shows style switcher after map loads` — switcher hidden pre-load, visible post-load with all 3 labels
+  - `calls setStyle when switching layers` — clicking "Satelit" calls `map.setStyle('hybrid-v4')`
+  - `persists selected style to localStorage` — clicking "Data" writes `nasstat-map-style=dataviz`
+  - `does not show style switcher when showHeatmap is true` — switcher hidden in heatmap mode
+  - `reads saved style from localStorage on mount` — `localStorage.getItem` called with correct key
+
+### Verification
+
+- Ran `npx vitest run src/components/Map.test.tsx`: 17/17 PASS
+- Ran `npm run lint`: PASS
+
+### Related
+
+- Closes Issue #74
+- Branch: `issue-74-layer-switcher` → `main`

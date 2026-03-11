@@ -1,117 +1,134 @@
-# Quality Report — PR #76 (Issue #73)
+# Quality Report — Issue #74 / PR #78
 
-**MapTiler API key for local development**
+**Map layer switcher (streets/hybrid/dataviz)**
 
-**Reviewer:** The Squirrel (re-audit #3)
-**Branch:** `issue-73-maptiler-key`
-**PR:** #76
-**Date:** 2026-03-10
-**Commits reviewed:** 4 (`e17ae58`..`10b1761`)
+**Reviewer:** The Squirrel (audit #3)
+**Branch:** `issue-74-layer-switcher`
+**PR:** #78 (base: main)
+**Date:** 2026-03-11
+**Tests:** 17/17 pass | Lint: 0 errors | CI: GREEN
 
 ---
 
-## Status: 🟡 SUSPICIOUS NUT
+## Status: 🔴 BAD NUT
 
 ---
 
 ## Executive Summary
 
-Third audit. **No commits since the last two reviews — all three showstoppers remain unfixed.** The core feature is solid: MapTiler key works, maps load, env strategy is clean, security is good. But CI is red, an empty test exists, and `parseLocation` has zero coverage. Cannot merge.
+Third audit. PR #77 (duplicate) was closed — that blocker is resolved. However, the two core blockers from audits #1 and #2 remain unfixed:
+
+1. **PR #78 is still empty** — `gh pr diff 78 --name-only` returns only `DEVLOG.md` and `PLAN.md`. The actual implementation (Map.tsx +75 lines, Map.test.tsx +137 lines) exists on the branch but doesn't appear in the PR diff due to squash-merge history from #73/#76.
+
+2. **Bug persists** — style switcher renders on the heatmap dashboard (`Map.tsx:319` has no `!showHeatmap` guard). The test passes as a false positive because it never fires the load event.
+
+**Cannot merge. Cannot close ticket.**
 
 ---
 
-## Critical Issues (Showstoppers) — STILL OPEN
+## Critical Issues (Showstoppers)
 
-### 1. CI is RED — Lint fails
+### 1. PR #78 contains no implementation code
 
+`gh pr diff 78 --name-only` → `DEVLOG.md`, `PLAN.md` only.
+
+The layer switcher implementation was committed under `10b1761` and `016ef1a` (part of #73 scope). When PR #76 squash-merged those to main, the history diverged. The feature code is stranded — merging this PR would add zero functionality.
+
+**Fix:** Re-commit the Map.tsx + Map.test.tsx changes as a new commit on this branch so they appear in the PR diff against main.
+
+### 2. Bug: Style switcher visible in heatmap mode
+
+`Map.tsx:319`:
+```tsx
+{isLoaded && (
+  <div data-testid="style-switcher">
 ```
-src/app/page.tsx:50:11 — <a> instead of <Link /> (@next/next/no-html-link-for-pages)
-src/app/reports/actions.test.ts:192 — unused vars (warnings)
+
+The spec says: "Heatmap mode (`showHeatmap=true`) locks to dataviz and hides the switcher." No `!showHeatmap` guard exists. The dashboard map will show all three style buttons.
+
+**Fix:**
+```tsx
+{isLoaded && !showHeatmap && (
 ```
 
-Pre-existing, but CI must be green to merge. Fix the `<a>` → `<Link>` in `page.tsx`.
+### 3. False-positive test masking the bug
 
-### 2. Empty test — zero assertions (`Map.test.tsx:330-339`)
+`Map.test.tsx:330-335` — test "does not show style switcher when showHeatmap is true" never fires the map `load` event. `isLoaded` stays false, so the switcher is hidden for the wrong reason. This test would pass even without any showHeatmap logic.
 
-```ts
-it('defaults to dataviz style when showHeatmap is true', () => {
+**Fix:** Fire the load event before asserting, matching the pattern used in all other tests:
+```tsx
+it('does not show style switcher when showHeatmap is true', async () => {
+  let onMapLoad: () => void = () => {};
+  onMock.mockImplementation((event, callback) => {
+    if (event === 'load') onMapLoad = callback;
+  });
+
   render(<Map showHeatmap={true} />);
-  // 6 lines of comments explaining why it CAN'T assert anything
-  // Zero expect() calls
+
+  await import('react').then((React) => {
+    React.act(() => { onMapLoad(); });
+  });
+
+  expect(screen.queryByTestId('style-switcher')).toBeNull();
 });
 ```
 
-A test without assertions is worse than no test. Either capture constructor args in the mock to assert dataviz was used, or delete it.
+---
 
-### 3. `parseLocation` — zero test coverage
+## Code Smells & Improvements (non-blocking)
 
-`src/utils/geo.ts` is a new 36-line utility doing hex buffer parsing with hardcoded byte offsets (`buf.readDoubleLE(9)`, `buf.readDoubleLE(17)`). Imported by 3 pages (`dashboard/page.tsx`, `reports/page.tsx`, `reports/[id]/page.tsx`). No `geo.test.ts` exists.
-
-Needs tests for: valid GeoJSON, valid WKB hex, null input, malformed hex, short buffer.
+| # | Issue | Severity | Location |
+|---|-------|----------|----------|
+| 1 | `queueMicrotask` hack to bounce `isLoaded` false→true for re-triggering effects after style change | Medium | Map.tsx:141-143 |
+| 2 | `as unknown as string` double-cast on MapStyle enums | Low | Map.tsx:24-26 |
+| 3 | Duplicate initial-style derivation (useState initializer + useEffect body both compute initial style) | Low | Map.tsx:78 vs 96 |
+| 4 | No try/catch on `localStorage.setItem` (throws in Safari private browsing) | Low | Map.tsx:132 |
 
 ---
 
-## Code Smells & Improvements (Non-blocking)
+## Test Coverage Analysis
 
-### 4. `schema.test.ts:280` — semantically wrong assertion
+| Test | Verdict |
+|------|---------|
+| Shows style switcher after map loads | ✅ Correct |
+| Calls setStyle when switching layers | ✅ Correct |
+| Persists selected style to localStorage | ✅ Correct |
+| Does not show switcher when showHeatmap=true | ❌ **FALSE POSITIVE** — never fires load |
+| Reads saved style from localStorage on mount | ✅ Correct |
+| API key tests (4 tests, #73 scope) | ✅ Correct |
 
-```ts
-expect(content).toContain('SUPABASE_SERVICE_ROLE_KEY');
-```
+**4/5 layer-switcher tests legitimate. 1 false positive masking a real bug.**
 
-This passes only because `.env.development` has a **comment** containing the string. The test was written when the key was present as an actual var. Meanwhile `env.test.ts:18-23` correctly strips comments before checking. The `schema.test.ts:280` assertion should be updated or removed to avoid false confidence.
-
-### 5. `queueMicrotask` hack (`Map.tsx:138-143`)
-
-```ts
-setIsLoaded(false);
-queueMicrotask(() => setIsLoaded(true));
-```
-
-Fragile approach to re-trigger the reports effect after style change. A `styleVersion` counter as a dependency would be more robust.
-
-### 6. `as unknown as string` triple-cast (`Map.tsx:24-26`)
-
-Acceptable workaround for MapTiler SDK types, but consider `String()` coercion to be more explicit.
-
-### 7. PR bundles 4 issues (#67, #68, #69, #73)
-
-Makes review harder. Future PRs should be 1:1 with issues.
+Full suite: 17/17 pass (Map.test.tsx). CI: green.
 
 ---
 
-## Test Coverage
+## Checklist vs. Issue #74 Spec
 
-| File | Tests | Status |
-|------|-------|--------|
-| `Map.test.tsx` | 21 (13 existing + 8 new) | Pass (1 empty — no assertions) |
-| `env.test.ts` | 5 | Pass — well written |
-| `schema.test.ts` | 30 | Pass (1 semantically wrong) |
-| `geo.ts` | 0 | **No tests** |
-
-**353/353 tests pass** locally. CI lint blocks the pipeline.
+| Task | Status |
+|---|---|
+| Custom layer switcher UI in Map.tsx | ✅ Code exists, not in PR diff |
+| `map.setStyle()` for 3 styles | ✅ Code exists, not in PR diff |
+| Re-add markers/heatmap after style change | ✅ Code exists, not in PR diff |
+| Dashboard default to DATAVIZ | ✅ Code exists, not in PR diff |
+| Update tests in Map.test.tsx | ⚠️ 4/5 correct, 1 false positive |
+| Persist to localStorage | ✅ Code exists, not in PR diff |
+| **Switcher hidden when showHeatmap=true** | ❌ **BUG — guard missing** |
 
 ---
 
-## What's Good
+## Action Items (ordered)
 
-- **Env strategy** is well designed — `.env.development` for safe defaults, `.env.local` for secrets
-- **Security test** in `env.test.ts:18-23` correctly strips comments before checking for service role key
-- **XSS protection** in `Map.tsx:44-51` — `escapeHtml` on all user content in popups
-- **Docker compose** changes are clean — `env_file` with optional `.env.local`, `host.docker.internal`
-- **API key guard** (`Map.tsx:91-93`) correctly rejects `placeholder` and `your-maptiler-key-here`
-- **MapTiler key** is free-tier, public — safe to commit as `NEXT_PUBLIC_`
+1. ~~Close PR #77~~ ✅ Done
+2. Fix `Map.tsx:319` — add `!showHeatmap` guard: `{isLoaded && !showHeatmap && (`
+3. Fix `Map.test.tsx:330` — fire load event in "does not show switcher when showHeatmap" test
+4. Re-commit Map.tsx + Map.test.tsx so changes appear in the PR #78 diff
+5. Re-request Squirrel review
 
 ---
 
 ## Final Verdict
 
-**SUSPICIOUS NUT — Cannot merge yet.**
+**🔴 BAD NUT — Do not merge.**
 
-Three fixes required:
-
-1. **Fix CI** — `<a>` → `<Link>` in `src/app/page.tsx:50`
-2. **Fix or delete empty test** — `Map.test.tsx:330` needs assertions or removal
-3. **Add `parseLocation` tests** — `src/utils/geo.ts` needs a `geo.test.ts`
-
-Once fixed → merge and close #73.
+The underlying implementation is solid — clean types, localStorage persistence, proper style switching with layer re-initialization. Two fixes are needed: one 15-character code fix (`!showHeatmap &&`) and one test correction. Then the PR diff needs to actually contain the code. Fix these and this becomes a Good Nut.

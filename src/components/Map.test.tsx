@@ -327,11 +327,21 @@ describe('Map Component', () => {
     expect(localStorageMock.setItem).toHaveBeenCalledWith('nasstat-map-style', 'dataviz');
   });
 
-  it('does not show style switcher when showHeatmap is true', () => {
+  it('does not show style switcher when showHeatmap is true', async () => {
+    let onMapLoad: () => void = () => {};
+    onMock.mockImplementation((event: string, callback: () => void) => {
+      if (event === 'load') onMapLoad = callback;
+    });
+
     render(<Map showHeatmap={true} />);
-    expect(screen.queryByText('Ulice')).not.toBeInTheDocument();
-    expect(screen.queryByText('Hybrid')).not.toBeInTheDocument();
-    expect(screen.queryByText('Data')).not.toBeInTheDocument();
+
+    await import('react').then((React) => {
+      React.act(() => {
+        onMapLoad();
+      });
+    });
+
+    expect(screen.queryByTestId('style-switcher')).toBeNull();
   });
 
   it('reads saved style from localStorage on mount', () => {
