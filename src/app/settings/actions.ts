@@ -6,7 +6,7 @@ import { z } from 'zod';
 import type { TerritoryLevel } from '@/lib/territories';
 
 const preferencesSchema = z.object({
-  territory_level: z.enum(['kraj', 'orp', '']).optional().default(''),
+  territory_level: z.enum(['kraj', 'orp', 'obec', '']).optional().default(''),
   territories: z.array(z.string()).default([]),
   categories: z.array(z.string()).default([]),
 });
