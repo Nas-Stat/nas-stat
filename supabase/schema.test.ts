@@ -165,11 +165,11 @@ test('Seed creates 120 reports via PL/pgSQL loop', () => {
   expect(content).toContain('ST_SetSRID(ST_MakePoint');
 });
 
-test('Seed reports use all 6 categories', () => {
+test('Seed reports use category slugs matching categories table', () => {
   const seedPath = join(process.cwd(), 'supabase/seed.sql');
   const content = readFileSync(seedPath, 'utf8');
 
-  const expected = ['Infrastruktura', 'Doprava', 'Zeleň', 'Úřad', 'Bezpečnost', 'Jiné'];
+  const expected = ['dopravni-infrastruktura', 'zivotni-prostredi', 'skolstvi', 'zdravotnictvi', 'energetika', 'fungovani-uradu', 'bezpecnost', 'jine'];
   for (const cat of expected) {
     expect(content).toContain(cat);
   }

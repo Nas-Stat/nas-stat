@@ -138,7 +138,7 @@ DECLARE
     'a1000000-0000-0000-0000-000000000009',
     'a1000000-0000-0000-0000-000000000010'
   ];
-  categories TEXT[] := ARRAY['Infrastruktura', 'Doprava', 'Zeleň', 'Úřad', 'Bezpečnost', 'Jiné'];
+  categories TEXT[] := ARRAY['dopravni-infrastruktura', 'zivotni-prostredi', 'skolstvi', 'zdravotnictvi', 'energetika', 'fungovani-uradu', 'bezpecnost', 'jine'];
   statuses TEXT[] := ARRAY['pending', 'in_review', 'resolved', 'rejected', 'escalated'];
   escalation_roles TEXT[] := ARRAY['obec', 'kraj', 'ministerstvo'];
 

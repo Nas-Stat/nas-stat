@@ -30,7 +30,7 @@ export interface Orp {
   krajCode: string;
 }
 
-/** 206 ORP (obce s rozšířenou působností) — static administrative boundaries */
+/** 193 ORP (obce s rozšířenou působností) — static administrative boundaries */
 export const ORP_LIST: Orp[] = [
   // Praha
   { code: '1000', label: 'Praha', krajCode: 'CZ010' },
