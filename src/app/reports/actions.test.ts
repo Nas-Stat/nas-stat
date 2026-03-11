@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createReport, claimReport, escalateReport, resolveReport, rejectReport } from './actions';
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { reverseGeocode } from '@/utils/geocode';
 
 vi.mock('@/utils/supabase/server', () => ({
   createClient: vi.fn(),
@@ -11,18 +12,29 @@ vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
 }));
 
+vi.mock('@/utils/geocode', () => ({
+  reverseGeocode: vi.fn().mockResolvedValue({ region_kraj: null, region_orp: null, region_obec: null }),
+}));
+
 describe('Report Actions', () => {
+  // insert chain: .from().insert().select().single()
+  const mockSingle = vi.fn();
+  const mockSelect = vi.fn(() => ({ single: mockSingle }));
+  const mockInsert = vi.fn(() => ({ select: mockSelect }));
+
   const mockSupabase = {
     auth: {
       getUser: vi.fn(),
     },
     from: vi.fn().mockReturnThis(),
-    insert: vi.fn(),
+    insert: mockInsert,
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(createClient).mockResolvedValue(mockSupabase as never);
+    // Make from() return an object with insert
+    mockSupabase.from.mockReturnValue({ insert: mockInsert });
   });
 
   const mockSupabaseOfficial = {
@@ -58,7 +70,7 @@ describe('Report Actions', () => {
       mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: { id: 'user-123' } },
       });
-      mockSupabase.insert.mockResolvedValue({ error: null });
+      mockSingle.mockResolvedValue({ data: { id: 'report-id' }, error: null });
 
       const formData = new FormData();
       formData.append('title', 'Díra v silnici');
@@ -72,7 +84,7 @@ describe('Report Actions', () => {
 
       expect(result).toEqual({ success: true });
       expect(mockSupabase.from).toHaveBeenCalledWith('reports');
-      expect(mockSupabase.insert).toHaveBeenCalledWith({
+      expect(mockInsert).toHaveBeenCalledWith({
         profile_id: 'user-123',
         title: 'Díra v silnici',
         description: 'Velká díra uprostřed ulice.',
@@ -88,7 +100,7 @@ describe('Report Actions', () => {
       mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: { id: 'user-123' } },
       });
-      mockSupabase.insert.mockResolvedValue({ error: null });
+      mockSingle.mockResolvedValue({ data: { id: 'report-id' }, error: null });
 
       const formData = new FormData();
       formData.append('title', 'Celostátní téma');
@@ -99,7 +111,7 @@ describe('Report Actions', () => {
       const result = await createReport(formData);
 
       expect(result).toEqual({ success: true });
-      expect(mockSupabase.insert).toHaveBeenCalledWith(
+      expect(mockInsert).toHaveBeenCalledWith(
         expect.objectContaining({ location: null })
       );
       expect(revalidatePath).toHaveBeenCalledWith('/reports');
@@ -143,9 +155,7 @@ describe('Report Actions', () => {
       mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: { id: 'user-123' } },
       });
-      mockSupabase.insert.mockResolvedValue({
-        error: { message: 'Database error' },
-      });
+      mockSingle.mockResolvedValue({ data: null, error: { message: 'Database error' } });
 
       const formData = new FormData();
       formData.append('title', 'Díra v silnici');
@@ -163,9 +173,7 @@ describe('Report Actions', () => {
       mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: { id: 'user-123' } },
       });
-      mockSupabase.insert.mockResolvedValue({
-        error: { message: 'Database error' },
-      });
+      mockSingle.mockResolvedValue({ data: null, error: { message: 'Database error' } });
 
       const formData = new FormData();
       formData.append('title', 'Celostátní podnět');
@@ -175,6 +183,78 @@ describe('Report Actions', () => {
       await expect(createReport(formData)).rejects.toThrow(
         'Nepodařilo se uložit hlášení.'
       );
+    });
+
+    it('calls reverseGeocode with correct lng and lat', async () => {
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-123' } },
+      });
+      mockSingle.mockResolvedValue({ data: { id: 'report-id' }, error: null });
+
+      const formData = new FormData();
+      formData.append('title', 'Díra v silnici');
+      formData.append('rating', '1');
+      formData.append('category', 'Doprava');
+      formData.append('lng', '16.6068');
+      formData.append('lat', '49.1951');
+
+      await createReport(formData);
+
+      expect(reverseGeocode).toHaveBeenCalledWith(16.6068, 49.1951);
+    });
+
+    it('updates report region columns when reverseGeocode returns data', async () => {
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-123' } },
+      });
+      mockSingle.mockResolvedValue({ data: { id: 'report-abc' }, error: null });
+      vi.mocked(reverseGeocode).mockResolvedValueOnce({
+        region_kraj: 'Jihomoravský kraj',
+        region_orp: 'Brno',
+        region_obec: 'Brno',
+      });
+
+      const mockEq = vi.fn().mockResolvedValue({ error: null });
+      const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq });
+      let callCount = 0;
+      mockSupabase.from.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) return { insert: mockInsert };
+        return { update: mockUpdate };
+      });
+
+      const formData = new FormData();
+      formData.append('title', 'Díra v silnici');
+      formData.append('rating', '1');
+      formData.append('category', 'Doprava');
+      formData.append('lng', '16.6068');
+      formData.append('lat', '49.1951');
+
+      const result = await createReport(formData);
+
+      expect(result).toEqual({ success: true });
+      expect(mockUpdate).toHaveBeenCalledWith({
+        region_kraj: 'Jihomoravský kraj',
+        region_orp: 'Brno',
+        region_obec: 'Brno',
+      });
+      expect(mockEq).toHaveBeenCalledWith('id', 'report-abc');
+    });
+
+    it('does not call reverseGeocode when location is absent', async () => {
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-123' } },
+      });
+      mockSingle.mockResolvedValue({ data: { id: 'report-id' }, error: null });
+
+      const formData = new FormData();
+      formData.append('title', 'Celostátní téma');
+      formData.append('rating', '3');
+      formData.append('category', 'Jiné');
+
+      await createReport(formData);
+
+      expect(reverseGeocode).not.toHaveBeenCalled();
     });
   });
 

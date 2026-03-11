@@ -350,3 +350,35 @@ test('Seed categories use ON CONFLICT upsert for idempotency', () => {
 
   expect(content).toContain('ON CONFLICT (slug) DO UPDATE');
 });
+
+// ---------------------------------------------------------------------------
+// Region columns migration tests (issue #80)
+// ---------------------------------------------------------------------------
+
+test('Region columns migration file exists', () => {
+  const migrationPath = join(process.cwd(), 'supabase/migrations/20260312000000_add_region_columns.sql');
+  expect(existsSync(migrationPath)).toBe(true);
+});
+
+test('Region columns migration adds all three region columns to reports', () => {
+  const migrationPath = join(process.cwd(), 'supabase/migrations/20260312000000_add_region_columns.sql');
+  const content = readFileSync(migrationPath, 'utf8');
+
+  expect(content).toContain('region_kraj');
+  expect(content).toContain('region_orp');
+  expect(content).toContain('region_obec');
+  expect(content).toContain('ADD COLUMN IF NOT EXISTS');
+  expect(content).toContain('ALTER TABLE public.reports');
+});
+
+test('Seed backfills region data for all 10 Czech cities', () => {
+  const seedPath = join(process.cwd(), 'supabase/seed.sql');
+  const content = readFileSync(seedPath, 'utf8');
+
+  // All 10 cities should have region_kraj set
+  expect(content).toContain('region_kraj');
+  expect(content).toContain('region_orp');
+  expect(content).toContain('region_obec');
+  // Verify at least one known region is present
+  expect(content).toMatch(/Jihomoravský kraj|Hlavní město Praha|Moravskoslezský kraj/);
+});

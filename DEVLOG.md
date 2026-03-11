@@ -1,5 +1,30 @@
 # Developer Log
 
+## 2026-03-11 — fix: Issue #80 — Squirrel audit fixes (post-audit #1) — Oompa Loompa
+
+### Changes
+- `src/app/reports/actions.ts` — fixed misleading "Non-blocking" comment → "Post-insert geocoding"; added `console.error` logging for region update failures
+- `src/app/reports/actions.test.ts` — added 3 integration tests: `reverseGeocode` called with correct coords, `.update()` called with region data when geocoding returns data, geocoding skipped when no location
+- `supabase/schema.test.ts` — added 3 tests for `20260312000000_add_region_columns.sql`: file exists, all 3 columns present, seed backfill verified
+- `QUALITY_REPORT.md` — updated to 🟢 GOOD NUT (audit #2)
+
+### Tests
+- Ran `npm run test`: **394/394 pass** (+6 new tests vs. prior 388)
+
+---
+
+## 2026-03-11 — feat: Issue #80 — Reverzní geokódování + region sloupce — Oompa Loompa
+
+### Changes
+- `supabase/migrations/20260312000000_add_region_columns.sql` — `ALTER TABLE reports ADD COLUMN region_kraj/orp/obec TEXT`
+- `src/utils/geocode.ts` — `reverseGeocode(lng, lat)` calls MapTiler Geocoding API, parses region/county/locality from feature context; silently returns nulls on any error
+- `src/app/reports/actions.ts` — `createReport` now does `.insert().select('id').single()`, then calls `reverseGeocode` non-blocking after successful insert; updates region columns when geocoding returns data
+- `supabase/seed.sql` — added `city_kraj/orp/obec` arrays for 10 known cities; region data seeded for all 120 test reports
+- `src/utils/geocode.test.ts` — 9 new tests: missing key, placeholder key, URL construction, context parsing (region/county/locality), district. prefix, feature name fallback, empty features, fetch error, non-OK status
+
+### Test results
+388/388 pass (was 379 before this issue; +9 new tests)
+
 ## 2026-03-11 — fix: Issue #79 — Squirrel audit blockers resolved — Oompa Loompa
 
 ### Changes
