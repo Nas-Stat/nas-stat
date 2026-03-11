@@ -11,9 +11,10 @@
 - `src/app/reports/ReportForm.tsx` — updated to accept `Category[]` (slug/label), uses slug as value and label as display text
 - `src/lib/territories.test.ts` — 11 new tests for KRAJE and ORP_LIST
 - `src/app/reports/ReportsClient.test.tsx` — updated to pass `categories` prop and use slug-based category values
+- `supabase/schema.test.ts` — 5 new tests: migration file existence, table columns, RLS policies, seed slugs, seed idempotency
 
 ### Test results
-374 tests passing (was 363)
+379 tests passing (was 363)
 
 ## 2026-03-11 — refactor: Issue #75 — Direct string IDs for map styles — Oompa Loompa
 
