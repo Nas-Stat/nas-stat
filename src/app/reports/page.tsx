@@ -22,6 +22,13 @@ export default async function ReportsPage({
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Fetch categories from DB
+  const { data: categoriesData } = await supabase
+    .from('categories')
+    .select('slug, label')
+    .order('sort_order', { ascending: true });
+  const categories = (categoriesData ?? []).map((c) => ({ slug: c.slug, label: c.label }));
+
   // Build filtered + paginated query
   let query = supabase
     .from('reports')
@@ -70,6 +77,7 @@ export default async function ReportsPage({
           totalPages={totalPages}
           currentStatus={statusFilter}
           currentCategory={categoryFilter}
+          categories={categories}
         />
       </main>
     </div>

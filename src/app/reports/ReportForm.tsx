@@ -3,11 +3,16 @@
 import React from 'react';
 import { Star, X, AlertCircle, MapPin } from 'lucide-react';
 
+interface Category {
+  slug: string;
+  label: string;
+}
+
 interface ReportFormProps {
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
   onClose: () => void;
   isSubmitting: boolean;
-  categories: string[];
+  categories: Category[];
   error?: string | null;
   onErrorClose?: () => void;
   hasLocation?: boolean;
@@ -92,8 +97,8 @@ export default function ReportForm({
             className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-800"
           >
             {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
+              <option key={cat.slug} value={cat.slug}>
+                {cat.label}
               </option>
             ))}
           </select>

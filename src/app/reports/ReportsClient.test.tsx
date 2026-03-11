@@ -38,6 +38,12 @@ vi.mock('next/navigation', () => ({
   }),
 }));
 
+const DEFAULT_CATEGORIES = [
+  { slug: 'bezpecnost', label: 'Bezpečnost' },
+  { slug: 'dopravni-infrastruktura', label: 'Dopravní infrastruktura' },
+  { slug: 'jine', label: 'Jiné' },
+];
+
 const DEFAULT_PROPS = {
   initialReports: [],
   user: null,
@@ -45,6 +51,7 @@ const DEFAULT_PROPS = {
   totalPages: 1,
   currentStatus: '',
   currentCategory: '',
+  categories: DEFAULT_CATEGORIES,
 };
 
 describe('ReportsClient', () => {
@@ -202,9 +209,9 @@ describe('ReportsClient', () => {
   });
 
   test('active category pill has aria-pressed true', () => {
-    render(<ReportsClient {...DEFAULT_PROPS} currentCategory="Doprava" />);
+    render(<ReportsClient {...DEFAULT_PROPS} currentCategory="dopravni-infrastruktura" />);
     const categoryGroup = screen.getByTestId('category-filter');
-    const dopravaBtn = within(categoryGroup).getByText('Doprava');
+    const dopravaBtn = within(categoryGroup).getByText('Dopravní infrastruktura');
     expect(dopravaBtn).toHaveAttribute('aria-pressed', 'true');
   });
 
@@ -214,12 +221,12 @@ describe('ReportsClient', () => {
         {...DEFAULT_PROPS}
         currentPage={3}
         currentStatus=""
-        currentCategory="Doprava"
+        currentCategory="bezpecnost"
       />
     );
     const statusGroup = screen.getByTestId('status-filter');
     fireEvent.click(within(statusGroup).getByText('Vyřešeno'));
-    expect(mockPush).toHaveBeenCalledWith('/reports?status=resolved&category=Doprava');
+    expect(mockPush).toHaveBeenCalledWith('/reports?status=resolved&category=bezpecnost');
   });
 
   test('clicking category pill navigates to filtered URL with page reset', () => {
@@ -232,8 +239,8 @@ describe('ReportsClient', () => {
       />
     );
     const categoryGroup = screen.getByTestId('category-filter');
-    fireEvent.click(within(categoryGroup).getByText('Zeleň'));
-    expect(mockPush).toHaveBeenCalledWith('/reports?status=pending&category=Zele%C5%88');
+    fireEvent.click(within(categoryGroup).getByText('Jiné'));
+    expect(mockPush).toHaveBeenCalledWith('/reports?status=pending&category=jine');
   });
 
   test('clicking "Všechny stavy" pill clears status filter', () => {
@@ -244,7 +251,7 @@ describe('ReportsClient', () => {
   });
 
   test('clicking "Vše" category pill clears category filter', () => {
-    render(<ReportsClient {...DEFAULT_PROPS} currentCategory="Doprava" />);
+    render(<ReportsClient {...DEFAULT_PROPS} currentCategory="bezpecnost" />);
     const categoryGroup = screen.getByTestId('category-filter');
     fireEvent.click(within(categoryGroup).getByText('Vše'));
     expect(mockPush).toHaveBeenCalledWith('/reports');
@@ -305,10 +312,10 @@ describe('ReportsClient', () => {
         currentPage={1}
         totalPages={5}
         currentStatus="pending"
-        currentCategory="Doprava"
+        currentCategory="bezpecnost"
       />
     );
     fireEvent.click(screen.getByLabelText('Další strana'));
-    expect(mockPush).toHaveBeenCalledWith('/reports?status=pending&category=Doprava&page=2');
+    expect(mockPush).toHaveBeenCalledWith('/reports?status=pending&category=bezpecnost&page=2');
   });
 });

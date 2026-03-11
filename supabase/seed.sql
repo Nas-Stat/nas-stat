@@ -4,6 +4,20 @@
 -- =============================================================================
 
 -- ---------------------------------------------------------------------------
+-- 0. Categories
+-- ---------------------------------------------------------------------------
+INSERT INTO categories (slug, label, sort_order) VALUES
+  ('zivotni-prostredi',    'Životní prostředí',    1),
+  ('skolstvi',             'Školství',              2),
+  ('zdravotnictvi',        'Zdravotnictví',         3),
+  ('dopravni-infrastruktura', 'Dopravní infrastruktura', 4),
+  ('energetika',           'Energetika',            5),
+  ('fungovani-uradu',      'Fungování úřadu',       6),
+  ('bezpecnost',           'Bezpečnost',            7),
+  ('jine',                 'Jiné',                  8)
+ON CONFLICT (slug) DO UPDATE SET label = EXCLUDED.label, sort_order = EXCLUDED.sort_order;
+
+-- ---------------------------------------------------------------------------
 -- 1. Test users (10)
 -- ---------------------------------------------------------------------------
 -- Password for all users: password123
@@ -124,7 +138,7 @@ DECLARE
     'a1000000-0000-0000-0000-000000000009',
     'a1000000-0000-0000-0000-000000000010'
   ];
-  categories TEXT[] := ARRAY['Infrastruktura', 'Doprava', 'Zeleň', 'Úřad', 'Bezpečnost', 'Jiné'];
+  categories TEXT[] := ARRAY['dopravni-infrastruktura', 'zivotni-prostredi', 'skolstvi', 'zdravotnictvi', 'energetika', 'fungovani-uradu', 'bezpecnost', 'jine'];
   statuses TEXT[] := ARRAY['pending', 'in_review', 'resolved', 'rejected', 'escalated'];
   escalation_roles TEXT[] := ARRAY['obec', 'kraj', 'ministerstvo'];
 

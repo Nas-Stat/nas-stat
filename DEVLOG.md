@@ -1,5 +1,33 @@
 # Developer Log
 
+## 2026-03-11 — fix: Issue #79 — Squirrel audit blockers resolved — Oompa Loompa
+
+### Changes
+- `supabase/seed.sql:141` — report categories now use slugs matching `categories` table (was using old Czech display names — broken category filtering)
+- `supabase/schema.test.ts:168` — test updated to assert new slugs
+- `src/lib/territories.ts:33` — ORP count comment corrected (193, not 206)
+- Branch rebased onto main via clean cherry-pick (was carrying 14 stale commits from #67–#75)
+- PR #85 closed, new clean PR #86 opened
+
+### Test results
+379/379 pass (unchanged count — all fixes were correctness fixes, not new features)
+
+## 2026-03-11 — feat: Issue #79 — Categories table + territory constants — Oompa Loompa
+
+### Changes
+- `supabase/migrations/20260311000000_add_categories_table.sql` — new `categories` table (id, slug, label, sort_order) with RLS: SELECT public, INSERT/UPDATE/DELETE admin only
+- `supabase/seed.sql` — seed 8 categories: životní prostředí, školství, zdravotnictví, dopravní infrastruktura, energetika, fungování úřadu, bezpečnost, jiné
+- `src/lib/territories.ts` — `TerritoryLevel` type, `KRAJE` (14 regions), `ORP_LIST` (193 entries, static administrative boundaries)
+- `src/app/reports/page.tsx` — fetch categories from DB, pass as `{ slug, label }[]` to client
+- `src/app/reports/ReportsClient.tsx` — removed hardcoded `CATEGORIES`, accepts `categories` prop with slug/label shape
+- `src/app/reports/ReportForm.tsx` — updated to accept `Category[]` (slug/label), uses slug as value and label as display text
+- `src/lib/territories.test.ts` — 11 new tests for KRAJE and ORP_LIST
+- `src/app/reports/ReportsClient.test.tsx` — updated to pass `categories` prop and use slug-based category values
+- `supabase/schema.test.ts` — 5 new tests: migration file existence, table columns, RLS policies, seed slugs, seed idempotency
+
+### Test results
+379 tests passing (was 363)
+
 ## 2026-03-11 — refactor: Issue #75 — Direct string IDs for map styles — Oompa Loompa
 
 ### Changes

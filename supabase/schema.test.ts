@@ -165,11 +165,11 @@ test('Seed creates 120 reports via PL/pgSQL loop', () => {
   expect(content).toContain('ST_SetSRID(ST_MakePoint');
 });
 
-test('Seed reports use all 6 categories', () => {
+test('Seed reports use category slugs matching categories table', () => {
   const seedPath = join(process.cwd(), 'supabase/seed.sql');
   const content = readFileSync(seedPath, 'utf8');
 
-  const expected = ['Infrastruktura', 'Doprava', 'Zeleň', 'Úřad', 'Bezpečnost', 'Jiné'];
+  const expected = ['dopravni-infrastruktura', 'zivotni-prostredi', 'skolstvi', 'zdravotnictvi', 'energetika', 'fungovani-uradu', 'bezpecnost', 'jine'];
   for (const cat of expected) {
     expect(content).toContain(cat);
   }
@@ -288,4 +288,65 @@ test('.env.example file exists and documents env strategy', () => {
   expect(content).toContain('.env.development');
   expect(content).toContain('.env.local');
   expect(content).toContain('NEXT_PUBLIC_SUPABASE_URL');
+});
+
+// ---------------------------------------------------------------------------
+// Categories migration tests (issue #79)
+// ---------------------------------------------------------------------------
+
+test('Categories migration file exists', () => {
+  const migrationPath = join(process.cwd(), 'supabase/migrations/20260311000000_add_categories_table.sql');
+  expect(existsSync(migrationPath)).toBe(true);
+});
+
+test('Categories migration creates categories table with required columns', () => {
+  const migrationPath = join(process.cwd(), 'supabase/migrations/20260311000000_add_categories_table.sql');
+  const content = readFileSync(migrationPath, 'utf8');
+
+  expect(content).toContain('CREATE TABLE IF NOT EXISTS categories');
+  expect(content).toContain('slug');
+  expect(content).toContain('label');
+  expect(content).toContain('sort_order');
+  expect(content).toContain('SERIAL PRIMARY KEY');
+  expect(content).toContain('UNIQUE NOT NULL');
+});
+
+test('Categories migration enables RLS with public SELECT and admin-only writes', () => {
+  const migrationPath = join(process.cwd(), 'supabase/migrations/20260311000000_add_categories_table.sql');
+  const content = readFileSync(migrationPath, 'utf8');
+
+  expect(content).toContain('ALTER TABLE categories ENABLE ROW LEVEL SECURITY');
+  expect(content).toContain('FOR SELECT');
+  expect(content).toContain('USING (true)');
+  expect(content).toContain('FOR INSERT');
+  expect(content).toContain('FOR UPDATE');
+  expect(content).toContain('FOR DELETE');
+  expect(content).toContain('admins');
+});
+
+test('Seed seeds categories table with all required slugs', () => {
+  const seedPath = join(process.cwd(), 'supabase/seed.sql');
+  const content = readFileSync(seedPath, 'utf8');
+
+  expect(content).toContain('INSERT INTO categories');
+  const expectedSlugs = [
+    'zivotni-prostredi',
+    'skolstvi',
+    'zdravotnictvi',
+    'dopravni-infrastruktura',
+    'energetika',
+    'fungovani-uradu',
+    'bezpecnost',
+    'jine',
+  ];
+  for (const slug of expectedSlugs) {
+    expect(content).toContain(slug);
+  }
+});
+
+test('Seed categories use ON CONFLICT upsert for idempotency', () => {
+  const seedPath = join(process.cwd(), 'supabase/seed.sql');
+  const content = readFileSync(seedPath, 'utf8');
+
+  expect(content).toContain('ON CONFLICT (slug) DO UPDATE');
 });

@@ -159,6 +159,19 @@ _(Detailní plánování bude následovat po dokončení Fáze 2)_
   - [x] Style switcher UI in bottom-left corner, visible after map loads; hidden in heatmap mode.
   - [x] 5 new tests in `Map.test.tsx` covering UI visibility, style switching, localStorage persistence, heatmap mode hiding.
 
+## Phase 5: Data Model Extensions
+
+### Epic 5.1: Categories and Territory Constants
+
+- [x] **Story 5.1.1: Categories table in DB + territory constants (Issue #79)**
+  - [x] `supabase/migrations/20260311000000_add_categories_table.sql` — `categories` table (id, slug, label, sort_order) with RLS: SELECT public, INSERT/UPDATE/DELETE admin only
+  - [x] `supabase/seed.sql` — seed 8 categories with ON CONFLICT upsert
+  - [x] `src/lib/territories.ts` — `TerritoryLevel` type, `KRAJE` (14 regions), `ORP_LIST` (206 static ORP entries)
+  - [x] `src/app/reports/page.tsx` — fetch categories from DB, pass as `{ slug, label }[]` to client
+  - [x] `src/app/reports/ReportsClient.tsx` — accepts `categories` prop, renders DB-sourced category filter pills
+  - [x] `src/lib/territories.test.ts` — 11 tests for KRAJE/ORP_LIST
+  - [x] `supabase/schema.test.ts` — 5 new tests: migration file, columns, RLS, seed slugs, idempotency
+
 ## Hotfixes / Perf Issues
 
 - [x] **Issue #22: Consolidate double reports fetch in dashboard page**
