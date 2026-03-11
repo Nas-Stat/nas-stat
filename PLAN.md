@@ -181,6 +181,17 @@ _(Detailní plánování bude následovat po dokončení Fáze 2)_
   - [x] `src/lib/territories.test.ts` — 11 tests for KRAJE/ORP_LIST
   - [x] `supabase/schema.test.ts` — 5 new tests: migration file, columns, RLS, seed slugs, idempotency
 
+### Epic 5.3: User Preferences & Onboarding
+
+- [x] **Story 5.3.1: Preferences na profilu + onboarding flow (Issue #81)**
+  - [x] `supabase/migrations/20260313000000_add_preferences.sql` — `preferences JSONB DEFAULT '{}'` and `onboarding_completed BOOLEAN DEFAULT false` on `profiles`; existing users backfilled as `onboarding_completed = true`
+  - [x] `src/components/PreferencesForm.tsx` — shared form: territory level selector (kraj/orp), territory multi-select, category checkboxes; reused in settings and onboarding
+  - [x] `src/app/settings/page.tsx`, `SettingsClient.tsx`, `actions.ts` — settings page with `updatePreferences()` server action (Zod validation)
+  - [x] `src/app/onboarding/page.tsx`, `OnboardingClient.tsx` — welcome + PreferencesForm + Skip button; redirects to /dashboard after saving
+  - [x] `src/utils/supabase/proxy.ts` — onboarding redirect: authenticated users with `onboarding_completed = false` redirected to `/onboarding` (exempt: `/onboarding`, `/settings`, `/login`, `/auth/*`, `/logout`, `/`)
+  - [x] `src/components/HeaderClient.tsx` — Settings link added for authenticated users (desktop + mobile)
+  - [x] Tests: `PreferencesForm.test.tsx` (9), `settings/actions.test.ts` (6), `OnboardingClient.test.tsx` (4), `proxy.test.ts` (+5 onboarding tests), `schema.test.ts` (+4 migration tests) — 422 total pass
+
 ## Hotfixes / Perf Issues
 
 - [x] **Issue #22: Consolidate double reports fetch in dashboard page**
