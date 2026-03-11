@@ -21,9 +21,9 @@ export interface Report {
 type MapStyleKey = 'streets' | 'hybrid' | 'dataviz';
 
 const MAP_STYLES: Record<MapStyleKey, { style: string; label: string }> = {
-  streets: { style: maptilersdk.MapStyle.STREETS as unknown as string, label: 'Ulice' },
-  hybrid: { style: maptilersdk.MapStyle.HYBRID as unknown as string, label: 'Satelit' },
-  dataviz: { style: maptilersdk.MapStyle.DATAVIZ as unknown as string, label: 'Data' },
+  streets: { style: 'streets-v4', label: 'Ulice' },
+  hybrid: { style: 'hybrid-v4', label: 'Satelit' },
+  dataviz: { style: 'dataviz-v4', label: 'Data' },
 };
 
 const STYLE_STORAGE_KEY = 'nasstat-map-style';

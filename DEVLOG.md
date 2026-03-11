@@ -1,5 +1,17 @@
 # Developer Log
 
+## 2026-03-11 — refactor: Issue #75 — Direct string IDs for map styles — Oompa Loompa
+
+### Changes
+
+- **`src/components/Map.tsx`**
+  - Replaced `maptilersdk.MapStyle.STREETS/HYBRID/DATAVIZ as unknown as string` with direct string literals `'streets-v4'`, `'hybrid-v4'`, `'dataviz-v4'`.
+  - Eliminates `as unknown as string` type casts; full control over style version string.
+
+### Tests
+
+- All 17 existing `Map.test.tsx` tests pass (mock already returned `streets-v4`/`hybrid-v4`/`dataviz-v4` — no mock changes needed).
+
 ## 2026-03-10 — feat: Issue #74 — Map layer switcher (streets/hybrid/dataviz) — Oompa Loompa
 
 ### Changes
