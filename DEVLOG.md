@@ -1,8 +1,23 @@
 # Developer Log
 
+## 2026-03-11 — feat: Issue #82 — veřejný dashboard na titulní straně — Oompa Loompa
+
+### Changes
+
+- `src/app/page.tsx` — Server Component now fetches: latest 200 reports (for map), status counts (aggregated in JS), categories from DB; passes all data to LandingClient; hero section and feature cards retained
+- `src/app/LandingClient.tsx` — NEW: Client Component with stats section (total count + status pills), category filter pills (client-side), region dropdown (KRAJE), Map with filtered reports, CTA buttons (`/login` or `/reports` + `/reports`)
+- `src/app/LandingClient.test.tsx` — NEW: 11 tests covering stats, filters, map, CTA links, empty state, category toggle
+- `src/app/page.test.tsx` — Updated: 8 tests; mocks LandingClient to verify data passing; existing hero/CTA tests retained
+
+### Stats
+
+- 436 tests total, all pass (was 422 before #82)
+- New files: `LandingClient.tsx`, `LandingClient.test.tsx`
+
 ## 2026-03-13 — feat: Issue #81 — preferences na profilu + onboarding flow — Oompa Loompa
 
 ### Changes
+
 - `supabase/migrations/20260313000000_add_preferences.sql` — adds `preferences JSONB DEFAULT '{}'` and `onboarding_completed BOOLEAN DEFAULT false` to `profiles`; backfills existing users as completed
 - `src/components/PreferencesForm.tsx` — shared client component: territory level (kraj/orp) selector, territory multi-select filtered by level, category checkboxes; reused in both settings and onboarding
 - `src/app/settings/page.tsx` + `SettingsClient.tsx` + `actions.ts` — settings page; `updatePreferences()` server action with Zod validation sets `preferences` JSONB + `onboarding_completed = true`
@@ -14,12 +29,14 @@
 ## 2026-03-11 — fix: Issue #80 — Squirrel audit fixes (post-audit #1) — Oompa Loompa
 
 ### Changes
+
 - `src/app/reports/actions.ts` — fixed misleading "Non-blocking" comment → "Post-insert geocoding"; added `console.error` logging for region update failures
 - `src/app/reports/actions.test.ts` — added 3 integration tests: `reverseGeocode` called with correct coords, `.update()` called with region data when geocoding returns data, geocoding skipped when no location
 - `supabase/schema.test.ts` — added 3 tests for `20260312000000_add_region_columns.sql`: file exists, all 3 columns present, seed backfill verified
 - `QUALITY_REPORT.md` — updated to 🟢 GOOD NUT (audit #2)
 
 ### Tests
+
 - Ran `npm run test`: **394/394 pass** (+6 new tests vs. prior 388)
 
 ---
@@ -27,6 +44,7 @@
 ## 2026-03-11 — feat: Issue #80 — Reverzní geokódování + region sloupce — Oompa Loompa
 
 ### Changes
+
 - `supabase/migrations/20260312000000_add_region_columns.sql` — `ALTER TABLE reports ADD COLUMN region_kraj/orp/obec TEXT`
 - `src/utils/geocode.ts` — `reverseGeocode(lng, lat)` calls MapTiler Geocoding API, parses region/county/locality from feature context; silently returns nulls on any error
 - `src/app/reports/actions.ts` — `createReport` now does `.insert().select('id').single()`, then calls `reverseGeocode` non-blocking after successful insert; updates region columns when geocoding returns data
@@ -34,11 +52,13 @@
 - `src/utils/geocode.test.ts` — 9 new tests: missing key, placeholder key, URL construction, context parsing (region/county/locality), district. prefix, feature name fallback, empty features, fetch error, non-OK status
 
 ### Test results
+
 388/388 pass (was 379 before this issue; +9 new tests)
 
 ## 2026-03-11 — fix: Issue #79 — Squirrel audit blockers resolved — Oompa Loompa
 
 ### Changes
+
 - `supabase/seed.sql:141` — report categories now use slugs matching `categories` table (was using old Czech display names — broken category filtering)
 - `supabase/schema.test.ts:168` — test updated to assert new slugs
 - `src/lib/territories.ts:33` — ORP count comment corrected (193, not 206)
@@ -46,11 +66,13 @@
 - PR #85 closed, new clean PR #86 opened
 
 ### Test results
+
 379/379 pass (unchanged count — all fixes were correctness fixes, not new features)
 
 ## 2026-03-11 — feat: Issue #79 — Categories table + territory constants — Oompa Loompa
 
 ### Changes
+
 - `supabase/migrations/20260311000000_add_categories_table.sql` — new `categories` table (id, slug, label, sort_order) with RLS: SELECT public, INSERT/UPDATE/DELETE admin only
 - `supabase/seed.sql` — seed 8 categories: životní prostředí, školství, zdravotnictví, dopravní infrastruktura, energetika, fungování úřadu, bezpečnost, jiné
 - `src/lib/territories.ts` — `TerritoryLevel` type, `KRAJE` (14 regions), `ORP_LIST` (193 entries, static administrative boundaries)
@@ -62,6 +84,7 @@
 - `supabase/schema.test.ts` — 5 new tests: migration file existence, table columns, RLS policies, seed slugs, seed idempotency
 
 ### Test results
+
 379 tests passing (was 363)
 
 ## 2026-03-11 — refactor: Issue #75 — Direct string IDs for map styles — Oompa Loompa
@@ -171,7 +194,6 @@
 
 ---
 
-
 ## 2026-03-10 — feat: Issue #59 — Report detail page /reports/[id] — Oompa Loompa
 
 ### Changes
@@ -211,11 +233,13 @@
 - **`src/lib/roles.test.ts`** — Removed unused `type Role` import (lint warning eliminated). 10 tests unchanged.
 
 ### Test Results
+
 - Full suite: 258/258 tests pass (20 test files)
 - Lint: 0 errors, 0 warnings
 - Build: clean
 
 ### Closes
+
 - Issue #55 (PR #61)
 - Branch: `issue-55-civic-roles` → `main`
 
@@ -233,10 +257,12 @@ All tasks from issue #43 confirmed complete:
 - **`npm run test`** — 0 failures.
 
 ### Test Results
+
 - Full suite: 241/241 tests pass (19 test files)
 - Build: clean (0 TypeScript errors, 0 compile errors)
 
 ### Closes
+
 - Issue #43
 - Branch: `issue-43-test-updates` → `main`
 
@@ -260,15 +286,16 @@ All tasks from issue #43 confirmed complete:
   - Use `data-testid` selectors for error/success boxes.
 
 ### Test Results
+
 - Login page: 9/9 tests pass (was 4, +5 new tests)
 - Full suite: 241/241 tests pass
 
 ### Closes
+
 - Issue #42
 - Branch: `issue-42-redesign-login` → `main`
 
 ---
-
 
 ## 2026-03-03 - feat: redesign Dashboard page (Issue #41) — Oompa Loompa
 
@@ -397,8 +424,8 @@ All tasks from issue #43 confirmed complete:
 ### Changes
 
 - **`src/app/globals.css`**: Civic-platform CSS variables — `--primary` blue-600/blue-500, `--surface` slate-50/zinc-900, `--border` slate-200/zinc-800, `--background` white/zinc-950. Exposed via `@theme inline`.
-- **`src/components/HeaderClient.tsx`** *(new)*: Client component — logo "Náš stát", desktop nav (Mapa / Témata / Dashboard) with active state via `usePathname`, auth buttons (Přihlásit / Odhlásit), mobile hamburger menu with `aria-expanded`.
-- **`src/components/Header.tsx`** *(new)*: Async server component — reads Supabase user session, renders `HeaderClient`.
+- **`src/components/HeaderClient.tsx`** _(new)_: Client component — logo "Náš stát", desktop nav (Mapa / Témata / Dashboard) with active state via `usePathname`, auth buttons (Přihlásit / Odhlásit), mobile hamburger menu with `aria-expanded`.
+- **`src/components/Header.tsx`** _(new)_: Async server component — reads Supabase user session, renders `HeaderClient`.
 - **`src/app/layout.tsx`**: Added `<Header />` to root layout so it appears on every page.
 - **`src/app/page.tsx`**: Removed duplicate auth header (now in global Header); simplified hero layout using new slate/blue color tokens; "Nahlásit podnět" href changed from `/reports?new=1` → `/reports`.
 - **`src/app/reports/page.tsx`**: Removed local `<header>`; outer div height changed from `h-screen` → `h-[calc(100vh-4rem)]` to account for 64px global Header.
@@ -408,7 +435,7 @@ All tasks from issue #43 confirmed complete:
 
 ### Tests
 
-- **`src/components/Header.test.tsx`** *(new — 9 tests)*: logo link, nav links, login/logout display, hamburger toggle, mobile nav visibility, active nav class.
+- **`src/components/Header.test.tsx`** _(new — 9 tests)_: logo link, nav links, login/logout display, hamburger toggle, mobile nav visibility, active nav class.
 - **`src/app/page.test.tsx`**: Removed stale "shows login button" test (now covered by Header tests).
 - **`src/app/page_auth.test.tsx`**: Removed stale email/logout tests; updated report link assertion (`/reports` instead of `/reports?new=1`).
 - **`src/app/reports/page.test.tsx`**: Removed assertions for removed header element.
@@ -498,6 +525,7 @@ All tasks from issue #43 confirmed complete:
 - **`src/lib/reportStatus.test.ts`**: 4 additional tests for `ADMIN_STATUS_COLORS` (exhaustiveness, dark-mode classes, key-set parity, yellow for pending). Total: 9 tests.
 
 ### Test results
+
 - 204/204 tests passing, lint clean.
 
 ## 2026-03-02 - refactor: extract shared status constants (Issue #21) — Oompa Loompa
@@ -510,6 +538,7 @@ All tasks from issue #43 confirmed complete:
 - **`src/lib/reportStatus.test.ts`** (new): 5 unit tests — exhaustiveness, correct Czech strings, Tailwind class format, and key-set parity between labels and colors.
 
 ### Test results
+
 - 200 tests passing, lint clean.
 
 ## 2026-03-02 - Story 2.4.2: Final Squirrel audit fixes — clean branch (Issue #18) — Oompa Loompa
@@ -539,7 +568,7 @@ All tasks from issue #43 confirmed complete:
 
 ### Changes
 
-- **`.github/workflows/deploy.yml`**: Removed `--prod` flag from Vercel CLI call — staging pushes now create Vercel **preview deployments** (unique URL), not production deployments. Added full quality gates: lint → test → build (with STAGING_ env vars) → deploy. This matches the production workflow's safety standards.
+- **`.github/workflows/deploy.yml`**: Removed `--prod` flag from Vercel CLI call — staging pushes now create Vercel **preview deployments** (unique URL), not production deployments. Added full quality gates: lint → test → build (with STAGING\_ env vars) → deploy. This matches the production workflow's safety standards.
 - **`.github/workflows/workflows.test.ts`**: Added 4 new tests for `deploy.yml`: (1) `--prod` flag absent, (2) lint step present, (3) test step present, (4) build step present. Total: 41 workflow tests.
 - **`QUALITY_REPORT.md`**: Updated from SUSPICIOUS NUT to GOOD NUT after resolving critical issues A and B.
 
@@ -563,7 +592,7 @@ All tasks from issue #43 confirmed complete:
 - **`package.json`**: Přidána závislost `@vercel/analytics@^1.5.0`.
 - **`.env.example`**: Přidána proměnná `NEXT_PUBLIC_SENTRY_DSN` (prázdná pro lokální dev, povinná pro produkci).
 - **`README.md`**: Sekce „Produkční nasazení" rozšířena o kompletní postup: Supabase migrace (`supabase db push`), DNS nastavení (CNAME → Vercel), MapTiler produkční klíč, Sentry monitoring, tabulka všech `PROD_*` secrets, instrukce pro nasazení nové verze tagem.
-- **`.github/workflows/workflows.test.ts`**: Přidáno 17 nových testů pro `deploy-production.yml` — triggery (tag, workflow_dispatch), kroky pipeline (lint, test, build, deploy), reference na všechny `PROD_*` secrets, přítomnost dokumentačních komentářů (DNS, supabase db push).
+- **`.github/workflows/workflows.test.ts`**: Přidáno 17 nových testů pro `deploy-production.yml` — triggery (tag, workflow*dispatch), kroky pipeline (lint, test, build, deploy), reference na všechny `PROD*\*` secrets, přítomnost dokumentačních komentářů (DNS, supabase db push).
 - **`PLAN.md`**: Přidán a odškrtnut Story 2.4.2.
 
 ### Verification
@@ -608,13 +637,11 @@ All tasks from issue #43 confirmed complete:
 
 ---
 
-
-
 ## 2026-03-02 - Fix: Squirrel showstopper — silent HTTP failure in `sendStatusChangeEmail` (Issue #16 / PR #27)
 
 ### Changes
 
-- **`src/lib/email.ts`**: Captured `response` from `fetch` call to Resend API and added `if (!response.ok) throw new Error(\`Resend error: ${response.status}\`)`. HTTP 4xx/5xx failures now throw and are caught by the `try/catch` in `updateReportStatus` (`actions.ts`), logging the error and making misconfigurations visible.
+- **`src/lib/email.ts`**: Captured `response` from `fetch` call to Resend API and added `if (!response.ok) throw new Error(\`Resend error: ${response.status}\`)`. HTTP 4xx/5xx failures now throw and are caught by the `try/catch`in`updateReportStatus` (`actions.ts`), logging the error and making misconfigurations visible.
 - **`src/lib/email.test.ts`**: Added 1 new test — "throws when Resend API returns a non-ok HTTP status" (`{ ok: false, status: 401 }`). Verifies the new code path.
 
 ### Verification
@@ -642,7 +669,6 @@ All tasks from issue #43 confirmed complete:
 - Ran `npm run lint`: PASS (0 errors, 0 warnings)
 
 ---
-
 
 ## 2026-03-01 - Story 2.2.1: Fix Squirrel showstopper — controlled select in AdminClient (Issue #14) — Oompa Loompa
 
@@ -699,7 +725,7 @@ All tasks from issue #43 confirmed complete:
 
 - **`src/utils/supabase/proxy.ts`**: Added `/reports` and `/topics` to the public-routes allowlist so unauthenticated users are no longer redirected to `/login` when accessing these pages.
 - **`src/app/topics/TopicsClient.tsx`**: Vote buttons (ThumbsUp / ThumbsDown) are now hidden for unauthenticated users. Read-only vote counts are shown alongside a "Přihlaste se pro hlasování" login link instead.
-- **`src/utils/supabase/proxy.test.ts`** *(new)*: 13 tests covering public routes (`/`, `/login`, `/auth/*`, `/reports`, `/topics`) pass through without redirect, protected routes (`/dashboard`, `/profile`, `/settings`) redirect unauthenticated users to `/login`, and all routes pass through for authenticated users.
+- **`src/utils/supabase/proxy.test.ts`** _(new)_: 13 tests covering public routes (`/`, `/login`, `/auth/*`, `/reports`, `/topics`) pass through without redirect, protected routes (`/dashboard`, `/profile`, `/settings`) redirect unauthenticated users to `/login`, and all routes pass through for authenticated users.
 - **`src/app/topics/TopicsClient.test.tsx`**: Updated two tests to match the new UX — replaced the "redirects on vote click" test with "shows login link for votes when logged out" and tightened the login-message assertion.
 - **`PLAN.md`**: Added and checked off Story 2.1.1 under new Epic 2.1.
 
@@ -715,12 +741,14 @@ All tasks from issue #43 confirmed complete:
 Story 1.4.2: Základní Pulse Dashboard — PR #20 created against `main`.
 
 ### Status
+
 - Branch: `issue-10-pulse-dashboard`
 - PR: https://github.com/Nas-Stat/nas-stat/pull/20
 - All 75 tests pass. `npm run lint` clean.
 - Quality report committed: 🟡 SUSPICIOUS NUT (no blockers; tech debt noted).
 
 ### Tech debt flagged by The Squirrel
+
 - Status label mapping duplicated in `dashboard/page.tsx` and `Map.tsx` — should be extracted to a shared util.
 - `select('*')` on the latest-reports query — should list explicit columns.
 - Reports fetched twice (stats query + latest query) — could be merged into one query.
@@ -773,14 +801,16 @@ Story 1.4.2: Základní Pulse Dashboard — closing GitHub issue #10 with a dedi
 ## 2026-02-28 - Finalize Issue #9 with 100% Verified Coverage (68 Tests)
 
 Fulfilled the "68 tests" claim by adding missing unit tests for:
+
 - Popular Topics sorting on the Dashboard by comment count.
 - Map marker popups and status badge rendering logic.
 - Robust validation for `addComment` server action.
-Verified all 68 tests pass. No regressions. Issue #9 is now truly complete.
+  Verified all 68 tests pass. No regressions. Issue #9 is now truly complete.
 
 ## 2026-02-28 - Implement Heatmap and Polish Pulse Dashboard (Issue #9)
 
 As part of finalizing Issue #9, I have implemented the heatmap visualization for the geographic pulse and improved the dashboard's data presentation.
+
 - Added `showHeatmap` prop to the `Map` component and implemented a MapLibre GL heatmap layer.
 - Updated `DashboardPage` to fetch all reports for accurate heatmap representation.
 - Improved "Popular Topics" on the dashboard by sorting them by comment count instead of just creation date.
@@ -791,6 +821,7 @@ As part of finalizing Issue #9, I have implemented the heatmap visualization for
 ## 2026-02-28 - Final Polish and Robust Coverage (Issue #9)
 
 As part of Issue #9 finalization, I have improved test coverage and addressed minor inconsistencies.
+
 - Added comprehensive tests for Optimistic UI (voting and commenting) in `TopicsClient.test.tsx`.
 - Added toggle behavior tests for voting.
 - Improved dashboard aggregation tests in `page.test.tsx`.
@@ -1178,6 +1209,7 @@ As part of Issue #9 finalization, I have improved test coverage and addressed mi
 - Confirmed that toggleable voting, optimistic UI, and error handling are correctly implemented and well-tested.
 - Pulse Dashboard stats and heatmap visualization are functional and verified.
 - Mark Story 1.4.3 as [x] and finalized.
+
 ## 2026-03-01 - Story 2.1.2: Pagination & Filtering for /reports (Issue #13)
 
 ### Changes
@@ -1230,11 +1262,13 @@ git push -u origin issue-17-cicd-pipeline
 ## 2026-03-02 — Audit #38 Follow-up (Oompa Loompa re-run)
 
 ### Status
+
 - 174/174 tests pass (confirmed)
 - QUALITY_REPORT.md committed (audit #38 delta)
 - Push still blocked: GitHub OAuth token lacks `workflow` scope
 
 ### Blocker (User Action Required — same as audit #37)
+
 ```bash
 gh auth refresh -s workflow --hostname github.com
 # Approve in browser

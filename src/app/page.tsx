@@ -1,6 +1,9 @@
 import Link from 'next/link';
 import { createClient } from '@/utils/supabase/server';
 import { MapPin, MessageSquare, BarChart2 } from 'lucide-react';
+import { parseLocation } from '@/utils/geo';
+import type { Report } from '@/components/Map';
+import LandingClient from './LandingClient';
 
 const FEATURES = [
   {
@@ -30,6 +33,53 @@ export default async function Home() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Fetch latest 200 reports for the map
+  const { data: reportsData } = await supabase
+    .from('reports')
+    .select('id, title, description, location, rating, category, status')
+    .order('created_at', { ascending: false })
+    .limit(200);
+
+  const reports: Report[] = (reportsData ?? []).flatMap((r) => {
+    const loc = parseLocation(r.location);
+    if (!loc) return [];
+    return [
+      {
+        id: r.id,
+        title: r.title,
+        description: r.description,
+        location: loc,
+        rating: r.rating,
+        category: r.category,
+        status: r.status,
+      },
+    ];
+  });
+
+  // Fetch status counts
+  const { data: countsData } = await supabase
+    .from('reports')
+    .select('status');
+
+  const countMap: Record<string, number> = {};
+  for (const row of countsData ?? []) {
+    countMap[row.status] = (countMap[row.status] ?? 0) + 1;
+  }
+  const statusCounts = Object.entries(countMap).map(([status, count]) => ({
+    status,
+    count,
+  }));
+
+  // Fetch categories
+  const { data: categoriesData } = await supabase
+    .from('categories')
+    .select('slug, label')
+    .order('sort_order', { ascending: true });
+  const categories = (categoriesData ?? []).map((c) => ({
+    slug: c.slug,
+    label: c.label,
+  }));
+
   return (
     <div className="flex flex-col">
       {/* Hero */}
@@ -56,6 +106,14 @@ export default async function Home() {
           </Link>
         </div>
       </section>
+
+      {/* Public dashboard: stats, map, filters */}
+      <LandingClient
+        reports={reports}
+        statusCounts={statusCounts}
+        categories={categories}
+        isLoggedIn={!!user}
+      />
 
       {/* Feature cards */}
       <section
