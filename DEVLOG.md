@@ -1,5 +1,29 @@
 # Developer Log
 
+## 2026-03-10 — feat: Issue #74 — Map layer switcher (streets/hybrid/dataviz) — Oompa Loompa
+
+### Changes
+
+- **`src/components/Map.tsx`**
+  - Added `MAP_STYLES` record mapping `streets | hybrid | dataviz` keys to `MapStyle.STREETS/HYBRID/DATAVIZ` enum values with Czech labels.
+  - `getInitialStyle()` — returns `dataviz` when `showHeatmap=true`; otherwise reads `localStorage` with fallback to `streets`.
+  - `handleStyleChange()` — calls `map.setStyle()`, saves selection to `localStorage`, then re-triggers the reports effect via `styledata` event + `isLoaded` toggle to restore markers/heatmap after layer reset.
+  - Style switcher UI rendered in bottom-left corner after map loads (hidden while loading); active style highlighted in blue.
+  - Style switcher hidden when `showHeatmap=true` (heatmap mode locks to dataviz).
+
+- **`src/components/Map.test.tsx`**
+  - `shows style switcher after map loads` — verifies switcher is absent before load, present after; all 3 labels visible.
+  - `calls setStyle when switching layers` — click "Satelit" → `map.setStyle('hybrid-v4')`.
+  - `persists selected style to localStorage` — click "Data" → `localStorage.setItem('nasstat-map-style', 'dataviz')`.
+  - `does not show style switcher when showHeatmap is true` — switcher absent in heatmap mode.
+  - `reads saved style from localStorage on mount` — verifies localStorage read on initialization.
+
+### Tests
+
+17 tests pass in `Map.test.tsx`. All 363 suite-wide tests pass. Lint clean.
+
+---
+
 ## 2026-03-10 — feat: Issue #73 — MapTiler API key for local development — Oompa Loompa (v3)
 
 ### Changes
@@ -1171,3 +1195,28 @@ gh pr create --title "feat(ci): add CI/CD pipeline and staging deploy (closes #1
 - Updated `.env.example` with env priority documentation
 - Added `supabase/env.test.ts` (4 tests, all passing)
 - PR #70 created
+
+## 2026-03-11 — Issue #74: Map Layer Switcher (streets/hybrid/dataviz)
+
+### Changes
+
+- **`src/components/Map.tsx`**: Added `MAP_STYLES` record mapping `streets | hybrid | dataviz` keys to MapTiler style enums with Czech labels (Ulice / Satelit / Data). Added `getInitialStyle()` reading `localStorage` key `nasstat-map-style`; defaults to `dataviz` when `showHeatmap=true`, else `streets`. Added `handleStyleChange()` calling `map.setStyle()`, persisting to `localStorage`, re-triggering reports effect via `styledata` event + `isLoaded` toggle. Style switcher UI rendered in bottom-left corner after map loads; hidden in heatmap mode.
+
+### Tests
+
+- **`src/components/Map.test.tsx`**: 5 new layer-switcher tests:
+  - `shows style switcher after map loads` — switcher hidden pre-load, visible post-load with all 3 labels
+  - `calls setStyle when switching layers` — clicking "Satelit" calls `map.setStyle('hybrid-v4')`
+  - `persists selected style to localStorage` — clicking "Data" writes `nasstat-map-style=dataviz`
+  - `does not show style switcher when showHeatmap is true` — switcher hidden in heatmap mode
+  - `reads saved style from localStorage on mount` — `localStorage.getItem` called with correct key
+
+### Verification
+
+- Ran `npx vitest run src/components/Map.test.tsx`: 17/17 PASS
+- Ran `npm run lint`: PASS
+
+### Related
+
+- Closes Issue #74
+- Branch: `issue-74-layer-switcher` → `main`
