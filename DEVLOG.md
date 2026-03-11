@@ -1330,3 +1330,38 @@ gh pr create --title "feat(ci): add CI/CD pipeline and staging deploy (closes #1
 
 - Closes Issue #74
 - Branch: `issue-74-layer-switcher` → `main`
+
+---
+
+## 2026-03-11 — Issue #82: Veřejný dashboard na titulní straně
+
+### Summary
+
+Implemented a public landing page dashboard at `/` displaying live platform stats, a map with filtered reports, category pills, and region dropdown for unauthenticated visitors.
+
+### Implementation
+
+- **`src/app/page.tsx`**: Server Component fetching latest 200 reports, status counts (pending/in_review/resolved/rejected), and DB categories; passes data to LandingClient.
+- **`src/app/LandingClient.tsx`**: Client Component with stats pills (total + per-status breakdown), category filter pills (client-side toggle), region dropdown (14 kraje), MapLibre map with filtered pins, and CTA buttons.
+
+### Tests
+
+- **`src/app/LandingClient.test.tsx`**: 11 new tests (stats display, category filtering, toggle deselect, region filter, CTA buttons, map data, empty state)
+- **`src/app/page.test.tsx`**: 8 tests updated (LandingClient mock, data-passing assertions)
+
+### Bug Fix
+
+- **`src/app/settings/actions.ts`**: Added `'obec'` to `preferencesSchema` Zod enum to align with `TerritoryLevel = 'kraj' | 'orp' | 'obec'`, fixing a TypeScript build error in `OnboardingClient.tsx`.
+
+### Verification
+
+- Ran `npm run test`: 436/436 PASS
+- Ran `npm run lint`: 0 errors
+- `npx tsc --noEmit`: 0 errors in production source files
+- Pushed fix commit; CI re-triggered
+
+### Related
+
+- Closes Issue #82
+- PR: #89
+- Branch: `issue-82-public-landing-dashboard`
