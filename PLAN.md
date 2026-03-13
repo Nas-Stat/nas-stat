@@ -2,6 +2,27 @@
 
 Tento dokument slouží jako detailní architektonický plán pro vývojový tým (Oompa Loompas), odvozený z high-level vize.
 
+## Workflow Protocol
+
+### Pravidla pro větve
+- 1 issue = 1 branch z `main` (nebo z explicitně uvedené base branch)
+- Před zahájením: `git log main..HEAD --oneline` musí být prázdný
+- Závislé issues musí být **mergenuté do main** před zahájením dalšího issue
+
+### Pravidla pro rozsah
+- Max ~10 souborů na issue; pokud story zasáhne víc → rozdělit na sub-tasks v PLAN.md
+- `npx tsc --noEmit` povinně před každým commitem
+
+### Commit checklist (Oompa Loompa)
+1. Branch clean check (`git log main..HEAD --oneline`)
+2. Implementace
+3. `npx tsc --noEmit` ✓
+4. `npm run test` (relevant files) ✓
+5. `npm run lint` ✓
+6. Commit + DEVLOG
+
+---
+
 ## Phase 1: "The Instant Pulse MVP" (Zlatý Tiket)
 
 **Architektonický cíl:** Plně funkční lokální vývojové prostředí v Dockeru, základní Next.js aplikace, bezpečná autentizace (Google, Email) přes Supabase a napojení na MapTiler.
