@@ -209,6 +209,12 @@ _(Detailní plánování bude následovat po dokončení Fáze 2)_
   - [x] `src/app/LandingClient.test.tsx` — 11 tests (stats, filters, map, CTAs, empty state, toggle)
   - [x] `src/app/page.test.tsx` — updated 8 tests with LandingClient mock and data-passing assertions
 
+### Epic 5.5: Personalizovaný dashboard (Issue #83)
+
+- [x] **Story 5.5.1: Preference-aware dashboard (Issue #83)**
+  - [x] `src/app/dashboard/page.tsx` — fetch user profile + preferences; partition reports into "Vaše oblasti" (matching territories + categories) vs "Ostatní"; preferences banner → /settings; heatmap centered on filtered region
+  - [x] `src/app/dashboard/page.test.tsx` — 6 new tests: banner visibility, personalized sections, heatmap center, empty state, anonymous user
+
 ### Epic 5.3: User Preferences & Onboarding
 
 - [x] **Story 5.3.1: Preferences na profilu + onboarding flow (Issue #81)**
