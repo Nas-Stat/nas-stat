@@ -1,5 +1,17 @@
 # Developer Log
 
+## 2026-03-13 — feat: Issue #83 — personalizovaný dashboard — Oompa Loompa
+
+### Changes
+
+- `src/app/dashboard/page.tsx` — Preference-aware dashboard: fetches user profile + preferences; partitions reports into "Vaše oblasti" (matching territories/categories) vs "Ostatní"; shows preferences banner with link to /settings for logged-in users with empty preferences; heatmap centered on filtered reports' centroid; generic `partitionReports<T>` helper with AND logic when both territory + category prefs set
+- `src/app/dashboard/page.test.tsx` — Updated: 16 tests (was 10); 6 new tests covering preferences banner, personalized sections, heatmap center, empty "Vaše oblasti" state, anonymous user (no banner), category preferences
+
+### Stats
+
+- 442 tests total, all pass (was 436 before #83)
+- Modified files: `page.tsx`, `page.test.tsx`
+
 ## 2026-03-11 — feat: Issue #82 — veřejný dashboard na titulní straně — Oompa Loompa
 
 ### Changes
