@@ -83,7 +83,6 @@ Tento dokument slouží jako detailní architektonický plán pro vývojový tý
   - [x] Zachovat kompatibilitu s mapovým pohledem (heatmapa/piny) — mapa zobrazuje aktuálně filtrované záznamy.
   - [x] Napsat testy pro logiku filtrování a stránkování.
 
-
 ### Epic 2.2: Admin panel
 
 - [x] **Story 2.2.1: Admin panel — správa hlášení (Issue #14)**
@@ -180,6 +179,14 @@ _(Detailní plánování bude následovat po dokončení Fáze 2)_
   - [x] `src/app/reports/ReportsClient.tsx` — accepts `categories` prop, renders DB-sourced category filter pills
   - [x] `src/lib/territories.test.ts` — 11 tests for KRAJE/ORP_LIST
   - [x] `supabase/schema.test.ts` — 5 new tests: migration file, columns, RLS, seed slugs, idempotency
+
+### Epic 5.4: Public Landing Dashboard (Issue #82)
+
+- [x] **Story 5.4.1: Veřejný dashboard na titulní straně (Issue #82)**
+  - [x] `src/app/page.tsx` — fetch latest 200 reports, status counts, categories from DB; pass to LandingClient
+  - [x] `src/app/LandingClient.tsx` — stats section (total + status breakdown pills), category filter pills, region dropdown, Map with filtered reports, CTA buttons
+  - [x] `src/app/LandingClient.test.tsx` — 11 tests (stats, filters, map, CTAs, empty state, toggle)
+  - [x] `src/app/page.test.tsx` — updated 8 tests with LandingClient mock and data-passing assertions
 
 ### Epic 5.3: User Preferences & Onboarding
 
